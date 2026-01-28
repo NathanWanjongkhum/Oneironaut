@@ -17,3 +17,4 @@ ASSET_MANAGER.downloadAll(() => {
 });
 
 gameEngine.addEntity(new SleepyGuy(gameEngine, 100, 100));
+gameEngine.addEntity(new WaypointBuilder(gameEngine));
