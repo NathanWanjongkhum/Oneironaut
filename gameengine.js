@@ -112,8 +112,6 @@ class GameEngine {
         this.clockTick = this.timer.tick();
         this.update();
         this.draw();
-    
-        console.log(this.mouse);
     };
 
 };

@@ -1,6 +1,7 @@
 class WaypointBuilder {
     constructor(game) {
         this.waypoints = [];
+        game.waypoints = this.waypoints;
     }
 
     draw(ctx) {

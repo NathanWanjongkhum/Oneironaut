@@ -4,15 +4,18 @@ class SleepyGuy {
     constructor(game, x, y) {
         Object.assign(this, { game, x, y });
 
-        this.game.knight = this;
+        this.game.sleepyGuy = this;
 
-        this.spritesheet = ASSET_MANAGER.getAsset("./assets/Knight_1/Idle.png");
+        // this.spritesheet = ASSET_MANAGER.getAsset("./assets/Knight_1/Idle.png");
 
         this.width = 50;
         this.height = 50;
+        this.velocity = { x: 100, y: 100 };
 
         this.state = 0; // 0: idle, 1: damaged
         this.currentFrame = 0;
+
+        this.targetWaypointIndex = null;
 
         this.animations = [];
         this.loadAnimations();
@@ -28,6 +31,32 @@ class SleepyGuy {
 
     update() {
         const TICK = this.game.clockTick;
+
+        // Move along waypoints if they exist
+        const waypoints = this.game.waypoints;
+        if (waypoints && waypoints.length > 0) {
+            // Set target waypoint
+            this.target = waypoints[this.targetWaypointIndex || 0];
+
+            const dx = this.target.x - this.x;
+            const dy = this.target.y - this.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const velocityLength = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y)
+
+            if (distance < velocityLength * TICK) {
+                if (this.targetWaypointIndex + 1 >= waypoints.length) {
+                    this.targetWaypointIndex = null; // Reached final waypoint
+                } else {
+                    this.targetWaypointIndex++; // Move to next waypoint
+                }
+            }
+
+            // Move to target waypoint
+            const angle = Math.atan2(dy, dx);
+            this.x += Math.cos(angle) * this.velocity.x * TICK;
+            this.y += Math.sin(angle) * this.velocity.y * TICK;
+            console.log("Target Waypoint:", this.target, "Current Position:", { x: this.x, y: this.y });
+        }
     }
 
     draw(ctx) {
