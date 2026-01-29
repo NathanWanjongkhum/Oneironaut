@@ -1,10 +1,14 @@
 class WaypointBuilder {
     constructor(game) {
         this.waypoints = [];
-        game.waypoints = this.waypoints;
+        this.game = game;
+        this.game.waypoints = this.waypoints;
     }
 
     draw(ctx) {
+        if (this.waypoints.length === 0) return;
+        if (this.game.inLevel === false) return;
+        
         // Draw waypoints
         ctx.fillStyle = "red";
         ctx.beginPath();
