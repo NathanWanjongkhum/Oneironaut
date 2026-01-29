@@ -19,6 +19,8 @@ class GameEngine {
         this.options = options || {
             debugging: false,
         };
+
+        this.inLevel = false;
     };
 
     init(ctx) {

@@ -1,5 +1,5 @@
 /** Global Parameters Object */
-const params = { };
+const PARAMS = { };
 
 /**
  * @param {Number} n
