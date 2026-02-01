@@ -11,7 +11,7 @@ ASSET_MANAGER.downloadAll(() => {
 	const canvas = document.getElementById("gameWorld");
 	const ctx = canvas.getContext("2d");
 
-	// gameEngine.addEntity(new Ghost(gameEngine));
+	gameEngine.addEntity(new Ghost(gameEngine));
 	gameEngine.addEntity(new SleepyGuy(gameEngine, 100, 100));
 	gameEngine.addEntity(new WaypointBuilder(gameEngine));
 
