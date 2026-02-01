@@ -8,8 +8,8 @@ class SleepyGuy {
 
         this.spritesheet = ASSET_MANAGER.getAsset("./assets/sleepyguy.png");
 
-        this.width = 50;
-        this.height = 50;
+        this.width = 200;
+        this.height = 100;
         this.velocity = { x: 100, y: 100 };
 
         this.state = 0; // 0: idle, 1: damaged
@@ -96,6 +96,37 @@ class SleepyGuy {
     }
 
     draw(ctx) {
-        this.animations[this.state][this.currentFrame].drawFrame(this.game.clockTick, ctx, this.x, this.y, 1);
+        const anim = this.animations[this.state][this.currentFrame];
+
+        // Advance animator time and preserve loop/finished behavior, then draw
+        anim.elapsedTime += this.game.clockTick;
+
+        if (anim.isDone()) {
+            if (anim.loop) {
+                anim.elapsedTime -= anim.totalTime;
+            } else {
+                return;
+            }
+        }
+
+        let frame = anim.currentFrame();
+        if (anim.reverse) frame = anim.frameCount - frame - 1;
+
+        // Preserve original frame aspect ratio
+        const frameW = anim.width;
+        const frameH = anim.height;
+        const scale = Math.min(this.width / frameW, this.height / frameH);
+        const drawW = frameW * scale;
+        const drawH = frameH * scale;
+
+        // Center the drawn frame within the entity's width/height box
+        const offsetX = this.x + (this.width - drawW) / 2;
+        const offsetY = this.y + (this.height - drawH) / 2;
+
+        ctx.drawImage(anim.spritesheet,
+            anim.xStart + frame * (anim.width + anim.framePadding), anim.yStart,
+            frameW, frameH,
+            offsetX, offsetY,
+            drawW, drawH);
     }
 }
