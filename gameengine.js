@@ -1,119 +1,93 @@
-// This game shell was happily modified from Googler Seth Ladd's "Bad Aliens" game and his Google IO talk in 2011
-
 class GameEngine {
-    constructor(options) {
-        // What you will use to draw
-        // Documentation: https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D
-        this.ctx = null;
+  constructor() {
+    this.entities = [];
+    this.ctx = null;
 
-        // Everything that will be updated and drawn each frame
-        this.entities = [];
+    this.click = null;
+    this.mouse = null;
+    this.wheel = null;
+    this.keys = {};
 
-        // Information on the input
-        this.click = null;
-        this.mouse = null;
-        this.wheel = null;
-        this.keys = {};
+    this.clockTick = 0;
+    this.timer = new Timer();
+  }
 
-        // Options and the Details
-        this.options = options || {
-            debugging: false,
-        };
+  init(ctx) {
+    this.ctx = ctx;
+    this.startInput();
+  }
+
+  start() {
+    const loop = () => {
+      this.loop();
+      requestAnimationFrame(loop);
     };
+    requestAnimationFrame(loop);
+  }
 
-    init(ctx) {
-        this.ctx = ctx;
-        this.startInput();
-        this.timer = new Timer();
-    };
+  startInput() {
+    const canvas = this.ctx.canvas;
 
-    start() {
-        this.running = true;
-        const gameLoop = () => {
-            this.loop();
-            requestAnimFrame(gameLoop, this.ctx.canvas);
-        };
-        gameLoop();
-    };
+    // Click
+    canvas.addEventListener("click", (e) => {
+      const rect = canvas.getBoundingClientRect();
 
-    startInput() {
-        const getXandY = e => ({
-            x: e.clientX - this.ctx.canvas.getBoundingClientRect().left,
-            y: e.clientY - this.ctx.canvas.getBoundingClientRect().top
-        });
-        
-        this.ctx.canvas.addEventListener("mousemove", e => {
-            if (this.options.debugging) {
-                console.log("MOUSE_MOVE", getXandY(e));
-            }
-            this.mouse = getXandY(e);
-        });
+      // convert from CSS pixels -> canvas internal pixels
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
 
-        this.ctx.canvas.addEventListener("click", e => {
-            if (this.options.debugging) {
-                console.log("CLICK", getXandY(e));
-            }
-            this.click = getXandY(e);
-        });
+      this.click = {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+      };
+    });
 
-        this.ctx.canvas.addEventListener("wheel", e => {
-            if (this.options.debugging) {
-                console.log("WHEEL", getXandY(e), e.wheelDelta);
-            }
-            e.preventDefault(); // Prevent Scrolling
-            this.wheel = e;
-        });
+    canvas.addEventListener("mousemove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
 
-        this.ctx.canvas.addEventListener("contextmenu", e => {
-            if (this.options.debugging) {
-                console.log("RIGHT_CLICK", getXandY(e));
-            }
-            e.preventDefault(); // Prevent Context Menu
-            this.rightclick = getXandY(e);
-        });
+      this.mouse = {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+      };
+    });
 
-        this.ctx.canvas.addEventListener("keydown", event => this.keys[event.key] = true);
-        this.ctx.canvas.addEventListener("keyup", event => this.keys[event.key] = false);
-    };
+    window.addEventListener("keydown", (e) => {
+      this.keys[e.code] = true;
+    });
+    window.addEventListener("keyup", (e) => {
+      this.keys[e.code] = false;
+    });
+  }
 
-    addEntity(entity) {
-        this.entities.push(entity);
-    };
+  addEntity(entity) {
+    this.entities.push(entity);
+  }
 
-    draw() {
-        // Clear the whole canvas with transparent color (rgba(0, 0, 0, 0))
-        this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+  update() {
+    for (let i = 0; i < this.entities.length; i++) {
+      const ent = this.entities[i];
+      if (!ent.removeFromWorld && ent.update) ent.update();
+    }
 
-        // Draw latest things first
-        for (let i = this.entities.length - 1; i >= 0; i--) {
-            this.entities[i].draw(this.ctx, this);
-        }
-    };
+    // remove entities marked for deletion
+    this.entities = this.entities.filter(e => !e.removeFromWorld);
+  }
 
-    update() {
-        let entitiesCount = this.entities.length;
+  draw() {
+    // clear whole canvas
+    this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 
-        for (let i = 0; i < entitiesCount; i++) {
-            let entity = this.entities[i];
+    for (let i = 0; i < this.entities.length; i++) {
+      const ent = this.entities[i];
+      if (ent.draw) ent.draw(this.ctx);
+    }
+  }
 
-            if (!entity.removeFromWorld) {
-                entity.update();
-            }
-        }
-
-        for (let i = this.entities.length - 1; i >= 0; --i) {
-            if (this.entities[i].removeFromWorld) {
-                this.entities.splice(i, 1);
-            }
-        }
-    };
-
-    loop() {
-        this.clockTick = this.timer.tick();
-        this.update();
-        this.draw();
-    };
-
-};
-
-// KV Le was here :)
+  loop() {
+    this.clockTick = this.timer.tick();
+    this.update();
+    this.draw();
+  }
+}
