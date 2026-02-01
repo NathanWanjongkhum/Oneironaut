@@ -119,9 +119,9 @@ class SleepyGuy {
         const drawW = frameW * scale;
         const drawH = frameH * scale;
 
-        // Center the drawn frame within the entity's width/height box
-        const offsetX = this.x + (this.width - drawW) / 2;
-        const offsetY = this.y + (this.height - drawH) / 2;
+        // Treat this.x/this.y as the sprite center: draw centered on that point
+        const offsetX = this.x - drawW / 2;
+        const offsetY = this.y - drawH / 2;
 
         ctx.drawImage(anim.spritesheet,
             anim.xStart + frame * (anim.width + anim.framePadding), anim.yStart,
