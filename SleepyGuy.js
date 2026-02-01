@@ -11,6 +11,7 @@ class SleepyGuy {
         this.width = 200;
         this.height = 100;
         this.velocity = { x: 100, y: 100 };
+        this.scale = 0.2;
 
         this.state = 0; // 0: idle, 1: damaged
         this.currentFrame = 0;
@@ -27,7 +28,7 @@ class SleepyGuy {
         }
 
         //spritesheet, xStart, yStart, width, height, frameCount, frameDuration, framePadding, reverse, loop
-        this.animations[0][0] = new Animator(this.spritesheet, 0, 0, 442, 444, 5, 0.5, 0, true, true); // idle
+        this.animations[0][0] = new Animator(this.spritesheet, 0, 0, 442, 247, 5, 0.5, 0, true, true); // idle
     }
 
     update() {
@@ -112,17 +113,23 @@ class SleepyGuy {
         let frame = anim.currentFrame();
         if (anim.reverse) frame = anim.frameCount - frame - 1;
 
-        // Preserve original frame aspect ratio
+        // Preserves aspect ratio
         const frameW = anim.width;
         const frameH = anim.height;
-        const scale = Math.min(this.width / frameW, this.height / frameH);
-        const drawW = frameW * scale;
-        const drawH = frameH * scale;
+        const drawW = frameW * this.scale;
+        const drawH = frameH * this.scale;
 
-        // Treat this.x/this.y as the sprite center: draw centered on that point
+        // Draw centered on that point
         const offsetX = this.x - drawW / 2;
         const offsetY = this.y - drawH / 2;
 
+        if (this.game.options.debugging) {
+            ctx.fillStyle = 'black';
+            ctx.fillRect(offsetX, offsetY, drawW, drawH); // debug box
+        }
+
+        console.log(anim.height, this.scale, drawH, offsetY);
+        
         ctx.drawImage(anim.spritesheet,
             anim.xStart + frame * (anim.width + anim.framePadding), anim.yStart,
             frameW, frameH,
