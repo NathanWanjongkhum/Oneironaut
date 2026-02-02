@@ -6,6 +6,7 @@ ASSET_MANAGER.queueDownload("./assets/background/menu/NightDream.png");
 ASSET_MANAGER.queueDownload("./assets/background/menu/DaydreamRoom.png");
 ASSET_MANAGER.queueDownload("./assets/background/menu/NightDreamRoom.png");
 ASSET_MANAGER.queueDownload("./assets/background/menu/newDream.png");
+ASSET_MANAGER.queueDownload("./assets/background/menu/endgamemessage.png");
 
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/1.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/2.png");
@@ -24,15 +25,19 @@ ASSET_MANAGER.downloadAll(() => {
 
 	PARAMS.CANVAS_WIDTH = canvas.width;
 	PARAMS.CANVAS_HEIGHT = canvas.height;
+	//PARAMS.DEBUG = true;
 
 	gameEngine.init(ctx);
 	gameEngine.start();
 
 	gameEngine.addEntity(new Background(gameEngine));//keep this as first entity added!
+	gameEngine.addEntity(new Ghost(gameEngine, 700, 50));
+	gameEngine.addEntity(new Ghost(gameEngine, 775, 350));
 	gameEngine.addEntity(new Ghost(gameEngine, 300, 400));
 	gameEngine.addEntity(new Bed(gameEngine, 700, 300));
 	gameEngine.addEntity(new SleepyGuy(gameEngine, 100, 100));
 	gameEngine.addEntity(new WaypointBuilder(gameEngine));
+	gameEngine.addEntity(new EndGame(gameEngine));
 
 	gameEngine.addEntity(new MenuRoomController(gameEngine));
 	

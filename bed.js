@@ -4,7 +4,7 @@ class Bed {
         this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/bed.png");
 
         
-        this.x = positionX;
+        this.x = positionX;//top left corner position
         this.y = postionY;
         this.radius = 100;
         this.scale = 0.2;
@@ -41,14 +41,15 @@ class Bed {
     };
 
     updateBB() {
-        this.lastBB = this.BB;
-        this.BB = new BoundingBox(
-            this.x,
-            this.y,
-            540 * this.scale, //540 = sprite pixel size
-            460 * this.scale
-        );
-    }
+    const w = 540 * this.scale; //540 = sprite pixel width
+    const h = 460 * this.scale;
+    this.BB = new BoundingBox(
+        this.x,
+        this.y,
+        w,
+        h
+    );
+}
 
 
     collide(other) {
@@ -58,6 +59,10 @@ class Bed {
 
     draw(ctx) {
         this.animations[0].drawFrame(this.game.clockTick, ctx, this.x, this.y, this.scale);
+        if (PARAMS.DEBUG && this.BB) {
+            ctx.strokeStyle = "red";
+            ctx.strokeRect(this.BB.x, this.BB.y, this.BB.width, this.BB.height);
+        }
     };
 
 }

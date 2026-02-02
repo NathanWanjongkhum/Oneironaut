@@ -46,7 +46,7 @@ class MenuRoomController {
     if(this.dead) {
       this.deadCounter += this.game.clockTick;
     }
-    if (this.deadCounter > 3) {
+    if (this.deadCounter > 2) {
       this.game.mode = "gameplay";
       this.removeFromWorld = true;
     }

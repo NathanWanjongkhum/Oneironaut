@@ -111,15 +111,20 @@ class SleepyGuy {
     }
 
     updateBB() {
+        const w = this.width * this.scale;
+        const h = this.height * this.scale;
         this.BB = new BoundingBox(
-            this.x,
-            this.y,
-            this.width * this.scale,
-            this.height * this.scale
+            this.x - w,// / 2,
+            this.y - h,// / 2,
+            w * 2,
+            h * 2
         );
     }
 
     draw(ctx) {
+        //TODO: best practices use the animator.drawframe method.
+        //Custom logic can be helpful, but work with the existing framework, not against.
+        //Causes issues in boundary handling.
         const anim = this.animations[this.state][this.currentFrame];
 
         // Advance animator time and preserve loop/finished behavior, then draw
@@ -147,7 +152,7 @@ class SleepyGuy {
         const offsetY = this.y - drawH / 2;
 
         if (this.game.options.debugging) {
-            ctx.fillStyle = 'black';
+            ctx.fillStyle = 'blue';
             ctx.fillRect(offsetX, offsetY, drawW, drawH); // debug box
             console.log(anim.height, this.scale, drawH, offsetY);
         }

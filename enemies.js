@@ -6,8 +6,8 @@ class Ghost {
         this.spritesheet3 = ASSET_MANAGER.getAsset("./assets/entities/ghost1.png");
 
         
-        this.x = positionX;
-        this.y = postionY;
+        this.x = positionX; //top left corner
+        this.y = postionY; //top left corner
         this.radius = 100;
         this.visualRadius = 300;
         this.velocity = { x: 0, y: 0 };
@@ -93,8 +93,9 @@ class Ghost {
                 if (!ent.BB) ent.updateBB();
                 const thisCX = this.x + (128 * this.scale) / 2;
                 const thisCY = this.y + (128 * this.scale) / 2;
-                const entCX = ent.x + ent.BB.width / 2;
-                const entCY = ent.y + ent.BB.height / 2;
+                //SleepyGuy currently treats x and y as center
+                const entCX = ent.x;// + ent.BB.width / 2;
+                const entCY = ent.y;// + ent.BB.height / 2;
 
                 const dx = entCX - thisCX;
                 const dy = entCY - thisCY;
@@ -159,12 +160,13 @@ class Ghost {
     
 
     updateBB() {
-        this.lastBB = this.BB;
+        const w = 128 * this.scale; //128 = sprite pixel size
+        const h = 128 * this.scale;
         this.BB = new BoundingBox(
-            this.x,
-            this.y,
-            128 * this.scale, //128 = sprite pixel size
-            128 * this.scale
+            this.x + (w / 6),
+            this.y + (h / 2),
+            w * 4/6,
+            h/2
         );
     }
 
@@ -179,6 +181,10 @@ class Ghost {
     draw(ctx) {
         //this.demoDraw(ctx);
         this.animations[this.state][this.type].drawFrame(this.game.clockTick, ctx, this.x, this.y, this.scale);
+        if (PARAMS.DEBUG && this.BB) {
+            ctx.strokeStyle = "red";
+            ctx.strokeRect(this.BB.x, this.BB.y, this.BB.width, this.BB.height);
+        }
     };
 
     demoDraw(ctx) {
