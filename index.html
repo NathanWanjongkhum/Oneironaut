@@ -7,6 +7,7 @@
   
     <script type="text/javascript" src="./background.js"></script>
     <script type="text/javascript" src="./assetmanager.js"></script>
+    <script type="text/javascript" src="./menuroomcontroller.js"></script>
     <script type="text/javascript" src="./timer.js"></script>
     <script type="text/javascript" src="./gameengine.js"></script>
     <script type="text/javascript" src="./boundingbox.js"></script>
@@ -49,18 +50,11 @@
 </head>
 
 <body>
-  <div class="stage">
-    <div class="frame">
-      <canvas id="gameWorld" width="1280" height="720"></canvas>
+    <div class="stage">
+        <div class="frame">
+            <canvas id="gameWorld" width="1280" height="720"></canvas>
+        </div>
     </div>
-  </div>
-
-  <script src="util.js"></script>
-  <script src="timer.js"></script>
-  <script src="assetmanager.js"></script>
-  <script src="gameengine.js"></script>
-  <script src="MenuRoomController.js"></script>
-  <script src="main.js"></script>
     <div>
         <br />
         <input type="checkbox" id="debug"> Debug <input type="checkbox" id="mute"> Mute <input type="range" id="volume" min="0" max="1" value="0.1" step="0.05"> Volume

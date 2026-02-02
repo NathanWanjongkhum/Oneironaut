@@ -1,3 +1,44 @@
+const gameEngine = new GameEngine();
+const ASSET_MANAGER = new AssetManager();
+
+ASSET_MANAGER.queueDownload("./DayDream.png");
+ASSET_MANAGER.queueDownload("./NightDream.png");
+ASSET_MANAGER.queueDownload("./DaydreamRoom.png");
+ASSET_MANAGER.queueDownload("./NightDreamRoom.png");
+ASSET_MANAGER.queueDownload("./newDream.png");
+
+ASSET_MANAGER.queueDownload("./assets/background/clouds7/1.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds7/2.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds7/3.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds7/4.png");
+ASSET_MANAGER.queueDownload("./assets/ghost1.png");
+ASSET_MANAGER.queueDownload("./assets/sleepyguy.png")
+
+ASSET_MANAGER.downloadAll(() => {
+
+	PARAMS.BLOCKWIDTH = PARAMS.BITWIDTH * PARAMS.SCALE;
+
+	const canvas = document.getElementById("gameWorld");
+	const ctx = canvas.getContext("2d");
+
+	PARAMS.CANVAS_WIDTH = canvas.width;
+	PARAMS.CANVAS_HEIGHT = canvas.height;
+
+	gameEngine.init(ctx);
+	gameEngine.start();
+
+	// Start music after any user interaction
+	canvas.addEventListener("pointerdown", tryStartMusic);
+
+});
+
+gameEngine.addEntity(new MenuRoomController(gameEngine));
+gameEngine.addEntity(new Ghost(gameEngine, 300, 400));
+gameEngine.addEntity(new SleepyGuy(gameEngine, 100, 100));
+gameEngine.addEntity(new WaypointBuilder(gameEngine));
+gameEngine.addEntity(new Background(gameEngine));//keep this as last entity!
+	
+
 // Music (starts on first click / tap)
 const MUSIC = {
   mode: "menu", // "menu" or "dream"
@@ -42,44 +83,3 @@ function tryStartMusic() {
     .then(() => (MUSIC.started = true))
     .catch(() => (MUSIC.started = false));
 }
-
-// ---- Asset loading ----
-const ASSET_MANAGER = new AssetManager();
-
-ASSET_MANAGER.queueDownload("./DayDream.png");
-ASSET_MANAGER.queueDownload("./NightDream.png");
-ASSET_MANAGER.queueDownload("./DaydreamRoom.png");
-ASSET_MANAGER.queueDownload("./NightDreamRoom.png");
-ASSET_MANAGER.queueDownload("./newDream.png");
-
-ASSET_MANAGER.queueDownload("./assets/background/clouds7/1.png");
-ASSET_MANAGER.queueDownload("./assets/background/clouds7/2.png");
-ASSET_MANAGER.queueDownload("./assets/background/clouds7/3.png");
-ASSET_MANAGER.queueDownload("./assets/background/clouds7/4.png");
-ASSET_MANAGER.queueDownload("./assets/ghost1.png");
-ASSET_MANAGER.queueDownload("./assets/sleepyguy.png")
-
-ASSET_MANAGER.downloadAll(() => {
-	PARAMS.BLOCKWIDTH = PARAMS.BITWIDTH * PARAMS.SCALE;
-
-  const canvas = document.getElementById("gameWorld");
-  const ctx = canvas.getContext("2d");
-
-	PARAMS.CANVAS_WIDTH = canvas.width;
-	PARAMS.CANVAS_HEIGHT = canvas.height;
-
-  const game = new GameEngine();
-  game.init(ctx);
-
-  game.addEntity(new MenuRoomController(game));
-
-  // Start music after any user interaction
-  canvas.addEventListener("pointerdown", tryStartMusic);
-
-  game.start();
-});
-
-gameEngine.addEntity(new Ghost(gameEngine, 300, 400));
-gameEngine.addEntity(new SleepyGuy(gameEngine, 100, 100));
-gameEngine.addEntity(new WaypointBuilder(gameEngine));
-gameEngine.addEntity(new Background(gameEngine));//keep this last!
