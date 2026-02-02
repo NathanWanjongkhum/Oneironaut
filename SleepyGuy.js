@@ -6,11 +6,12 @@ class SleepyGuy {
 
         this.game.sleepyGuy = this;
 
-        this.spritesheet = ASSET_MANAGER.getAsset("./assets/sleepyGuy.png");
+        this.spritesheet = ASSET_MANAGER.getAsset("./assets/sleepyguy.png");
 
-        this.width = 50;
-        this.height = 50;
+        this.width = 200;
+        this.height = 100;
         this.velocity = { x: 100, y: 100 };
+        this.scale = 0.2;
         this.scale = 0.5;
         this.BB = null;
 
@@ -18,7 +19,7 @@ class SleepyGuy {
         this.currentFrame = 0;
         this.dead = false;
 
-        this.targetWaypointIndex = null;
+        this.targetWaypointIndex = 0;
 
         this.animations = [];
         this.loadAnimations();
@@ -29,8 +30,8 @@ class SleepyGuy {
             this.animations.push([]);
         }
 
-        this.animations[0].push([]);//temp fix line
-        this.animations[0][0] = new Animator(this.spritesheet, 0, 0, 360, 210, 1, 1, 0, false, true);
+        //spritesheet, xStart, yStart, width, height, frameCount, frameDuration, framePadding, reverse, loop
+        this.animations[0][0] = new Animator(this.spritesheet, 0, 0, 442, 247, 5, 0.5, 0, true, true); // idle
     }
 
     update() {
@@ -48,41 +49,104 @@ class SleepyGuy {
         // Move along waypoints if they exist
         const waypoints = this.game.waypoints;
         if (waypoints && waypoints.length > 0) {
-            // Set target waypoint
-            this.target = waypoints[this.targetWaypointIndex || 0];
+            // Set target waypoint (use explicit index)
+            const targetIndex = this.targetWaypointIndex;
+            this.target = waypoints[targetIndex];
 
-            const dx = this.target.x - this.x;
-            const dy = this.target.y - this.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            const velocityLength = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y)
+            let dx = this.target.x - this.x;
+            let dy = this.target.y - this.y;
+            let distance = Math.sqrt(dx * dx + dy * dy);
+            const velocityLength = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y);
 
-            if (distance < velocityLength * TICK) {
-                if (this.targetWaypointIndex + 1 >= waypoints.length) {
-                    this.targetWaypointIndex = null; // Reached final waypoint
+            // Use remaining movement this frame
+            let remaining = velocityLength * TICK;
+            let currentIndex = targetIndex;
+
+            while (remaining > 0) {
+                // Recompute target and deltas for current index
+                this.target = waypoints[currentIndex];
+                dx = this.target.x - this.x;
+                dy = this.target.y - this.y;
+                distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance === 0) {
+                    // Exactly on the point so advance if possible, otherwise stop
+                    if (currentIndex + 1 < waypoints.length) {
+                        currentIndex++;
+                        this.targetWaypointIndex = currentIndex;
+                        continue;
+                    } else {
+                        this.targetWaypointIndex = currentIndex;
+                        break;
+                    }
+                }
+
+                if (distance <= remaining) {
+                    // Snap to this waypoint and consume movement, then try next
+                    this.x = this.target.x;
+                    this.y = this.target.y;
+                    remaining -= distance;
+
+                    if (currentIndex + 1 < waypoints.length) {
+                        currentIndex++;
+                        this.targetWaypointIndex = currentIndex;
+                        // loop to attempt to use leftover movement on next waypoint
+                        continue;
+                    } else {
+                        // Reached final waypoint
+                        this.targetWaypointIndex = currentIndex;
+                        break;
+                    }
                 } else {
-                    this.targetWaypointIndex++; // Move to next waypoint
+                    // Move part-way towards the current target and finish this frame
+                    const angle = Math.atan2(dy, dx);
+                    this.x += Math.cos(angle) * remaining;
+                    this.y += Math.sin(angle) * remaining;
+                    break;
                 }
             }
-
-            // Move to target waypoint
-            const angle = Math.atan2(dy, dx);
-            this.x += Math.cos(angle) * this.velocity.x * TICK;
-            this.y += Math.sin(angle) * this.velocity.y * TICK;
-            console.log("Target Waypoint:", this.target, "Current Position:", { x: this.x, y: this.y });
         }
-        this.updateBB();
     }
 
-    updateBB() {
-    this.BB = new BoundingBox(
-        this.x,
-        this.y,
-        this.width * this.scale,
-        this.height * this.scale
-    );
-}
-
     draw(ctx) {
+        const anim = this.animations[this.state][this.currentFrame];
+
+        // Advance animator time and preserve loop/finished behavior, then draw
+        anim.elapsedTime += this.game.clockTick;
+
+        if (anim.isDone()) {
+            if (anim.loop) {
+                anim.elapsedTime -= anim.totalTime;
+            } else {
+                return;
+            }
+        }
+
+        let frame = anim.currentFrame();
+        if (anim.reverse) frame = anim.frameCount - frame - 1;
+
+        // Preserves aspect ratio
+        const frameW = anim.width;
+        const frameH = anim.height;
+        const drawW = frameW * this.scale;
+        const drawH = frameH * this.scale;
+
+        // Draw centered on that point
+        const offsetX = this.x - drawW / 2;
+        const offsetY = this.y - drawH / 2;
+
+        if (this.game.options.debugging) {
+            ctx.fillStyle = 'black';
+            ctx.fillRect(offsetX, offsetY, drawW, drawH); // debug box
+        }
+
+        console.log(anim.height, this.scale, drawH, offsetY);
+        
+        ctx.drawImage(anim.spritesheet,
+            anim.xStart + frame * (anim.width + anim.framePadding), anim.yStart,
+            frameW, frameH,
+            offsetX, offsetY,
+            drawW, drawH);
         // ctx.fillStyle = "Blue";
         // ctx.fillRect(this.x, this.y, this.width, this.height);
 

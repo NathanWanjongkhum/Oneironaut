@@ -8,6 +8,7 @@ ASSET_MANAGER.queueDownload("./assets/background/clouds7/3.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/4.png");
 ASSET_MANAGER.queueDownload("./assets/sleepyGuy.png");
 ASSET_MANAGER.queueDownload("./assets/ghost1.png");
+ASSET_MANAGER.queueDownload("./assets/sleepyguy.png")
 
 ASSET_MANAGER.downloadAll(() => {
 	PARAMS.BLOCKWIDTH = PARAMS.BITWIDTH * PARAMS.SCALE;

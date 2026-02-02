@@ -21,7 +21,7 @@ class GameEngine {
             debugging: false,
         };
 
-        this.inLevel = false;
+        this.inLevel = true;
     };
 
     init(ctx) {
