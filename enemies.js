@@ -163,11 +163,6 @@ class Ghost {
     };
 
 
-    updateBB() {
-        this.lastBB = this.BB;
-        this.BB = new BoundingBox(this.x, this.y, PARAMS.BLOCKWIDTH, PARAMS.BLOCKWIDTH);
-    };
-
     draw(ctx) {
         //this.demoDraw(ctx);
         this.animations[this.state][this.type].drawFrame(this.game.clockTick, ctx, this.x, this.y, this.scale);

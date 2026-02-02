@@ -8,7 +8,8 @@ class GameEngine {
         this.mouse = null;
         this.wheel = null;
         this.keys = {};
-        this.gameover = false;
+        this.gameOver = false;
+        this.gameWon = false;
         this.clockTick = 0;
         this.timer = new Timer();
 
