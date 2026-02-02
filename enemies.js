@@ -144,6 +144,13 @@ class Ghost {
                 // else if (ent instanceof Enemy)
             }
         }
+
+
+        //TODO: Add this later on (after prototype stage)
+        // if (this.dead) {
+        //     this.deadCounter += this.game.clockTick;
+        //     if (this.deadCounter > 0.5) this.removeFromWorld = true; //death animation
+        // }
     
     };
 

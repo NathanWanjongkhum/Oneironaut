@@ -32,9 +32,30 @@ class MenuRoomController {
     this.showCredits = false;
     this.creditsPanelRect = { x: 0, y: 0, w: 0, h: 0 };
     this.creditsCloseRect = { x: 0, y: 0, w: 44, h: 44 };
+
+
+    //Janky fix to exit menu for prototype stage
+    this.dead = false;
+    this.deadCounter = 0;
   }
 
   update() {
+
+
+    //Janky fix to exit menu for prototype stage
+    if(this.dead) {
+      this.deadCounter += this.game.clockTick;
+    }
+    if (this.deadCounter > 3) {
+      // gameEngine.addEntity(new Ghost(gameEngine, 300, 400));
+      // gameEngine.addEntity(new Bed(gameEngine, 700, 300));
+      // gameEngine.addEntity(new SleepyGuy(gameEngine, 100, 100));
+      // gameEngine.addEntity(new WaypointBuilder(gameEngine));
+      // gameEngine.addEntity(new Background(gameEngine));//keep this as last entity!
+      this.removeFromWorld = true;
+    }
+
+
     const cw = this.game.ctx.canvas.width;
     const ch = this.game.ctx.canvas.height;
 
@@ -262,6 +283,11 @@ class MenuRoomController {
         if (window.setMusicMode) window.setMusicMode("dream"); // Lucid Journey
         this.showHelp = false;
         this.showCredits = false;
+
+        //Janky fix to exit menu for prototype stage
+        this.dead = true;
+        this.deadCounter += this.game.clockTick;
+
         return;
       }
 

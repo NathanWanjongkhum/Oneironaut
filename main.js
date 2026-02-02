@@ -28,7 +28,6 @@ ASSET_MANAGER.downloadAll(() => {
 	gameEngine.init(ctx);
 	gameEngine.start();
 
-
 	gameEngine.addEntity(new Ghost(gameEngine, 300, 400));
 	gameEngine.addEntity(new Bed(gameEngine, 700, 300));
 	gameEngine.addEntity(new SleepyGuy(gameEngine, 100, 100));
