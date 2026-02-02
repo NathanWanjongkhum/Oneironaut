@@ -52,9 +52,21 @@ ASSET_MANAGER.queueDownload("./DaydreamRoom.png");
 ASSET_MANAGER.queueDownload("./NightDreamRoom.png");
 ASSET_MANAGER.queueDownload("./newDream.png");
 
+ASSET_MANAGER.queueDownload("./assets/background/clouds7/1.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds7/2.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds7/3.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds7/4.png");
+ASSET_MANAGER.queueDownload("./assets/ghost1.png");
+ASSET_MANAGER.queueDownload("./assets/sleepyguy.png")
+
 ASSET_MANAGER.downloadAll(() => {
-  const canvas = document.getElementById("game");
+	PARAMS.BLOCKWIDTH = PARAMS.BITWIDTH * PARAMS.SCALE;
+
+  const canvas = document.getElementById("gameWorld");
   const ctx = canvas.getContext("2d");
+
+	PARAMS.CANVAS_WIDTH = canvas.width;
+	PARAMS.CANVAS_HEIGHT = canvas.height;
 
   const game = new GameEngine();
   game.init(ctx);
@@ -66,3 +78,8 @@ ASSET_MANAGER.downloadAll(() => {
 
   game.start();
 });
+
+gameEngine.addEntity(new Ghost(gameEngine, 300, 400));
+gameEngine.addEntity(new SleepyGuy(gameEngine, 100, 100));
+gameEngine.addEntity(new WaypointBuilder(gameEngine));
+gameEngine.addEntity(new Background(gameEngine));//keep this last!

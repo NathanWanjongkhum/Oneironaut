@@ -1,15 +1,25 @@
 class GameEngine {
   constructor() {
-    this.entities = [];
+
     this.ctx = null;
+    this.entities = [];
 
     this.click = null;
     this.mouse = null;
     this.wheel = null;
     this.keys = {};
-
+    this.gameover = false;
     this.clockTick = 0;
     this.timer = new Timer();
+
+    // Options and the Details
+    this.options = options || {
+        debugging: false,
+    };
+    this.inLevel = true;
+    
+    };
+    
   }
 
   init(ctx) {
