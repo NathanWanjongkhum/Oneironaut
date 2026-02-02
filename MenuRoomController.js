@@ -355,17 +355,17 @@ class MenuRoomController {
   getBackground() {
     if (this.scene === "menu") {
       return this.theme === "night"
-        ? ASSET_MANAGER.getAsset("./NightDream.png")
-        : ASSET_MANAGER.getAsset("./DayDream.png");
+        ? ASSET_MANAGER.getAsset("./assets/background/menu/NightDream.png")
+        : ASSET_MANAGER.getAsset("./assets/background/menu/DayDream.png");
     }
 
     if (this.scene === "room") {
       return this.theme === "night"
-        ? ASSET_MANAGER.getAsset("./NightDreamRoom.png")
-        : ASSET_MANAGER.getAsset("./DaydreamRoom.png");
+        ? ASSET_MANAGER.getAsset("./assets/background/menu/NightDreamRoom.png")
+        : ASSET_MANAGER.getAsset("./assets/background/menu/DaydreamRoom.png");
     }
 
-    return ASSET_MANAGER.getAsset("./newDream.png");
+    return ASSET_MANAGER.getAsset("./assets/background/menu/newDream.png");
   }
 
   // Helpers
