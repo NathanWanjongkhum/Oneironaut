@@ -11,8 +11,7 @@ class SleepyGuy {
         this.width = 200;
         this.height = 100;
         this.velocity = { x: 100, y: 100 };
-        this.scale = 0.2;
-        this.scale = 0.5;
+        this.scale = 0.3;
         this.BB = null;
 
         this.state = 0; // 0: idle, 1: damaged
@@ -106,6 +105,16 @@ class SleepyGuy {
                 }
             }
         }
+        this.updateBB();
+    }
+
+    updateBB() {
+        this.BB = new BoundingBox(
+            this.x,
+            this.y,
+            this.width * this.scale,
+            this.height * this.scale
+        );
     }
 
     draw(ctx) {
@@ -154,6 +163,5 @@ class SleepyGuy {
             ctx.strokeStyle = "red";
             ctx.strokeRect(this.BB.x, this.BB.y, this.BB.width, this.BB.height);
         }
-        this.animations[this.state][this.currentFrame].drawFrame(this.game.clockTick, ctx, this.x, this.y, this.scale);
     }
 }
