@@ -5,13 +5,17 @@ class Ghost {
         this.spritesheet2 = ASSET_MANAGER.getAsset("./assets/ghost1.png");
         this.spritesheet3 = ASSET_MANAGER.getAsset("./assets/ghost1.png");
         
-        this.x = 0;
-        this.y = 10;
+        this.x = 50;
+        this.y = 200;
+        this.radius = 100;
+        this.visualRadius = 1000;
         this.velocity = { x: 0, y: 0 };
-        this.scale = 2;
+        this.acceleration = 10000;
+        this.scale = 1.5;
         this.state = 0;
         this.type = 0;
         this.facing = { x: 0, y: 0 };
+        this.BB = null;
         this.dead = false;
 
         this.animations = [];
@@ -62,24 +66,81 @@ class Ghost {
     }
 
     update() {
+        //move -> BB update -> collision check
         if(this.facing.x === 0) {
             this.x += this.velocity.x * this.game.clockTick;
         } else {
             this.x -= this.velocity.x * this.game.clockTick;
         }
         if(this.facing.y === 0) {
-            this.y += this.velocity.x * this.game.clockTick;
+            this.y += this.velocity.y * this.game.clockTick;
         } else {
-            this.y -= this.velocity.x * this.game.clockTick;
+            this.y -= this.velocity.y * this.game.clockTick;
         }
         if(this.x > 1024) this.x = -100;
         if(this.x < -100) this.x = 1024;
         if(this.y > 325) this.y = 325;
+
+        if (this.velocity.x + this.velocity.y > 100) {
+            this.state = 2; //running
+        } else if (this.velocity.x + this.velocity.y > 50) {
+            this.state = 1; //walking
+        } else {
+            this.state = 0; //idle
+        }
+
+        this.updateBB();
+
+        for (var i = 0; i < this.game.entities.length; i++) {
+            var ent = this.game.entities[i];
+            if (ent !== this && this.collide(ent)) { //collision
+                var dist = getDistance(this, ent);
+                if(ent instanceof SleepyGuy) {
+                    this.state = 3; //attack
+                }
+                
+            }
+
+            if (ent != this && this.collide({ x: ent.x, y: ent.y, radius: this.visualRadius })) {
+                var dist = getDistance(this, ent);
+                if(ent instanceof SleepyGuy) {//check this code!!!TODO
+                    var difX = (ent.x - this.x) / dist;
+                    var difY = (ent.y - this.y) / dist;
+                    this.velocity.x += difX * this.acceleration / (dist * dist);
+                    this.velocity.y += difY * this.acceleration / (dist * dist);
+                }
+            }
+        }
+
+        
+
+    
+    };
+
+    updateBB() {
+        this.lastBB = this.BB;
+        this.BB = new BoundingBox(
+            this.x,
+            this.y,
+            128 * this.scale, //128 = sprite pixel size
+            128 * this.scale
+        );
+    }
+
+
+    collide(other) {
+        return getDistance(this, other) < this.radius + other.radius;
+    };
+
+
+    updateBB() {
+        this.lastBB = this.BB;
+        this.BB = new BoundingBox(this.x, this.y, PARAMS.BLOCKWIDTH, PARAMS.BLOCKWIDTH);
     };
 
     draw(ctx) {
-        this.demoDraw(ctx);
-        //this.animations[this.state][this.type].drawFrame(this.game.clockTick, ctx, this.x, this.y, this.scale);
+        //this.demoDraw(ctx);
+        this.animations[this.state][this.type].drawFrame(this.game.clockTick, ctx, this.x, this.y, this.scale);
     };
 
     demoDraw(ctx) {

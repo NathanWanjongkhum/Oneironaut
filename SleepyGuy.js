@@ -6,14 +6,17 @@ class SleepyGuy {
 
         this.game.sleepyGuy = this;
 
-        // this.spritesheet = ASSET_MANAGER.getAsset("./assets/Knight_1/Idle.png");
+        this.spritesheet = ASSET_MANAGER.getAsset("./assets/sleepyGuy.png");
 
         this.width = 50;
         this.height = 50;
         this.velocity = { x: 100, y: 100 };
+        this.scale = 0.5;
+        this.BB = null;
 
         this.state = 0; // 0: idle, 1: damaged
         this.currentFrame = 0;
+        this.dead = false;
 
         this.targetWaypointIndex = null;
 
@@ -26,10 +29,14 @@ class SleepyGuy {
             this.animations.push([]);
         }
 
-        // this.animations[0][0] = new Animator(this.spritesheet, 0, 0, 128, 128, 4, 0.5, 0, false, true);
+        this.animations[0].push([]);//temp fix line
+        this.animations[0][0] = new Animator(this.spritesheet, 0, 0, 360, 210, 1, 1, 0, false, true);
     }
 
     update() {
+
+        if (this.dead) return;
+        
         const TICK = this.game.clockTick;
 
         // Move along waypoints if they exist
@@ -57,12 +64,26 @@ class SleepyGuy {
             this.y += Math.sin(angle) * this.velocity.y * TICK;
             console.log("Target Waypoint:", this.target, "Current Position:", { x: this.x, y: this.y });
         }
+        this.updateBB();
     }
 
-    draw(ctx) {
-        ctx.fillStyle = "Blue";
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+    updateBB() {
+    this.BB = new BoundingBox(
+        this.x,
+        this.y,
+        this.width * this.scale,
+        this.height * this.scale
+    );
+}
 
-        // this.animations[this.state][this.currentFrame].drawFrame(this.game.clockTick, ctx, this.x, this.y, 1);
+    draw(ctx) {
+        // ctx.fillStyle = "Blue";
+        // ctx.fillRect(this.x, this.y, this.width, this.height);
+
+        if (PARAMS.DEBUG && this.BB) {
+            ctx.strokeStyle = "red";
+            ctx.strokeRect(this.BB.x, this.BB.y, this.BB.width, this.BB.height);
+        }
+        this.animations[this.state][this.currentFrame].drawFrame(this.game.clockTick, ctx, this.x, this.y, this.scale);
     }
 }
