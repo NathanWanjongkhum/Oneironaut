@@ -12,6 +12,7 @@ class GameEngine {
         this.gameWon = false;
         this.clockTick = 0;
         this.timer = new Timer();
+        this.mode = "menu"; //"menu" || "gameplay"
 
         // Options and the Details
         this.options = options || {

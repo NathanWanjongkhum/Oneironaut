@@ -35,6 +35,7 @@ class SleepyGuy {
     }
 
     update() {
+        if (this.game.mode !== "gameplay") return;
         const TICK = this.game.clockTick;
         if (this.dead) {
             this.attackTimer += TICK;
@@ -148,9 +149,10 @@ class SleepyGuy {
         if (this.game.options.debugging) {
             ctx.fillStyle = 'black';
             ctx.fillRect(offsetX, offsetY, drawW, drawH); // debug box
+            console.log(anim.height, this.scale, drawH, offsetY);
         }
 
-        console.log(anim.height, this.scale, drawH, offsetY);
+        
         
         ctx.drawImage(anim.spritesheet,
             anim.xStart + frame * (anim.width + anim.framePadding), anim.yStart,

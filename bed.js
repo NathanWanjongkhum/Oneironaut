@@ -7,7 +7,7 @@ class Bed {
         this.x = positionX;
         this.y = postionY;
         this.radius = 100;
-        this.scale = 0.5;
+        this.scale = 0.2;
         this.BB = null;
 
         this.animations = [];
@@ -24,6 +24,7 @@ class Bed {
     }
 
     update() {
+        if (this.game.mode !== "gameplay") return;
         //TODO: this should be handled in sleepy guy, this is just a temp setup for prototype
 
         //Collision

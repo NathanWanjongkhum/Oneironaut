@@ -47,11 +47,7 @@ class MenuRoomController {
       this.deadCounter += this.game.clockTick;
     }
     if (this.deadCounter > 3) {
-      // gameEngine.addEntity(new Ghost(gameEngine, 300, 400));
-      // gameEngine.addEntity(new Bed(gameEngine, 700, 300));
-      // gameEngine.addEntity(new SleepyGuy(gameEngine, 100, 100));
-      // gameEngine.addEntity(new WaypointBuilder(gameEngine));
-      // gameEngine.addEntity(new Background(gameEngine));//keep this as last entity!
+      this.game.mode = "gameplay";
       this.removeFromWorld = true;
     }
 
@@ -274,6 +270,8 @@ class MenuRoomController {
     // 6. Room buttons
     if (this.scene === "room") {
       if (this.pointInRect(x, y, this.backRect)) {
+        this.dead = false;
+        this.deadCounter = 0;
         this.transitionTo("menu");
         return;
       }

@@ -28,11 +28,12 @@ ASSET_MANAGER.downloadAll(() => {
 	gameEngine.init(ctx);
 	gameEngine.start();
 
+	gameEngine.addEntity(new Background(gameEngine));//keep this as first entity added!
 	gameEngine.addEntity(new Ghost(gameEngine, 300, 400));
 	gameEngine.addEntity(new Bed(gameEngine, 700, 300));
 	gameEngine.addEntity(new SleepyGuy(gameEngine, 100, 100));
 	gameEngine.addEntity(new WaypointBuilder(gameEngine));
-	gameEngine.addEntity(new Background(gameEngine));//keep this as last entity!
+
 	gameEngine.addEntity(new MenuRoomController(gameEngine));
 	
 
@@ -42,7 +43,7 @@ ASSET_MANAGER.downloadAll(() => {
 });
 
 
-//TODO This belongs in its own file/controller. Main should not have this music handling!
+//TODO: This belongs in its own file/controller. Main should not have this music handling!
 // Music (starts on first click / tap)
 const MUSIC = {
   mode: "menu", // "menu" or "dream"

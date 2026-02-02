@@ -40,6 +40,7 @@ class WaypointBuilder {
     }
 
     update() {
+        if (this.game.mode !== "gameplay" || this.game.gameOver) return;
         // Add waypoint on click
         if (gameEngine.click) {
             this.addPoint(gameEngine.click.x, gameEngine.click.y);

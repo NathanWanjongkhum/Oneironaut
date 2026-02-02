@@ -67,6 +67,7 @@ class Ghost {
     }
 
     update() {
+        if (this.game.mode !== "gameplay") return;
         if (this.dead) return;
 
         const TICK = this.game.clockTick;
