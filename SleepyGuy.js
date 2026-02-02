@@ -17,6 +17,7 @@ class SleepyGuy {
         this.state = 0; // 0: idle, 1: damaged
         this.currentFrame = 0;
         this.dead = false;
+        this.attackTimer = 0;
 
         this.targetWaypointIndex = 0;
 
@@ -34,18 +35,16 @@ class SleepyGuy {
     }
 
     update() {
-
-
         const TICK = this.game.clockTick;
-
         if (this.dead) {
             this.attackTimer += TICK;
             if (this.attackTimer > 1) {
                 this.game.gameOver = true;
             }
+            this.updateBB();
             return;
+
         }
-        
 
         // Move along waypoints if they exist
         const waypoints = this.game.waypoints;

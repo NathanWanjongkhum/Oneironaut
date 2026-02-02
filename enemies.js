@@ -71,7 +71,7 @@ class Ghost {
 
         const TICK = this.game.clockTick;
 
-        if(this.state === 3 || this.game.gameover) {
+        if(this.state === 3 || this.game.gameOver) {
             return;
         }
 
@@ -139,6 +139,8 @@ class Ghost {
                     this.velocity.x = 0;
                     this.velocity.y = 0;
                     ent.dead = true;
+                    this.game.gameOver = true; 
+                    return; 
                 }
                 // else if (ent instanceof Wall)
                 // else if (ent instanceof Enemy)
@@ -146,6 +148,7 @@ class Ghost {
         }
     
     };
+    
 
     updateBB() {
         this.lastBB = this.BB;
@@ -162,6 +165,8 @@ class Ghost {
         return getDistance(this, other) < this.radius + other.radius;
     };
 
+
+    
 
     draw(ctx) {
         //this.demoDraw(ctx);
