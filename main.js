@@ -6,8 +6,8 @@ ASSET_MANAGER.queueDownload("./assets/background/clouds7/1.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/2.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/3.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/4.png");
-ASSET_MANAGER.queueDownload("./assets/ghost1.png");
 ASSET_MANAGER.queueDownload("./assets/sleepyGuy.png");
+ASSET_MANAGER.queueDownload("./assets/ghost1.png");
 
 ASSET_MANAGER.downloadAll(() => {
 	PARAMS.BLOCKWIDTH = PARAMS.BITWIDTH * PARAMS.SCALE;
@@ -23,7 +23,7 @@ ASSET_MANAGER.downloadAll(() => {
 	gameEngine.start();
 });
 
+gameEngine.addEntity(new Ghost(gameEngine, 300, 400));
 gameEngine.addEntity(new SleepyGuy(gameEngine, 100, 100));
-gameEngine.addEntity(new Ghost(gameEngine));
 gameEngine.addEntity(new WaypointBuilder(gameEngine));
 gameEngine.addEntity(new Background(gameEngine));//keep this last!

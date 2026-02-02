@@ -1,12 +1,12 @@
 class Ghost {
-    constructor(game) {
+    constructor(game, positionX, postionY) {
         this.game = game;
         this.spritesheet1 = ASSET_MANAGER.getAsset("./assets/ghost1.png");
         this.spritesheet2 = ASSET_MANAGER.getAsset("./assets/ghost1.png");
         this.spritesheet3 = ASSET_MANAGER.getAsset("./assets/ghost1.png");
         
-        this.x = 100;
-        this.y = 400;
+        this.x = positionX;
+        this.y = postionY;
         this.radius = 100;
         this.visualRadius = 300;
         this.velocity = { x: 0, y: 0 };
@@ -69,18 +69,25 @@ class Ghost {
 
         const TICK = this.game.clockTick;
 
+        if(this.state === 3 || this.game.gameover) {
+            return;
+        }
+
         //Reset movement each frame
         this.velocity.x = 0;
         this.velocity.y = 0;
+        
+        //TODO remove repeated loops, add a direct reference to SleepyGuy entity
 
         //Detection and collision checks
-        for (var i = 0; i < this.game.entities.length; i++) {
-            var ent = this.game.entities[i];
+        for(var i = 0; i < this.game.entities.length; i++) {
+            let ent = this.game.entities[i];
 
-            if (ent === this || ent.dead) continue;
+            if(ent === this || ent.dead) continue;
 
             //Detection
-            if (ent instanceof SleepyGuy) {
+            if(ent instanceof SleepyGuy) {
+                if (!ent.BB) ent.updateBB();
                 const thisCX = this.x + (128 * this.scale) / 2;
                 const thisCY = this.y + (128 * this.scale) / 2;
                 const entCX = ent.x + ent.BB.width / 2;
@@ -90,6 +97,7 @@ class Ghost {
                 const dy = entCY - thisCY;
                 const dist = getDistance({ x: thisCX, y: thisCY}, { x: entCX, y: entCY});
 
+                if(dist === 0) continue;
                 const nx = dx / dist;
                 const ny = dy / dist;
                 let speed = 0;
@@ -118,13 +126,13 @@ class Ghost {
         this.updateBB();
 
         //Collision
-        for (var i = 0; i < this.game.entities.length; i++) {
-            var ent = this.game.entities[i];
+        for(var i = 0; i < this.game.entities.length; i++) {
+            let ent = this.game.entities[i];
 
-            if (ent === this || ent.dead || !ent.BB) continue;
+            if(ent === this || ((ent.dead || !ent.BB) && !(ent instanceof SleepyGuy))) continue;
 
-            if (this.BB.collide(ent.BB)) {//swap the ordering of these if clauses??
-                if (ent instanceof SleepyGuy) {
+            if(this.BB.collide(ent.BB)) {//swap the ordering of these if clauses??
+                if(ent instanceof SleepyGuy) {
                     this.state = 3; // attack
                     this.velocity.x = 0;
                     this.velocity.y = 0;
