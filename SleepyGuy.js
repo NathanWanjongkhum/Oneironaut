@@ -6,7 +6,7 @@ class SleepyGuy {
 
         this.game.sleepyGuy = this;
 
-        this.spritesheet = ASSET_MANAGER.getAsset("./assets/sleepyguy.png");
+        this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/sleepyguy.png");
 
         this.width = 200;
         this.height = 100;

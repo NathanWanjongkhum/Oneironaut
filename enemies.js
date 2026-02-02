@@ -1,9 +1,10 @@
 class Ghost {
     constructor(game, positionX, postionY) {
         this.game = game;
-        this.spritesheet1 = ASSET_MANAGER.getAsset("./assets/ghost1.png");
-        this.spritesheet2 = ASSET_MANAGER.getAsset("./assets/ghost1.png");
-        this.spritesheet3 = ASSET_MANAGER.getAsset("./assets/ghost1.png");
+        this.spritesheet1 = ASSET_MANAGER.getAsset("./assets/entities/ghost1.png");
+        this.spritesheet2 = ASSET_MANAGER.getAsset("./assets/entities/ghost1.png");
+        this.spritesheet3 = ASSET_MANAGER.getAsset("./assets/entities/ghost1.png");
+
         
         this.x = positionX;
         this.y = postionY;
@@ -28,6 +29,7 @@ class Ghost {
                 this.animations.push([]);
             }
         }
+
 
         //spritesheet, xStart, yStart, width, height, frameCount, frameDuration, framePadding, reverse, loop
         this.animations[0][0] = new Animator(this.spritesheet1, 0, 0, 128, 128, 5, 0.3, 0, 0, 1); //idle
