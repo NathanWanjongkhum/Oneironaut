@@ -23,7 +23,7 @@ ASSET_MANAGER.downloadAll(() => {
 	gameEngine.start();
 });
 
-gameEngine.addEntity(new SleepyGuy(gameEngine, 100, 100));
 gameEngine.addEntity(new Ghost(gameEngine, 300, 400));
+gameEngine.addEntity(new SleepyGuy(gameEngine, 100, 100));
 gameEngine.addEntity(new WaypointBuilder(gameEngine));
 gameEngine.addEntity(new Background(gameEngine));//keep this last!
