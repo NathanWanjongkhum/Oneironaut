@@ -1,18 +1,18 @@
 const gameEngine = new GameEngine();
 const ASSET_MANAGER = new AssetManager();
 
-ASSET_MANAGER.queueDownload("./DayDream.png");
-ASSET_MANAGER.queueDownload("./NightDream.png");
-ASSET_MANAGER.queueDownload("./DaydreamRoom.png");
-ASSET_MANAGER.queueDownload("./NightDreamRoom.png");
-ASSET_MANAGER.queueDownload("./newDream.png");
+ASSET_MANAGER.queueDownload("./assets/background/menu/DayDream.png");
+ASSET_MANAGER.queueDownload("./assets/background/menu/NightDream.png");
+ASSET_MANAGER.queueDownload("./assets/background/menu/DaydreamRoom.png");
+ASSET_MANAGER.queueDownload("./assets/background/menu/NightDreamRoom.png");
+ASSET_MANAGER.queueDownload("./assets/background/menu/newDream.png");
 
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/1.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/2.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/3.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/4.png");
-ASSET_MANAGER.queueDownload("./assets/ghost1.png");
-ASSET_MANAGER.queueDownload("./assets/sleepyguy.png")
+ASSET_MANAGER.queueDownload("./assets/entities/ghost1.png");
+ASSET_MANAGER.queueDownload("./assets/entities/sleepyguy.png")
 
 ASSET_MANAGER.downloadAll(() => {
 
@@ -46,8 +46,8 @@ const MUSIC = {
   mode: "menu", // "menu" or "dream"
   started: false,
   tracks: {
-    menu: new Audio("./Oneironaut.mp3"),
-    dream: new Audio("./Lucid_Journey.mp3"),
+    menu: new Audio("./assets/music/Oneironaut.mp3"),
+    dream: new Audio("./assets/music/Lucid_Journey.mp3"),
   },
 };
 
