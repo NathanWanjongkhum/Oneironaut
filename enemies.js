@@ -5,12 +5,11 @@ class Ghost {
         this.spritesheet2 = ASSET_MANAGER.getAsset("./assets/ghost1.png");
         this.spritesheet3 = ASSET_MANAGER.getAsset("./assets/ghost1.png");
         
-        this.x = 50;
-        this.y = 200;
+        this.x = 100;
+        this.y = 400;
         this.radius = 100;
-        this.visualRadius = 1000;
+        this.visualRadius = 300;
         this.velocity = { x: 0, y: 0 };
-        this.acceleration = 10000;
         this.scale = 1.5;
         this.state = 0;
         this.type = 0;
@@ -66,54 +65,75 @@ class Ghost {
     }
 
     update() {
-        //move -> BB update -> collision check
-        if(this.facing.x === 0) {
-            this.x += this.velocity.x * this.game.clockTick;
-        } else {
-            this.x -= this.velocity.x * this.game.clockTick;
-        }
-        if(this.facing.y === 0) {
-            this.y += this.velocity.y * this.game.clockTick;
-        } else {
-            this.y -= this.velocity.y * this.game.clockTick;
-        }
-        if(this.x > 1024) this.x = -100;
-        if(this.x < -100) this.x = 1024;
-        if(this.y > 325) this.y = 325;
+        if (this.dead) return;
 
-        if (this.velocity.x + this.velocity.y > 100) {
-            this.state = 2; //running
-        } else if (this.velocity.x + this.velocity.y > 50) {
-            this.state = 1; //walking
-        } else {
-            this.state = 0; //idle
+        const TICK = this.game.clockTick;
+
+        //Reset movement each frame
+        this.velocity.x = 0;
+        this.velocity.y = 0;
+
+        //Detection and collision checks
+        for (var i = 0; i < this.game.entities.length; i++) {
+            var ent = this.game.entities[i];
+
+            if (ent === this || ent.dead) continue;
+
+            //Detection
+            if (ent instanceof SleepyGuy) {
+                const thisCX = this.x + (128 * this.scale) / 2;
+                const thisCY = this.y + (128 * this.scale) / 2;
+                const entCX = ent.x + ent.BB.width / 2;
+                const entCY = ent.y + ent.BB.height / 2;
+
+                const dx = entCX - thisCX;
+                const dy = entCY - thisCY;
+                const dist = getDistance({ x: thisCX, y: thisCY}, { x: entCX, y: entCY});
+
+                const nx = dx / dist;
+                const ny = dy / dist;
+                let speed = 0;
+
+                if (dist < this.visualRadius) {
+                    if (dist < 200) {
+                        speed = 120;//running
+                        this.state = 2;
+                    } else {
+                        speed = 80;//walking
+                        this.state = 1;
+                    }
+                } else {
+                    speed = 0;//idle
+                    this.state = 0;
+                }
+                this.velocity.x = nx * speed;
+                this.velocity.y = ny * speed;
+
+            }
         }
+
+        this.x += this.velocity.x * TICK;
+        this.y += this.velocity.y * TICK;
 
         this.updateBB();
 
+        //Collision
         for (var i = 0; i < this.game.entities.length; i++) {
             var ent = this.game.entities[i];
-            if (ent !== this && this.collide(ent)) { //collision
-                var dist = getDistance(this, ent);
-                if(ent instanceof SleepyGuy) {
-                    this.state = 3; //attack
-                }
-                
-            }
 
-            if (ent != this && this.collide({ x: ent.x, y: ent.y, radius: this.visualRadius })) {
-                var dist = getDistance(this, ent);
-                if(ent instanceof SleepyGuy) {//check this code!!!TODO
-                    var difX = (ent.x - this.x) / dist;
-                    var difY = (ent.y - this.y) / dist;
-                    this.velocity.x += difX * this.acceleration / (dist * dist);
-                    this.velocity.y += difY * this.acceleration / (dist * dist);
+            if (ent === this || ent.dead || !ent.BB) continue;
+
+            if (this.BB.collide(ent.BB)) {//swap the ordering of these if clauses??
+                if (ent instanceof SleepyGuy) {
+                    this.state = 3; // attack
+                    this.velocity.x = 0;
+                    this.velocity.y = 0;
+                    ent.dead = true;
                 }
+                // else if (ent instanceof Wall)
+                // else if (ent instanceof Enemy)
             }
         }
-
-        
-
     
     };
 

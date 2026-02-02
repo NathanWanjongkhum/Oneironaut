@@ -35,7 +35,13 @@ class SleepyGuy {
 
     update() {
 
-        if (this.dead) return;
+        if (this.dead) {
+            this.attackTimer += TICK;
+            if (this.attackTimer > 1) {
+                this.game.gameOver = true;
+            }
+            return;
+        }
         
         const TICK = this.game.clockTick;
 
