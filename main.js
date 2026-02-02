@@ -35,6 +35,7 @@ ASSET_MANAGER.downloadAll(() => {
 	gameEngine.addEntity(new WaypointBuilder(gameEngine));
 	gameEngine.addEntity(new Background(gameEngine));//keep this as last entity!
 	gameEngine.addEntity(new MenuRoomController(gameEngine));
+	
 
 	// Start music after any user interaction
 	canvas.addEventListener("pointerdown", tryStartMusic);

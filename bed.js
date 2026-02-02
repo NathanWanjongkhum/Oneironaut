@@ -28,14 +28,12 @@ class Bed {
 
         //Collision
         for(var i = 0; i < this.game.entities.length; i++) {
-            if(!(this.game.entities[i] instanceof SleepyGuy)) continue;
+            if(!(this.game.entities[i] instanceof SleepyGuy)) continue; //if not sleepy guy ignore
 
-            if(this.BB.collide(ent.BB)) {
-                if(ent instanceof SleepyGuy) {
-                    //Win condition
-                    this.game.gameWon = true;
-                    this.game.gameOver = true;
-                }
+            if(this.BB.collide(this.game.entities[i].BB)) {
+                //Win condition
+                this.game.gameWon = true;
+                this.game.gameOver = true;
             }
         }
     

@@ -35,6 +35,9 @@ class SleepyGuy {
 
     update() {
 
+
+        const TICK = this.game.clockTick;
+
         if (this.dead) {
             this.attackTimer += TICK;
             if (this.attackTimer > 1) {
@@ -43,7 +46,6 @@ class SleepyGuy {
             return;
         }
         
-        const TICK = this.game.clockTick;
 
         // Move along waypoints if they exist
         const waypoints = this.game.waypoints;
