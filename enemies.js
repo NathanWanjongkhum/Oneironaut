@@ -194,19 +194,10 @@ class Sheep {
         this.state = 4; // 0: left, 1: right, 2: panicking left, 3: panicking right, 4: idle
         this.facing = true; //true = right, false = left
         this.BB = null;
-        // this.alertBB = null;
 
         this.animations = [];
         this.loadAnimations();
         this.updateBB();
-    }
-
-    panic(isPanicking) {
-        if (isPanicking) {
-            this.state = this.facing ? 3 : 2;
-        } else {
-            this.state = 4; // idle
-        }
     }
 
     draw(ctx) {
@@ -221,6 +212,70 @@ class Sheep {
         }
     }
 
+    update() {
+        if (this.game.mode !== "gameplay") return;
+        if (this.dead) return;
+
+        const TICK = this.game.clockTick;
+
+        if (this.game.gameOver) {
+            return;
+        }
+
+        // Reset movement each frame
+        this.velocity.x = 0;
+        this.velocity.y = 0;
+
+        // Direct reference to SleepyGuy
+        const ent = this.game.sleepyGuy;
+
+        if (ent && !ent.dead) {
+            if (!ent.BB) ent.updateBB();
+
+            const thisCX = this.x + (this.SPRITE_WIDTH * this.scale) / 2;
+            const thisCY = this.y + (this.SPRITE_HEIGHT * this.scale) / 2;
+
+            // SleepyGuy treats x,y as center
+            const entCX = ent.x;
+            const entCY = ent.y;
+
+            const dx = entCX - thisCX;
+            const dy = entCY - thisCY;
+            const dist = getDistance({ x: thisCX, y: thisCY }, { x: entCX, y: entCY });
+
+            if (dist !== 0) {
+                const nx = dx / dist;
+                let speed = 0;
+
+                if (dist < this.alertRadius) {
+                    speed = 150;
+
+                    // Run away
+                    this.velocity.x = -nx * speed;
+                    this.velocity.y = 0;
+
+                    // Face direction of movement
+                    this.facing = this.velocity.x > 0;
+                    this.state = this.facing ? 3 : 2;
+                } else {
+                    speed = 0;
+                    this.velocity.x = 0;
+                    this.velocity.y = 0;
+                    this.state = 4;
+                }
+            }
+        } else {
+            // No sleepy guy or he is dead -> idle
+            this.state = 0;
+        }
+
+        this.x += this.velocity.x * TICK;
+        this.y += this.velocity.y * TICK;
+
+        this.updateBB();
+    }
+
+
     updateBB() {
         const w = this.SPRITE_WIDTH * this.scale;
         const h = this.SPRITE_HEIGHT * this.scale;
@@ -230,13 +285,6 @@ class Sheep {
             w,
             h
         );
-
-        // this.alertBB = new BoundingBox(
-        //     this.x - this.alertRadius,
-        //     this.y - this.alertRadius,
-        //     w + this.alertRadius * 2,
-        //     h + this.alertRadius * 2
-        // );
     }
 
     loadAnimations() {

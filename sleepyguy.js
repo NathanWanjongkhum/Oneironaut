@@ -120,23 +120,20 @@ class SleepyGuy {
             if (ent === this || ent.dead) continue;
             if(!ent.BB) continue;
 
-            if (!this.BB.collide(ent.BB)) continue;
-
-            if (ent instanceof Bed) {
-                this.onReachBed(ent);
-                return; 
-            }
-
-            if (ent instanceof Ghost) {
-                this.onHitByGhost(ent);
-                return; 
-            }
-
-            if (ent instanceof Sheep) {
-                this.onAlertSheep(ent);
+            if (this.BB.collide(ent.BB)) {
+                const entType = ent.constructor.name;
+                switch (entType) {
+                    case "Bed":
+                        this.onReachBed(ent);
+                    case "Ghost":
+                        this.onHitByGhost(ent);
+                    default:
+                        break;
+                }
             }
         }
     }
+
     //triggers win condition when SleepyGuy reaches bed 
     onReachBed(_bed) {
         this.game.gameWon = true;
@@ -146,10 +143,6 @@ class SleepyGuy {
     onHitByGhost(_ghost) {
         this.dead = true;
         this.attackTimer = 0;
-    }
-    //triggers sheeps panic state when SleepyGuy is in alert radius
-    onAlertSheep(_sheep) {
-        _sheep.panic(true);
     }
 
     updateBB() {
