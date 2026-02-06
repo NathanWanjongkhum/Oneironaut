@@ -175,3 +175,80 @@ class Ghost {
     }
 
 }
+
+class Sheep {
+    SPRITE_WIDTH = 32;
+    SPRITE_HEIGHT = 32;
+
+    constructor(game, positionX, postionY) {
+        this.game = game;
+        this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/sheep_shadow.png");
+        this.x = positionX;
+        this.y = postionY;
+        this.velocity = { x: 0, y: 0 };
+        this.dead = false;
+
+        this.alertRadius = 200;
+
+        this.scale = 2;
+        this.state = 4; // 0: left, 1: right, 2: panicking left, 3: panicking right, 4: idle
+        this.facing = true; //true = right, false = left
+        this.BB = null;
+        // this.alertBB = null;
+
+        this.animations = [];
+        this.loadAnimations();
+        this.updateBB();
+    }
+
+    panic(isPanicking) {
+        if (isPanicking) {
+            this.state = this.facing ? 3 : 2;
+        } else {
+            this.state = 4; // idle
+        }
+    }
+
+    draw(ctx) {
+        this.animations[this.state].drawFrame(this.game.clockTick, ctx, this.x, this.y, this.scale);
+        if (PARAMS.DEBUG && this.BB) {
+            ctx.strokeStyle = "red";
+            ctx.strokeRect(this.BB.x, this.BB.y, this.BB.width, this.BB.height);
+        }
+        if (PARAMS.DEBUG && this.alertBB) {
+            ctx.strokeStyle = "yellow";
+            ctx.strokeRect(this.alertBB.x, this.alertBB.y, this.alertBB.width, this.alertBB.height);
+        }
+    }
+
+    updateBB() {
+        const w = this.SPRITE_WIDTH * this.scale;
+        const h = this.SPRITE_HEIGHT * this.scale;
+        this.BB = new BoundingBox(
+            this.x,
+            this.y,
+            w,
+            h
+        );
+
+        // this.alertBB = new BoundingBox(
+        //     this.x - this.alertRadius,
+        //     this.y - this.alertRadius,
+        //     w + this.alertRadius * 2,
+        //     h + this.alertRadius * 2
+        // );
+    }
+
+    loadAnimations() {
+        for(let i = 0; i < 5; i++) { //states
+            this.animations.push([]);
+        }
+
+        //spritesheet, xStart, yStart, width, height, frameCount, frameDuration, framePadding, reverse, loop
+        this.animations[0] = new Animator(this.spritesheet, 0, this.SPRITE_HEIGHT*2, this.SPRITE_WIDTH, this.SPRITE_HEIGHT, 6, 0.5, 0, 0, 1);// left
+        this.animations[1] = new Animator(this.spritesheet, 0, this.SPRITE_HEIGHT*3, this.SPRITE_WIDTH, this.SPRITE_HEIGHT, 6, 0.5, 0, 0, 1); // right
+        this.animations[2] = new Animator(this.spritesheet, 0, this.SPRITE_HEIGHT*2, this.SPRITE_WIDTH, this.SPRITE_HEIGHT, 6, 0.25, 0, 0, 1); // panicking left
+        this.animations[3] = new Animator(this.spritesheet, 0, this.SPRITE_HEIGHT*3, this.SPRITE_WIDTH, this.SPRITE_HEIGHT, 6, 0.25, 0, 0, 1); // panicking right
+        this.animations[4] = new Animator(this.spritesheet, 0, 0, this.SPRITE_WIDTH, this.SPRITE_HEIGHT, 1, 1, 0, 0, 1); //idle
+    }
+}

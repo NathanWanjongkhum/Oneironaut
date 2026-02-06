@@ -132,6 +132,9 @@ class SleepyGuy {
                 return; 
             }
 
+            if (ent instanceof Sheep) {
+                this.onAlertSheep(ent);
+            }
         }
     }
     //triggers win condition when SleepyGuy reaches bed 
@@ -143,6 +146,10 @@ class SleepyGuy {
     onHitByGhost(_ghost) {
         this.dead = true;
         this.attackTimer = 0;
+    }
+    //triggers sheeps panic state when SleepyGuy is in alert radius
+    onAlertSheep(_sheep) {
+        _sheep.panic(true);
     }
 
     updateBB() {

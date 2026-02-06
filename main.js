@@ -12,8 +12,10 @@ ASSET_MANAGER.queueDownload("./assets/background/clouds7/1.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/2.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/3.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/4.png");
+
 ASSET_MANAGER.queueDownload("./assets/entities/bed.png")
 ASSET_MANAGER.queueDownload("./assets/entities/ghost1.png");
+ASSET_MANAGER.queueDownload("./assets/entities/sheep_shadow.png");
 ASSET_MANAGER.queueDownload("./assets/entities/sleepyguy.png")
 
 ASSET_MANAGER.downloadAll(() => {
@@ -25,12 +27,13 @@ ASSET_MANAGER.downloadAll(() => {
 
 	PARAMS.CANVAS_WIDTH = canvas.width;
 	PARAMS.CANVAS_HEIGHT = canvas.height;
-	//PARAMS.DEBUG = true;
+	PARAMS.DEBUG = true;
 
 	gameEngine.init(ctx);
 	gameEngine.start();
 
 	gameEngine.addEntity(new Background(gameEngine));//keep this as first entity added!
+  gameEngine.addEntity(new Sheep(gameEngine, 500, 50));
 	gameEngine.addEntity(new Ghost(gameEngine, 700, 50));
 	gameEngine.addEntity(new Ghost(gameEngine, 775, 350));
 	gameEngine.addEntity(new Ghost(gameEngine, 300, 400));
