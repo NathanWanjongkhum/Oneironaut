@@ -23,6 +23,7 @@ class SleepyGuy {
 
         this.animations = [];
         this.loadAnimations();
+        this.updateBB();
     }
 
     loadAnimations() {
@@ -108,6 +109,40 @@ class SleepyGuy {
             }
         }
         this.updateBB();
+        this.handleCollisions();
+    }
+    //sleepGuy now handles all win/lose conditions and collision logic. 
+    handleCollisions() {
+        if (!this.BB || this.dead) return; 
+
+        for(let i = 0; i < this.game.entities.length; i++) {
+            const ent = this.game.entities[i];
+            if (ent === this || ent.dead) continue;
+            if(!ent.BB) continue;
+
+            if (!this.BB.collide(ent.BB)) continue;
+
+            if (ent instanceof Bed) {
+                this.onReachBed(ent);
+                return; 
+            }
+
+            if (ent instanceof Ghost) {
+                this.onHitByGhost(ent);
+                return; 
+            }
+
+        }
+    }
+    //triggers win condition when SleepyGuy reaches bed 
+    onReachBed(_bed) {
+        this.game.gameWon = true;
+        this.game.gameOver = true;
+    }
+    //triggers lose condition when SleepyGuy hit by ghost
+    onHitByGhost(_ghost) {
+        this.dead = true;
+        this.attackTimer = 0;
     }
 
     updateBB() {
