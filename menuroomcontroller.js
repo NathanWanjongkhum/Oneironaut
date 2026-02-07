@@ -34,24 +34,13 @@ class MenuRoomController {
     this.creditsCloseRect = { x: 0, y: 0, w: 44, h: 44 };
 
 
-    //Janky fix to exit menu for prototype stage
-    this.dead = false;
-    this.deadCounter = 0;
+    
   }
 
   update() {
 
-
-    //Janky fix to exit menu for prototype stage
-    if(this.dead) {
-      this.deadCounter += this.game.clockTick;
-    }
-    if (this.deadCounter > 2) {
-      this.game.mode = "gameplay";
-      this.removeFromWorld = true;
-    }
-
-
+   if (this.game.mode !== "menu") return;
+    
     const cw = this.game.ctx.canvas.width;
     const ch = this.game.ctx.canvas.height;
 
@@ -159,6 +148,8 @@ class MenuRoomController {
   }
 
   draw(ctx) {
+
+    if (this.game.mode !== "menu") return;
     const cw = this.game.ctx.canvas.width;
     const ch = this.game.ctx.canvas.height;
 
@@ -282,9 +273,8 @@ class MenuRoomController {
         this.showHelp = false;
         this.showCredits = false;
 
-        //Janky fix to exit menu for prototype stage
-        this.dead = true;
-        this.deadCounter += this.game.clockTick;
+        // ✅ Start gameplay immediately
+        this.game.mode = "gameplay";
 
         return;
       }

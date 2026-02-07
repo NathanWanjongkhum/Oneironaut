@@ -18,6 +18,7 @@ ASSET_MANAGER.queueDownload("./assets/entities/ghost1.png");
 ASSET_MANAGER.queueDownload("./assets/entities/sheep_shadow.png");
 ASSET_MANAGER.queueDownload("./assets/entities/sleepyguy.png")
 
+
 ASSET_MANAGER.downloadAll(() => {
 
 	PARAMS.BLOCKWIDTH = PARAMS.BITWIDTH * PARAMS.SCALE;
@@ -29,27 +30,59 @@ ASSET_MANAGER.downloadAll(() => {
 	PARAMS.CANVAS_HEIGHT = canvas.height;
 	PARAMS.DEBUG = true;
 
-	gameEngine.init(ctx);
-	gameEngine.start();
+gameEngine.init(ctx);
 
-	gameEngine.addEntity(new Background(gameEngine));//keep this as first entity added!
-  gameEngine.addEntity(new Sheep(gameEngine, 500, 50));
-	gameEngine.addEntity(new Ghost(gameEngine, 700, 50));
-	gameEngine.addEntity(new Ghost(gameEngine, 775, 350));
-	gameEngine.addEntity(new Ghost(gameEngine, 300, 400));
-	gameEngine.addEntity(new Bed(gameEngine, 700, 300));
-	gameEngine.addEntity(new SleepyGuy(gameEngine, 100, 100));
-	gameEngine.addEntity(new WaypointBuilder(gameEngine));
-	gameEngine.addEntity(new EndGame(gameEngine));
+// Builds a fresh set of game entities (used for initial load and replay)
+  function buildWorld(engine) {
+    engine.addEntity(new Background(engine)); // keep first entity added!
+    engine.addEntity(new Sheep(engine, 500, 50));
+    engine.addEntity(new Ghost(engine, 700, 50));
+    engine.addEntity(new Ghost(engine, 775, 350));
+    engine.addEntity(new Ghost(engine, 300, 400));
+    engine.addEntity(new Bed(engine, 700, 300));
+    engine.addEntity(new SleepyGuy(engine, 100, 100));
+    engine.addEntity(new WaypointBuilder(engine));
+    engine.addEntity(new EndGame(engine));
+    engine.addEntity(new MenuRoomController(engine));
+  }
 
-	gameEngine.addEntity(new MenuRoomController(gameEngine));
-	
+  // // Clears current world state and rebuilds it
+  function resetWorld(engine, mode) {
+    engine.gameOver = false;
+    engine.gameWon = false;
+    engine.mode = mode;
 
-	// Start music after any user interaction
-	canvas.addEventListener("pointerdown", tryStartMusic);
+    engine.entities = [];
+    engine.sleepyGuy = null;
+    engine.waypoints = [];
+    engine.click = null; // prevent button-click carryover
 
+    buildWorld(engine);
+
+    // Optional: music switch based on mode
+    if (window.setMusicMode) {
+      window.setMusicMode(mode === "menu" ? "menu" : "dream");
+    }
+  }
+
+  gameEngine.restartToGameplay = () => resetWorld(gameEngine, "gameplay");
+  gameEngine.restartToMenu = () => resetWorld(gameEngine, "menu");
+
+  // Initial world
+  buildWorld(gameEngine);
+
+  // Start engine loop
+  gameEngine.start();
+
+  // Start music after any user interaction
+  canvas.addEventListener("pointerdown", tryStartMusic);
+
+  window.addEventListener("keydown", (e) => {
+    if (!gameEngine.gameOver) return;
+    if (e.key === "r" || e.key === "R") gameEngine.restartToGameplay();
+    if (e.key === "Escape") gameEngine.restartToMenu();
+  });
 });
-
 
 //TODO: This belongs in its own file/controller. Main should not have this music handling!
 // Music (starts on first click / tap)
