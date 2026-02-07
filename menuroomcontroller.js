@@ -273,7 +273,7 @@ class MenuRoomController {
         this.showHelp = false;
         this.showCredits = false;
 
-        // ✅ Start gameplay immediately
+        
         this.game.mode = "gameplay";
 
         return;
