@@ -4,7 +4,6 @@ class Monster extends Entity {
 
         this.dead = false;
 
-        // MOVEMENT & DETECTION
         this.velocity = { x: 0, y: 0 };
         this.speed = 0;         // Pixels per second
     }
@@ -72,40 +71,103 @@ class Monster extends Entity {
     }
 }
 
-class Ghost {
-    constructor(game, positionX, postionY) {
-        this.game = game;
+class Ghost extends Monster {
+    constructor(game, x, y) {
+        super(game, x, y);
+
+        this.width = 128;
+        this.height = 128;
+
+        this.radius = 100;
+        this.visualRadius = 300;
+        this.scale = 1.5;
+        this.dead = false;
+        
+        this.state = 0;
+        this.type = 0;
+        this.facing = { x: 0, y: 0 };
+
         this.spritesheet1 = ASSET_MANAGER.getAsset("./assets/entities/ghost1.png");
         this.spritesheet2 = ASSET_MANAGER.getAsset("./assets/entities/ghost1.png");
         this.spritesheet3 = ASSET_MANAGER.getAsset("./assets/entities/ghost1.png");
 
-        
-        this.x = positionX; //top left corner
-        this.y = postionY; //top left corner
-        this.radius = 100;
-        this.visualRadius = 300;
-        this.velocity = { x: 0, y: 0 };
-        this.scale = 1.5;
-        this.state = 0;
-        this.type = 0;
-        this.facing = { x: 0, y: 0 };
-        this.BB = null;
-        this.dead = false;
-
         this.animations = [];
         this.loadAnimations();
+        
         this.updateBB();
     };
 
-    loadAnimations() {
-        for(let i = 0; i < 10; i++) { //states
+    onCollision(guy) {
+        if (guy.onHitByGhost) {
+            guy.onHitByGhost(this);
+        }
+    }
+
+    update() {
+        if (this.game.mode !== "gameplay") return;
+        if (this.dead) return;
+
+        const TICK = this.game.clockTick;
+
+        if (this.state === 3 || this.game.gameOver) return;
+
+        // Reset velocity
+        this.velocity = { x: 0, y: 0 };
+
+        const dist = this.getDistToPlayer();
+        const vec = this.getVectorToPlayer();
+
+        if (dist !== Infinity && dist < this.visualRadius) {
+            if (dist < 200) {
+                this.speed = 120; // Run
+                this.state = 2;
+            } else {
+                this.speed = 80;  // Walk
+                this.state = 1;
+            }
+            
+            // Move towards player
+            this.velocity.x = vec.x * this.speed;
+            this.velocity.y = vec.y * this.speed;
+
+        } else {
+            // Idle
+            this.speed = 0;
+            this.state = 0;
+        }
+
+        // Apply Movement
+        this.x += this.velocity.x * TICK;
+        this.y += this.velocity.y * TICK;
+
+        super.update();
+    }
+
+    updateBB() {
+        const w = 128 * this.scale;
+        const h = 128 * this.scale;
+        this.BB = new BoundingBox(
+            this.x + (w / 6),
+            this.y + (h / 2),
+            w * 4/6,
+            h / 2
+        );
+    }
+
+    draw(ctx) {
+        this.animations[this.state][this.type].drawFrame(this.game.clockTick, ctx, this.x, this.y, this.scale);
+
+        super.draw(ctx);
+    };
+
+    loadAnimations() { // states
+        for(let i = 0; i < 10; i++) { 
             this.animations.push([]);
-            for(let j = 0; j < 3; j++) { //ghost version
+            for(let j = 0; j < 3; j++) { // ghost types 
                 this.animations.push([]);
             }
         }
-
-
+        
         //spritesheet, xStart, yStart, width, height, frameCount, frameDuration, framePadding, reverse, loop
         this.animations[0][0] = new Animator(this.spritesheet1, 0, 0, 128, 128, 5, 0.3, 0, 0, 1); //idle
         this.animations[1][0] = new Animator(this.spritesheet1, 0, 128, 128, 128, 5, 0.2, 0, 0, 1); //walk
@@ -140,115 +202,8 @@ class Ghost {
         this.animations[8][2] = new Animator(this.spritesheet3, 0, 1024, 128, 128, 3, 0.3, 0, 0, 1); //hurt
         this.animations[9][2] = new Animator(this.spritesheet3, 0, 1152, 128, 128, 5, 0.3, 0, 0, 0); //dead
     }
-
-    update() {
-    if (this.game.mode !== "gameplay") return;
-    if (this.dead) return;
-
-    const TICK = this.game.clockTick;
-
-    if (this.state === 3 || this.game.gameOver) {
-        return;
-    }
-
-    // Reset movement each frame
-    this.velocity.x = 0;
-    this.velocity.y = 0;
-
-    // Direct reference to SleepyGuy
-    const ent = this.game.sleepyGuy;
-
-    if (ent && !ent.dead) {
-        if (!ent.BB) ent.updateBB();
-
-        const thisCX = this.x + (128 * this.scale) / 2;
-        const thisCY = this.y + (128 * this.scale) / 2;
-
-        // SleepyGuy treats x,y as center
-        const entCX = ent.x;
-        const entCY = ent.y;
-
-        const dx = entCX - thisCX;
-        const dy = entCY - thisCY;
-        const dist = getDistance({ x: thisCX, y: thisCY }, { x: entCX, y: entCY });
-
-        if (dist !== 0) {
-            const nx = dx / dist;
-            const ny = dy / dist;
-            let speed = 0;
-
-            if (dist < this.visualRadius) {
-                if (dist < 200) {
-                    speed = 120; // running
-                    this.state = 2;
-                } else {
-                    speed = 80;  // walking
-                    this.state = 1;
-                }
-            } else {
-                speed = 0;      // idle
-                this.state = 0;
-            }
-
-            this.velocity.x = nx * speed;
-            this.velocity.y = ny * speed;
-        }
-    } else {
-        // No sleepy guy or he is dead -> idle
-        this.state = 0;
-    }
-
-    this.x += this.velocity.x * TICK;
-    this.y += this.velocity.y * TICK;
-
-    this.updateBB();
 }
 
-
-    
-
-    updateBB() {
-        const w = 128 * this.scale; //128 = sprite pixel size
-        const h = 128 * this.scale;
-        this.BB = new BoundingBox(
-            this.x + (w / 6),
-            this.y + (h / 2),
-            w * 4/6,
-            h/2
-        );
-    }
-
-
-    collide(other) {
-        return getDistance(this, other) < this.radius + other.radius;
-    };
-
-
-    
-
-    draw(ctx) {
-        //this.demoDraw(ctx);
-        this.animations[this.state][this.type].drawFrame(this.game.clockTick, ctx, this.x, this.y, this.scale);
-        if (PARAMS.DEBUG && this.BB) {
-            ctx.strokeStyle = "red";
-            ctx.strokeRect(this.BB.x, this.BB.y, this.BB.width, this.BB.height);
-        }
-    };
-
-    demoDraw(ctx) {
-        this.animations[0][0].drawFrame(this.game.clockTick, ctx, this.x, this.y, this.scale);
-        this.animations[1][0].drawFrame(this.game.clockTick, ctx, this.x+128, this.y, this.scale);
-        this.animations[2][0].drawFrame(this.game.clockTick, ctx, this.x+256, this.y, this.scale);
-        this.animations[3][0].drawFrame(this.game.clockTick, ctx, this.x+384, this.y, this.scale);
-        this.animations[4][0].drawFrame(this.game.clockTick, ctx, this.x+512, this.y, this.scale);
-        this.animations[5][0].drawFrame(this.game.clockTick, ctx, this.x, this.y+200, this.scale);
-        this.animations[6][0].drawFrame(this.game.clockTick, ctx, this.x+256, this.y+200, this.scale);
-        this.animations[7][0].drawFrame(this.game.clockTick, ctx, this.x, this.y+400, this.scale);
-        this.animations[8][0].drawFrame(this.game.clockTick, ctx, this.x+256, this.y+400, this.scale);
-        this.animations[9][0].drawFrame(this.game.clockTick, ctx, this.x+512, this.y+300, this.scale);
-    }
-
-}
 
 class Sheep {
     SPRITE_WIDTH = 32;
