@@ -204,129 +204,89 @@ class Ghost extends Monster {
     }
 }
 
+class Sheep extends Entity {
+    constructor(game, positionX, positionY) {
+        super(game, positionX, positionY);
 
-class Sheep {
-    SPRITE_WIDTH = 32;
-    SPRITE_HEIGHT = 32;
-
-    constructor(game, positionX, postionY) {
-        this.game = game;
-        this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/sheep_shadow.png");
-        this.x = positionX;
-        this.y = postionY;
-        this.velocity = { x: 0, y: 0 };
-        this.dead = false;
+        this.SPRITE_WIDTH = 32;
+        this.SPRITE_HEIGHT = 32;
+        
+        this.width = 32;
+        this.height = 32;
+        this.scale = 2;
 
         this.alertRadius = 200;
-
-        this.scale = 2;
-        this.state = 4; // 0: left, 1: right, 2: panicking left, 3: panicking right, 4: idle
-        this.facing = true; //true = right, false = left
-        this.BB = null;
+        this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/sheep_shadow.png");
+        
+        this.state = 4; // 0: left, 1: right, 2: panic L, 3: panic R, 4: idle
+        this.facing = true; 
 
         this.animations = [];
         this.loadAnimations();
         this.updateBB();
     }
 
-    draw(ctx) {
-        this.animations[this.state].drawFrame(this.game.clockTick, ctx, this.x, this.y, this.scale);
-        if (PARAMS.DEBUG && this.BB) {
-            ctx.strokeStyle = "red";
-            ctx.strokeRect(this.BB.x, this.BB.y, this.BB.width, this.BB.height);
-        }
-        if (PARAMS.DEBUG && this.alertBB) {
-            ctx.strokeStyle = "yellow";
-            ctx.strokeRect(this.alertBB.x, this.alertBB.y, this.alertBB.width, this.alertBB.height);
-        }
-    }
-
     update() {
         if (this.game.mode !== "gameplay") return;
-        if (this.dead) return;
+        if (this.dead || this.game.gameOver) return;
 
         const TICK = this.game.clockTick;
 
-        if (this.game.gameOver) {
-            return;
-        }
-
-        // Reset movement each frame
-        this.velocity.x = 0;
-        this.velocity.y = 0;
-
-        // Direct reference to SleepyGuy
+        // Run away from SleepyGuy
+        this.velocity = { x: 0, y: 0 };
         const ent = this.game.sleepyGuy;
 
         if (ent && !ent.dead) {
             if (!ent.BB) ent.updateBB();
 
-            const thisCX = this.x + (this.SPRITE_WIDTH * this.scale) / 2;
-            const thisCY = this.y + (this.SPRITE_HEIGHT * this.scale) / 2;
-
-            // SleepyGuy treats x,y as center
+            const thisCX = this.x + (this.width * this.scale) / 2;
+            const thisCY = this.y + (this.height * this.scale) / 2;
             const entCX = ent.x;
             const entCY = ent.y;
 
             const dx = entCX - thisCX;
             const dy = entCY - thisCY;
-            const dist = getDistance({ x: thisCX, y: thisCY }, { x: entCX, y: entCY });
+            const dist = Math.sqrt(dx*dx + dy*dy);
 
-            if (dist !== 0) {
+            if (dist !== 0 && dist < this.alertRadius) {
+                const speed = 150;
                 const nx = dx / dist;
-                let speed = 0;
 
-                if (dist < this.alertRadius) {
-                    speed = 150;
+                this.velocity.x = -nx * speed;
+                this.velocity.y = 0;
 
-                    // Run away
-                    this.velocity.x = -nx * speed;
-                    this.velocity.y = 0;
-
-                    // Face direction of movement
-                    this.facing = this.velocity.x > 0;
-                    this.state = this.facing ? 3 : 2;
-                } else {
-                    speed = 0;
-                    this.velocity.x = 0;
-                    this.velocity.y = 0;
-                    this.state = 4;
-                }
+                this.facing = this.velocity.x > 0;
+                this.state = this.facing ? 3 : 2;
+            } else {
+                this.state = 4;
             }
         } else {
-            // No sleepy guy or he is dead -> idle
             this.state = 0;
         }
 
         this.x += this.velocity.x * TICK;
         this.y += this.velocity.y * TICK;
 
-        this.updateBB();
-    }
-
-
-    updateBB() {
-        const w = this.SPRITE_WIDTH * this.scale;
-        const h = this.SPRITE_HEIGHT * this.scale;
-        this.BB = new BoundingBox(
-            this.x,
-            this.y,
-            w,
-            h
-        );
+        super.update();
     }
 
     loadAnimations() {
-        for(let i = 0; i < 5; i++) { //states
-            this.animations.push([]);
-        }
+        for(let i = 0; i < 5; i++) this.animations.push([]);
 
-        //spritesheet, xStart, yStart, width, height, frameCount, frameDuration, framePadding, reverse, loop
-        this.animations[0] = new Animator(this.spritesheet, 0, this.SPRITE_HEIGHT*2, this.SPRITE_WIDTH, this.SPRITE_HEIGHT, 6, 0.5, 0, 0, 1);// left
-        this.animations[1] = new Animator(this.spritesheet, 0, this.SPRITE_HEIGHT*3, this.SPRITE_WIDTH, this.SPRITE_HEIGHT, 6, 0.5, 0, 0, 1); // right
-        this.animations[2] = new Animator(this.spritesheet, 0, this.SPRITE_HEIGHT*2, this.SPRITE_WIDTH, this.SPRITE_HEIGHT, 6, 0.25, 0, 0, 1); // panicking left
-        this.animations[3] = new Animator(this.spritesheet, 0, this.SPRITE_HEIGHT*3, this.SPRITE_WIDTH, this.SPRITE_HEIGHT, 6, 0.25, 0, 0, 1); // panicking right
-        this.animations[4] = new Animator(this.spritesheet, 0, 0, this.SPRITE_WIDTH, this.SPRITE_HEIGHT, 1, 1, 0, 0, 1); //idle
+        const h = this.SPRITE_HEIGHT;
+        const w = this.SPRITE_WIDTH;
+        
+        this.animations[0] = new Animator(this.spritesheet, 0, h*2, w, h, 6, 0.5, 0, 0, 1); // left
+        this.animations[1] = new Animator(this.spritesheet, 0, h*3, w, h, 6, 0.5, 0, 0, 1); // right
+        this.animations[2] = new Animator(this.spritesheet, 0, h*2, w, h, 6, 0.25, 0, 0, 1); // panic left
+        this.animations[3] = new Animator(this.spritesheet, 0, h*3, w, h, 6, 0.25, 0, 0, 1); // panic right
+        this.animations[4] = new Animator(this.spritesheet, 0, 0, w, h, 1, 1, 0, 0, 1); // idle
+    }
+
+    draw(ctx) {
+        this.animations[this.state].drawFrame(this.game.clockTick, ctx, this.x, this.y, this.scale);
+        
+        super.draw(ctx);
     }
 }
 
