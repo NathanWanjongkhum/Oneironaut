@@ -330,48 +330,35 @@ class Sheep {
     }
 }
 
-class Spider {
+class Spider extends Monster {
     constructor(game, path) {
-        this.game = game;
+        super(game, path[0].x, path[0].y);
         
         this.path = path; 
-        
-        this.x = path[0].x;
-        this.y = path[0].y;
-        
         this.targetIndex = 1; 
-        
-        // TODO:: Get actual sprite and dimensions
-        this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/ghost1.png"); 
         
         this.width = 64;
         this.height = 64;
         this.scale = 2;
-        
         this.speed = 150;
-        this.dead = false;
         
-        this.BB = null;
-        this.updateBB();
+        // TODO: Replace with actual spider spritesheet
+        this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/ghost1.png"); // Placeholder
 
         this.animations = [];
         this.loadAnimations();
+        
+        this.updateBB();
     };
+
+    onCollision(guy) {
+        if (guy.onHitByGhost) {
+            guy.onHitByGhost(this);
+        }
+    }
 
     loadAnimations() {
         this.animations.push(new Animator(this.spritesheet, 0, 0, this.width, this.height, 4, 0.2, 0, false, true));
-    }
-
-    updateBB() {
-        const drawWidth = this.width * this.scale;
-        const drawHeight = this.height * this.scale;
-        
-        this.BB = new BoundingBox(
-            this.x, 
-            this.y, 
-            drawWidth, 
-            drawHeight
-        );
     }
 
     update() {
@@ -380,6 +367,7 @@ class Spider {
 
         const TICK = this.game.clockTick;
 
+        // Path Following Logic
         if (this.path && this.path.length > 0) {
             const target = this.path[this.targetIndex];
             
@@ -390,24 +378,24 @@ class Spider {
             const move = this.speed * TICK;
 
             if (dist <= move) {
+                // Snap to target
                 this.x = target.x;
                 this.y = target.y;
-
+                // Next waypoint
                 this.targetIndex++;
-                
-                if (this.targetIndex >= this.path.length) {
-                    this.targetIndex = 0;
-                }
+                if (this.targetIndex >= this.path.length) this.targetIndex = 0;
             } else {
+                // Move along line
                 this.x += (dx / dist) * move;
                 this.y += (dy / dist) * move;
             }
         }
 
-        this.updateBB();
+        super.update();
     }
 
     draw(ctx) {
+        // Web Drawer
         if (this.path && this.path.length > 1) {
             ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
             ctx.lineWidth = 2;
@@ -420,11 +408,9 @@ class Spider {
             ctx.stroke();
         }
 
+        // Draw Sprite
         this.animations[0].drawFrame(this.game.clockTick, ctx, this.x, this.y, this.scale);
 
-        if (PARAMS.DEBUG && this.BB) {
-            ctx.strokeStyle = "red";
-            ctx.strokeRect(this.BB.x, this.BB.y, this.BB.width, this.BB.height);
-        }
+        super.draw(ctx);
     }
 }
