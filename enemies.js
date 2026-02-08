@@ -1,3 +1,77 @@
+class Monster extends Entity {
+    constructor(game, x, y) {
+        super(game, x, y);
+
+        this.dead = false;
+
+        // MOVEMENT & DETECTION
+        this.velocity = { x: 0, y: 0 };
+        this.speed = 0;         // Pixels per second
+    }
+
+    /**
+     * Checks player collision.
+     */
+    update() {
+        if (this.dead) return;
+
+        this.checkPlayerCollision();
+        super.update();
+    }
+
+    /**
+     * Handles collision with the SleepyGuy.
+     * If a collision occurs, it triggers monster collision handling.
+     */
+    checkPlayerCollision() {
+        const guy = this.game.sleepyGuy;
+
+        if (!guy || guy.dead || !guy.BB || !this.BB) return;
+
+        if (this.BB.collide(guy.BB)) {
+            this.onCollision(guy);
+        }
+    }
+
+    /**
+     * Get distance to the SleepyGuy.
+     * Returns Infinity if player is dead/missing.
+     */
+    getDistToPlayer() {
+        const player = this.game.sleepyGuy;
+        if (!player || player.dead) return Infinity;
+
+        // Calculate center-to-center distance
+        const thisCX = this.x + (this.width * this.scale) / 2;
+        const thisCY = this.y + (this.height * this.scale) / 2;
+
+        return Math.sqrt(
+            Math.pow(player.x - thisCX, 2) + 
+            Math.pow(player.y - thisCY, 2)
+        );
+    }
+
+    /**
+     * Get a normalized vector {x, y} pointing toward the player.
+     * Returns {x: 0, y: 0} if already at target or player missing.
+     */
+    getVectorToPlayer() {
+        const player = this.game.sleepyGuy;
+        if (!player || player.dead) return { x: 0, y: 0 };
+
+        const thisCX = this.x + (this.width * this.scale) / 2;
+        const thisCY = this.y + (this.height * this.scale) / 2;
+
+        const dx = player.x - thisCX;
+        const dy = player.y - thisCY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist === 0) return { x: 0, y: 0 };
+
+        return { x: dx / dist, y: dy / dist };
+    }
+}
+
 class Ghost {
     constructor(game, positionX, postionY) {
         this.game = game;
