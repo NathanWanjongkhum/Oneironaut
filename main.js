@@ -20,7 +20,6 @@ ASSET_MANAGER.queueDownload("./assets/entities/sleepyguy.png")
 
 
 ASSET_MANAGER.downloadAll(() => {
-
 	PARAMS.BLOCKWIDTH = PARAMS.BITWIDTH * PARAMS.SCALE;
 
 	const canvas = document.getElementById("gameWorld");
@@ -30,11 +29,19 @@ ASSET_MANAGER.downloadAll(() => {
 	PARAMS.CANVAS_HEIGHT = canvas.height;
 	PARAMS.DEBUG = true;
 
-gameEngine.init(ctx);
+  gameEngine.init(ctx);
 
-// Builds a fresh set of game entities (used for initial load and replay)
+  // Builds a fresh set of game entities (used for initial load and replay)
   function buildWorld(engine) {
     engine.addEntity(new Background(engine)); // keep first entity added!
+
+    const spiderPath = [
+      { x: 400, y: 100 },
+      { x: 600, y: 100 },
+      { x: 600, y: 300 },
+    ];
+
+    engine.addEntity(new Spider(engine, spiderPath));
     engine.addEntity(new Sheep(engine, 500, 50));
     engine.addEntity(new Ghost(engine, 700, 50));
     engine.addEntity(new Ghost(engine, 775, 350));
@@ -46,7 +53,7 @@ gameEngine.init(ctx);
     engine.addEntity(new MenuRoomController(engine));
   }
 
-  // // Clears current world state and rebuilds it
+  // Clears current world state and rebuilds it
   function resetWorld(engine, mode) {
     engine.gameOver = false;
     engine.gameWon = false;
@@ -78,9 +85,9 @@ gameEngine.init(ctx);
   canvas.addEventListener("pointerdown", tryStartMusic);
 
   window.addEventListener("keydown", (e) => {
-    if (!gameEngine.gameOver) return;
-    if (e.key === "r" || e.key === "R") gameEngine.restartToGameplay();
-    if (e.key === "Escape") gameEngine.restartToMenu();
+      if (!gameEngine.gameOver) return;
+      if (e.key === "r" || e.key === "R") gameEngine.restartToGameplay();
+      if (e.key === "Escape") gameEngine.restartToMenu();
   });
 });
 

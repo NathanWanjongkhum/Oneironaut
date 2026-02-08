@@ -300,3 +300,102 @@ class Sheep {
         this.animations[4] = new Animator(this.spritesheet, 0, 0, this.SPRITE_WIDTH, this.SPRITE_HEIGHT, 1, 1, 0, 0, 1); //idle
     }
 }
+
+class Spider {
+    constructor(game, path) {
+        this.game = game;
+        
+        this.path = path; 
+        
+        this.x = path[0].x;
+        this.y = path[0].y;
+        
+        this.targetIndex = 1; 
+        
+        // TODO:: Get actual sprite and dimensions
+        this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/ghost1.png"); 
+        
+        this.width = 64;
+        this.height = 64;
+        this.scale = 2;
+        
+        this.speed = 150;
+        this.dead = false;
+        
+        this.BB = null;
+        this.updateBB();
+
+        this.animations = [];
+        this.loadAnimations();
+    };
+
+    loadAnimations() {
+        this.animations.push(new Animator(this.spritesheet, 0, 0, this.width, this.height, 4, 0.2, 0, false, true));
+    }
+
+    updateBB() {
+        const drawWidth = this.width * this.scale;
+        const drawHeight = this.height * this.scale;
+        
+        this.BB = new BoundingBox(
+            this.x, 
+            this.y, 
+            drawWidth, 
+            drawHeight
+        );
+    }
+
+    update() {
+        if (this.game.mode !== "gameplay") return;
+        if (this.dead) return;
+
+        const TICK = this.game.clockTick;
+
+        if (this.path && this.path.length > 0) {
+            const target = this.path[this.targetIndex];
+            
+            const dx = target.x - this.x;
+            const dy = target.y - this.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            const move = this.speed * TICK;
+
+            if (dist <= move) {
+                this.x = target.x;
+                this.y = target.y;
+
+                this.targetIndex++;
+                
+                if (this.targetIndex >= this.path.length) {
+                    this.targetIndex = 0;
+                }
+            } else {
+                this.x += (dx / dist) * move;
+                this.y += (dy / dist) * move;
+            }
+        }
+
+        this.updateBB();
+    }
+
+    draw(ctx) {
+        if (this.path && this.path.length > 1) {
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(this.path[0].x + (this.width*this.scale)/2, this.path[0].y + (this.height*this.scale)/2);
+            for (let i = 1; i < this.path.length; i++) {
+                ctx.lineTo(this.path[i].x + (this.width*this.scale)/2, this.path[i].y + (this.height*this.scale)/2);
+            }
+            ctx.lineTo(this.path[0].x + (this.width*this.scale)/2, this.path[0].y + (this.height*this.scale)/2);
+            ctx.stroke();
+        }
+
+        this.animations[0].drawFrame(this.game.clockTick, ctx, this.x, this.y, this.scale);
+
+        if (PARAMS.DEBUG && this.BB) {
+            ctx.strokeStyle = "red";
+            ctx.strokeRect(this.BB.x, this.BB.y, this.BB.width, this.BB.height);
+        }
+    }
+}

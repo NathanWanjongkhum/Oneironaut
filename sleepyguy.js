@@ -127,6 +127,8 @@ class SleepyGuy {
                         this.onReachBed(ent);
                     case "Ghost":
                         this.onHitByGhost(ent);
+                    case "Spider":
+                        this.onHitByGhost(ent);
                     default:
                         break;
                 }
