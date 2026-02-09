@@ -7,11 +7,16 @@ ASSET_MANAGER.queueDownload("./assets/background/menu/DaydreamRoom.png");
 ASSET_MANAGER.queueDownload("./assets/background/menu/NightDreamRoom.png");
 ASSET_MANAGER.queueDownload("./assets/background/menu/newDream.png");
 ASSET_MANAGER.queueDownload("./assets/background/menu/endgamemessage.png");
+ASSET_MANAGER.queueDownload("./assets/background/menu/Selected.png");
+ASSET_MANAGER.queueDownload("./assets/background/menu/Unselected.png");
+
 
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/1.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/2.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/3.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/4.png");
+  
+
 
 ASSET_MANAGER.queueDownload("./assets/entities/bed.png")
 ASSET_MANAGER.queueDownload("./assets/entities/ghost1.png");

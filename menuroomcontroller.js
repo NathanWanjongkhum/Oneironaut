@@ -5,6 +5,11 @@ class MenuRoomController {
     // States
     this.scene = "menu"; // "menu" (sky screen) or "room" (bedroom screen)
     this.theme = "day";  // "day" or "night"
+    
+    this.btnBubbleNormal = ASSET_MANAGER.getAsset("./assets/background/menu/Unselected.png");
+    this.btnBubbleHover  = ASSET_MANAGER.getAsset("./assets/background/menu/Selected.png");
+
+
 
     // Fade transition
     this.transitioning = false;
@@ -312,24 +317,29 @@ class MenuRoomController {
 
   // GUI Drawing
 
-  drawMenuButton(ctx, r, label) {
-    ctx.save();
+ drawMenuButton(ctx, r, label) {
+  ctx.save();
 
-    ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.55)";
-    ctx.lineWidth = 2;
-    this.roundRectPath(ctx, r.x, r.y, r.w, r.h, 18);
-    ctx.fill();
-    ctx.stroke();
+  const hover =
+    this.game.mouse && this.pointInRect(this.game.mouse.x, this.game.mouse.y, r);
 
-    ctx.fillStyle = "rgba(255,255,255,0.95)";
-    ctx.font = `600 ${Math.floor(r.h * 0.38)}px serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(label, r.x + r.w / 2, r.y + r.h / 2);
+  const bubble = hover ? this.btnBubbleHover : this.btnBubbleNormal;
 
-    ctx.restore();
+  // ✅ safety guard (prevents drawImage crash if asset path is wrong)
+  if (bubble) {
+    ctx.drawImage(bubble, r.x, r.y, r.w, r.h);
   }
+
+  ctx.fillStyle = "rgba(255,255,255,0.95)";
+  ctx.font = `600 ${Math.floor(r.h * 0.38)}px serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(label, r.x + r.w / 2, r.y + r.h / 2);
+
+  ctx.restore();
+}
+
+
 
   drawToggle(ctx) {
     const r = this.toggleRect;
