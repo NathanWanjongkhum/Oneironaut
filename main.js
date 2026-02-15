@@ -49,15 +49,10 @@ ASSET_MANAGER.downloadAll(() => {
 
     // Add blocks 
     const builder = new LevelBuilder(engine);
-    // Spawn a floor
-    builder.spawnRow(15, 0, 20); 
 
-    // Spawn a random pillar
+    builder.spawnRow(15, 0, 20); 
     builder.spawnBlock(5, 14);
     builder.spawnBlock(5, 13);
-
-    // This will be automatically rejected by the logic above!
-    builder.spawnBlock(5, 14);
 
     engine.addEntity(new Sheep(engine, 100, 200));
     engine.addEntity(new Spider(engine, spiderPath));

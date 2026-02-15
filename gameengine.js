@@ -1,6 +1,5 @@
 class GameEngine {
     constructor(options) {
-
         this.ctx = null;
         this.entities = [];
 
@@ -76,6 +75,8 @@ class GameEngine {
     }
 
     checkBlockCollision(entity) {
+        if (!entity.BB) return;
+
         const left = Math.floor(entity.BB.left / PARAMS.BLOCKWIDTH);
         const right = Math.floor(entity.BB.right / PARAMS.BLOCKWIDTH);
         const top = Math.floor(entity.BB.top / PARAMS.BLOCKWIDTH);
@@ -84,7 +85,7 @@ class GameEngine {
         // Only check the cells the entity is overlapping
         for (let x = left; x <= right; x++) {
             for (let y = top; y <= bottom; y++) {
-                const block = this.engine.blockMap[`${x},${y}`];
+                const block = this.blockMap[`${x},${y}`];
                 if (block) {
                     entity.onCollision(block);
                 }
@@ -96,6 +97,10 @@ class GameEngine {
         for (let i = 0; i < this.entities.length; i++) {
             const ent = this.entities[i];
             if (!ent.removeFromWorld && ent.update) ent.update();
+
+            if (!(ent instanceof Block)) {
+                this.checkBlockCollision(ent);
+            }
         }
 
         // remove entities marked for deletion
