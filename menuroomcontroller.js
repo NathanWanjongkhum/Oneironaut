@@ -5,7 +5,7 @@ class MenuRoomController {
     // States
     this.scene = "menu"; // "menu" (sky screen) or "room" (bedroom screen)
     this.theme = "day";  // "day" or "night"
-    
+
     this.btnBubbleNormal = ASSET_MANAGER.getAsset("./assets/background/menu/Unselected.png");
     this.btnBubbleHover  = ASSET_MANAGER.getAsset("./assets/background/menu/Selected.png");
 
@@ -38,6 +38,31 @@ class MenuRoomController {
     this.creditsPanelRect = { x: 0, y: 0, w: 0, h: 0 };
     this.creditsCloseRect = { x: 0, y: 0, w: 44, h: 44 };
 
+    
+    this.levels = [
+      { id: 1, name: "Level 1", unlocked: true },
+      { id: 2, name: "Level 2", unlocked: true },
+      { id: 3, name: "Level 3", unlocked: false },
+      { id: 4, name: "Level 4", unlocked: false },
+    ];
+
+    this.selectedLevel = null;
+
+    // grid button rects (computed every frame)
+    this.levelRects = []; 
+    this.levelPanelRect = { x: 0, y: 0, w: 0, h: 0 };
+    this.levelBackRect = { x: 0, y: 0, w: 150, h: 46 };
+    this.levelSelectRect = { x: 0, y: 0, w: 0, h: 0 };
+    
+    this.portalUnlocked =
+      ASSET_MANAGER.getAsset("./assets/background/selectLevel/unlockedLevel.png");
+
+    this.portalLocked =
+      ASSET_MANAGER.getAsset("./assets/background/selectLevel/lockedLevel.png");
+
+    
+ 
+
 
     
   }
@@ -62,6 +87,13 @@ class MenuRoomController {
     this.backRect.h = 46;
     this.backRect.x = pad;
     this.backRect.y = pad;
+
+    this.levelBackRect.w = 150;
+    this.levelBackRect.h = 46;
+    this.levelBackRect.x = 18;
+    this.levelBackRect.y = 18;
+
+
 
     // MENU screen: Start button (center)
     this.startRect.w = Math.min(320, Math.max(220, cw * 0.22));
@@ -125,6 +157,13 @@ class MenuRoomController {
     this.creditsRect.x = cw - pad - this.creditsRect.w;
     this.creditsRect.y = ch - pad - buttonH;
 
+    // Level Select (top-middle-ish or wherever you want)
+    this.levelSelectRect.w = Math.min(320, Math.max(220, cw * 0.22));
+    this.levelSelectRect.h = buttonH;
+    this.levelSelectRect.x = (cw - this.levelSelectRect.w) / 2;
+    this.levelSelectRect.y = this.newDreamRect.y + this.newDreamRect.h + 18; // sits under New Dream
+
+
     // Handle click
     if (this.game.click) {
       const { x, y } = this.game.click;
@@ -150,36 +189,165 @@ class MenuRoomController {
         this.nextScene = null;
       }
     }
+
+    // ✅ CHANGED: centered “2x2 portal cards” layout like your screenshot
+  // ✅ CHANGED: make cards smaller + fit ALL rows on screen + center the grid
+if (this.scene === "levelSelect") {
+  const cols = 2;
+
+  // Title sits around ch*0.17 in draw(), so reserve space above grid
+  const titleTop = ch * 0.17;
+  const titleHeight = 70;     // roughly your 52px font + padding
+  const topSafe = titleTop + titleHeight + 25;
+
+  // Reserve a little space at the bottom so nothing kisses the edge
+  const bottomSafe = 40;
+
+  const gap = Math.max(22, cw * 0.018);
+
+  const rows = Math.ceil(this.levels.length / cols);
+
+  // Available area for the grid
+  const availW = cw * 0.78; // keep the grid nicely centered, not too wide
+  const availH = ch - topSafe - bottomSafe;
+
+  // Compute max card sizes that guarantee everything fits
+  const maxCardW = (availW - gap * (cols - 1)) / cols;
+  const maxCardH = (availH - gap * (rows - 1)) / rows;
+
+  // Your card aspect ratio (keep consistent with your look)
+  const aspect = 1.05; // cardH = cardW * aspect
+
+  // Fit by BOTH width and height:
+  // - width constraint: cardW <= maxCardW
+  // - height constraint: cardW*aspect <= maxCardH  => cardW <= maxCardH/aspect
+  let cardW = Math.min(maxCardW, maxCardH / aspect);
+
+  // ✅ Make them a bit smaller than the max so it feels airy/centered
+  cardW *= 0.92;
+
+  // Clamp to reasonable limits so it doesn't get huge/tiny
+  cardW = Math.max(190, Math.min(290, cardW));
+
+  const cardH = cardW * aspect;
+
+  const gridW = cols * cardW + (cols - 1) * gap;
+  const gridH = rows * cardH + (rows - 1) * gap;
+
+  // ✅ Center the whole grid in the available region
+  const startX = (cw - gridW) / 2;
+  const startY = topSafe + (availH - gridH) / 2;
+
+  this.levelRects = [];
+  for (let i = 0; i < this.levels.length; i++) {
+    const row = Math.floor(i / cols);
+    const col = i % cols;
+
+    this.levelRects.push({
+      levelIndex: i,
+      x: startX + col * (cardW + gap),
+      y: startY + row * (cardH + gap),
+      w: cardW,
+      h: cardH,
+    });
+  }
+}
+
   }
 
   draw(ctx) {
+  if (this.game.mode !== "menu") return;
 
-    if (this.game.mode !== "menu") return;
-    const cw = this.game.ctx.canvas.width;
-    const ch = this.game.ctx.canvas.height;
+  const cw = this.game.ctx.canvas.width;
+  const ch = this.game.ctx.canvas.height;
 
-    const bg = this.getBackground();
+  const bg = this.getBackground();
 
-    // Background
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, cw, ch);
-    this.drawContain(ctx, bg, 0, 0, cw, ch);
+  // Background
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, cw, ch);
+  this.drawContain(ctx, bg, 0, 0, cw, ch);
 
-    // Always show theme toggle
-    this.drawToggle(ctx);
+  // Always show theme toggle
+  this.drawToggle(ctx);
 
-    if (this.scene === "menu") {
-      // Sky screen
-      this.drawMenuButton(ctx, this.startRect, "Start Game");
-    } else if (this.scene === "room") {
-      // Bedroom screen: back + 4 buttons
-      this.drawMenuButton(ctx, this.backRect, "← Menu");
-      this.drawMenuButton(ctx, this.newDreamRect, "New Dream");
-      this.drawMenuButton(ctx, this.loadDreamRect, "Load Dream (Coming Soon)");
-      this.drawMenuButton(ctx, this.helpRect, "Help");
-      this.drawMenuButton(ctx, this.creditsRect, "Credits");
+  if (this.scene === "menu") {
+    // Sky screen
+    this.drawMenuButton(ctx, this.startRect, "Start Game");
+
+  } else if (this.scene === "room") {
+    // Bedroom screen: back + 4 buttons
+    this.drawMenuButton(ctx, this.backRect, "← Menu");
+    this.drawMenuButton(ctx, this.newDreamRect, "New Dream");
+    this.drawMenuButton(ctx, this.loadDreamRect, "Load Dream (Coming Soon)");
+    this.drawMenuButton(ctx, this.helpRect, "Help");
+    this.drawMenuButton(ctx, this.creditsRect, "Credits");
+    this.drawMenuButton(ctx, this.levelSelectRect, "Select Level");
+
+
+    } else if (this.scene === "levelSelect") {
+      // ✅ CHANGED: fixed your braces/structure — levelSelect is its own else-if (not inside room)
+      this.drawMenuButton(ctx, this.levelBackRect, "← Room");
+
+      // ✅ CHANGED: title looks like screenshot (no giant dark stripe)
+      const titleY = ch * 0.17;
+      ctx.save();
+      ctx.fillStyle = "rgba(255,255,255,0.95)";
+      ctx.font = "700 52px serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.shadowColor = "rgba(0,0,0,0.65)";
+      ctx.shadowBlur = 14;
+      ctx.fillText("Select Level", cw / 2, titleY);
+      ctx.restore();
+
+      // ✅ CHANGED: portal “cards”
+      for (const r of this.levelRects) {
+        const L = this.levels[r.levelIndex];
+
+        // ✅ CHANGED: FIX “hover is not defined” — define it per card
+        const hover =
+          this.game.mouse && this.pointInRect(this.game.mouse.x, this.game.mouse.y, r);
+
+        // 1) frosted glass card background
+        this.drawGlassCard(ctx, r, { hover, locked: !L.unlocked });
+
+        // 2) portal image clipped inside rounded card
+        const portalImg = L.unlocked ? this.portalUnlocked : this.portalLocked;
+        this.drawImageClipped(ctx, portalImg, r, 16);
+
+        // 3) number badge / lock badge
+        const badgeR = Math.min(34, r.w * 0.12);
+        const bx = r.x + r.w / 2;
+        const by = r.y + r.h - badgeR - 14;
+
+        ctx.save();
+        ctx.fillStyle = "rgba(20,18,35,0.55)";
+        ctx.strokeStyle = "rgba(255,255,255,0.35)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(bx, by, badgeR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(255,255,255,0.95)";
+        ctx.font = `700 ${Math.floor(badgeR * 1.05)}px serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(L.unlocked ? String(L.id) : "🔒", bx, by + 1);
+        ctx.restore();
+
+        // 4) locked overlay
+        if (!L.unlocked) {
+          ctx.save();
+          ctx.globalAlpha = 0.22;
+          ctx.fillStyle = "black";
+          this.roundRect(ctx, r.x, r.y, r.w, r.h, 18);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
     } else if (this.scene === "dream") {
-      // Gameplay sample screen: back to room only
       this.drawMenuButton(ctx, this.backRect, "← Room");
     }
 
@@ -187,7 +355,7 @@ class MenuRoomController {
     if (this.showHelp) this.drawHelpModal(ctx);
     if (this.showCredits) this.drawCreditsModal(ctx);
 
-    // Fade overlay
+
     if (this.transitioning) {
       ctx.save();
       ctx.globalAlpha = this.fade;
@@ -196,6 +364,7 @@ class MenuRoomController {
       ctx.restore();
     }
   }
+
 
   handleClick(x, y) {
 
@@ -249,6 +418,38 @@ class MenuRoomController {
       return;
     }
 
+        // Level Select scene clicks
+    if (this.scene === "levelSelect") {
+      // Back to room
+      if (this.pointInRect(x, y, this.levelBackRect)) {
+        this.transitionTo("room");
+        return;
+      }
+
+      // Click a level
+      for (const r of this.levelRects) {
+        if (this.pointInRect(x, y, r)) {
+          const L = this.levels[r.levelIndex];
+          if (!L.unlocked) return;
+
+          this.selectedLevel = L.id;
+
+          // Start gameplay immediately (and let main.js rebuild world for that level)
+          if (this.game.startLevel) {
+            this.game.startLevel(this.selectedLevel);
+          } else {
+            // fallback if you haven’t added startLevel yet
+            this.game.mode = "gameplay";
+          }
+
+          return;
+        }
+      }
+
+  return; // ignore other clicks while on level select
+}
+
+
     // 4. Theme toggle (works in menu/room)
     if (this.pointInRect(x, y, this.toggleRect)) {
       this.theme = this.theme === "night" ? "day" : "night";
@@ -261,6 +462,7 @@ class MenuRoomController {
     if (this.scene === "menu" && this.pointInRect(x, y, this.startRect)) {
       this.transitionTo("room");
       return;
+      
     }
 
     // 6. Room buttons
@@ -271,6 +473,12 @@ class MenuRoomController {
         this.transitionTo("menu");
         return;
       }
+    }
+      if (this.pointInRect(x, y, this.levelSelectRect)) {
+          this.transitionTo("levelSelect");
+          return;
+        }
+
 
       if (this.pointInRect(x, y, this.newDreamRect)) {
         this.transitionTo("dream");
@@ -301,7 +509,7 @@ class MenuRoomController {
         return;
       }
     }
-  }
+  
 
   transitionTo(sceneKey) {
     if (this.transitioning) return;
@@ -337,7 +545,7 @@ class MenuRoomController {
   ctx.fillText(label, r.x + r.w / 2, r.y + r.h / 2);
 
   ctx.restore();
-}
+ }
 
 
 
@@ -376,7 +584,7 @@ class MenuRoomController {
 
   // Backgrounds
 
-  getBackground() {
+getBackground() {
     if (this.scene === "menu") {
       return this.theme === "night"
         ? ASSET_MANAGER.getAsset("./assets/background/menu/NightDream.png")
@@ -389,8 +597,14 @@ class MenuRoomController {
         : ASSET_MANAGER.getAsset("./assets/background/menu/DaydreamRoom.png");
     }
 
+    if (this.scene === "levelSelect") {
+      return ASSET_MANAGER.getAsset("./assets/background/selectLevel/LevelSelectCorridor.png");
+    }
+
     return ASSET_MANAGER.getAsset("./assets/background/menu/newDream.png");
   }
+
+
 
   // Helpers
 
@@ -423,16 +637,95 @@ class MenuRoomController {
     ctx.drawImage(img, dx, dy, dw, dh);
   }
 
+  // ✅ CHANGED: helper used by glass cards + locked overlay
+  roundRect(ctx, x, y, w, h, r) {
+    const rr = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + rr, y);
+    ctx.arcTo(x + w, y, x + w, y + h, rr);
+    ctx.arcTo(x + w, y + h, x, y + h, rr);
+    ctx.arcTo(x, y + h, x, y, rr);
+    ctx.arcTo(x, y, x + w, y, rr);
+    ctx.closePath();
+  }
+
+  // ✅ CHANGED: frosted-glass card look (like screenshot)
+  drawGlassCard(ctx, r, { hover = false, locked = false } = {}) {
+    ctx.save();
+
+    // soft shadow
+    ctx.shadowColor = "rgba(0,0,0,0.35)";
+    ctx.shadowBlur = 18;
+    ctx.shadowOffsetY = 8;
+
+    // frosted fill
+    ctx.fillStyle = locked ? "rgba(20, 20, 35, 0.55)" : "rgba(255,255,255,0.12)";
+    this.roundRect(ctx, r.x, r.y, r.w, r.h, 18);
+    ctx.fill();
+
+    // border
+    ctx.shadowBlur = 0;
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = locked ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.30)";
+    ctx.stroke();
+
+    // hover glow
+    if (hover && !locked) {
+      ctx.strokeStyle = "rgba(210, 200, 255, 0.55)";
+      ctx.lineWidth = 3;
+      this.roundRect(ctx, r.x + 1, r.y + 1, r.w - 2, r.h - 2, 18);
+      ctx.stroke();
+
+      ctx.globalAlpha = 0.10;
+      ctx.fillStyle = "white";
+      this.roundRect(ctx, r.x + 1, r.y + 1, r.w - 2, r.h - 2, 18);
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  // ✅ CHANGED: portal image clipped inside the rounded card
+  drawImageClipped(ctx, img, r, pad = 14) {
+    if (!img) return;
+
+    const ix = r.x + pad;
+    const iy = r.y + pad;
+    const iw = r.w - pad * 2;
+    const ih = r.h - pad * 2;
+
+    ctx.save();
+    this.roundRect(ctx, ix, iy, iw, ih, 14);
+    ctx.clip();
+
+    // contain
+    const scale = Math.min(iw / img.width, ih / img.height);
+    const dw = img.width * scale;
+    const dh = img.height * scale;
+    const dx = ix + (iw - dw) / 2;
+    const dy = iy + (ih - dh) / 2;
+
+    ctx.drawImage(img, dx, dy, dw, dh);
+    ctx.restore();
+  }
+
+
+
   drawHelpModal(ctx) {
     const cw = this.game.ctx.canvas.width;
     const ch = this.game.ctx.canvas.height;
 
     // Dim background
-    ctx.save();
-    ctx.globalAlpha = 0.55;
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, cw, ch);
-    ctx.restore();
+  ctx.save();
+  ctx.fillStyle = "white";
+  ctx.font = "700 46px serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  ctx.shadowColor = "rgba(0,0,0,0.7)";
+  ctx.shadowBlur = 12;
+  ctx.fillText("Select Level", cw/2, titleY);
+  ctx.restore();
+
 
     // Panel
     const p = this.helpPanelRect;
