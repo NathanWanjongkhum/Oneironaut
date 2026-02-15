@@ -1,5 +1,5 @@
-const gameEngine = new GameEngine();
 const ASSET_MANAGER = new AssetManager();
+const gameEngine = new GameEngine();
 
 ASSET_MANAGER.queueDownload("./assets/background/menu/DayDream.png");
 ASSET_MANAGER.queueDownload("./assets/background/menu/NightDream.png");
@@ -12,12 +12,29 @@ ASSET_MANAGER.queueDownload("./assets/background/clouds7/1.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/2.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/3.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/4.png");
-ASSET_MANAGER.queueDownload("./assets/entities/bed.png")
+
+ASSET_MANAGER.queueDownload("./assets/InventorySlots.png");
+ASSET_MANAGER.queueDownload("./assets/entities/bed.png");
 ASSET_MANAGER.queueDownload("./assets/entities/ghost1.png");
-ASSET_MANAGER.queueDownload("./assets/entities/sleepyguy.png")
+ASSET_MANAGER.queueDownload("./assets/entities/sleepyguy.png");
+
+// Items
+ASSET_MANAGER.queueDownload("./assets/items/Sword.png");
+ASSET_MANAGER.queueDownload("./assets/items/ToothBrush.png");
+ASSET_MANAGER.queueDownload("./assets/items/TeddyBear.png");
+ASSET_MANAGER.queueDownload("./assets/items/SleepDust.png");
+ASSET_MANAGER.queueDownload("./assets/items/SandBag1.png");
+ASSET_MANAGER.queueDownload("./assets/items/SandBag3.png");
+
+ASSET_MANAGER.queueDownload("./assets/items/DreamCatcher.png");
+ASSET_MANAGER.queueDownload("./assets/items/Rocket.png");
+ASSET_MANAGER.queueDownload("./assets/items/SleepMask.png");
+ASSET_MANAGER.queueDownload("./assets/items/TheStrangeLamp.png");
+ASSET_MANAGER.queueDownload("./assets/items/Pijama.png");
+
+ASSET_MANAGER.queueDownload("./assets/items/DreamBubble.png");
 
 ASSET_MANAGER.downloadAll(() => {
-
 	PARAMS.BLOCKWIDTH = PARAMS.BITWIDTH * PARAMS.SCALE;
 
 	const canvas = document.getElementById("gameWorld");
@@ -25,71 +42,27 @@ ASSET_MANAGER.downloadAll(() => {
 
 	PARAMS.CANVAS_WIDTH = canvas.width;
 	PARAMS.CANVAS_HEIGHT = canvas.height;
-	//PARAMS.DEBUG = true;
 
 	gameEngine.init(ctx);
 	gameEngine.start();
 
-	gameEngine.addEntity(new Background(gameEngine));//keep this as first entity added!
-	gameEngine.addEntity(new Ghost(gameEngine, 700, 50));
-	gameEngine.addEntity(new Ghost(gameEngine, 775, 350));
-	gameEngine.addEntity(new Ghost(gameEngine, 300, 400));
-	gameEngine.addEntity(new Bed(gameEngine, 700, 300));
-	gameEngine.addEntity(new SleepyGuy(gameEngine, 100, 100));
-	gameEngine.addEntity(new WaypointBuilder(gameEngine));
-	gameEngine.addEntity(new EndGame(gameEngine));
-
+	gameEngine.mode = "menu";
+	gameEngine.entities = [];
 	gameEngine.addEntity(new MenuRoomController(gameEngine));
-	
 
-	// Start music after any user interaction
-	canvas.addEventListener("pointerdown", tryStartMusic);
+	// TEST: drop some items near the player
+	gameEngine.addEntity(new PickupItem(gameEngine, 220, 140, "Sword"));
+	gameEngine.addEntity(new PickupItem(gameEngine, 280, 140, "ToothBrush"));
+	gameEngine.addEntity(new PickupItem(gameEngine, 340, 140, "TeddyBear"));
 
+	gameEngine.addEntity(new PickupItem(gameEngine, 220, 220, "DreamCatcher"));
+	gameEngine.addEntity(new PickupItem(gameEngine, 280, 220, "Rocket"));
+	gameEngine.addEntity(new PickupItem(gameEngine, 340, 220, "Pajama"));
+
+
+	Music.init();
+	if (window.setMusicMode) window.setMusicMode("menu");
+
+	// tryStart once (prevents repeated calls)
+	canvas.addEventListener("pointerdown", () => Music.tryStart(), { once: true });
 });
-
-
-//TODO: This belongs in its own file/controller. Main should not have this music handling!
-// Music (starts on first click / tap)
-const MUSIC = {
-  mode: "menu", // "menu" or "dream"
-  started: false,
-  tracks: {
-    menu: new Audio("./assets/music/Oneironaut.mp3"),
-    dream: new Audio("./assets/music/Lucid_Journey.mp3"),
-  },
-};
-
-for (const k in MUSIC.tracks) {
-  MUSIC.tracks[k].loop = true;
-  MUSIC.tracks[k].volume = 0.55;
-  MUSIC.tracks[k].preload = "auto";
-}
-
-function stopAllMusic() {
-  for (const k in MUSIC.tracks) {
-    const a = MUSIC.tracks[k];
-    a.pause();
-    a.currentTime = 0;
-  }
-}
-
-function playMusic(mode) {
-  MUSIC.mode = mode;
-  if (!MUSIC.started) return;
-
-  stopAllMusic();
-  const a = MUSIC.tracks[mode];
-  a.play().catch(() => {});
-}
-
-// Expose so MenuRoomController can call it
-window.setMusicMode = playMusic;
-
-function tryStartMusic() {
-  if (MUSIC.started) return;
-
-  const a = MUSIC.tracks[MUSIC.mode];
-  a.play()
-    .then(() => (MUSIC.started = true))
-    .catch(() => (MUSIC.started = false));
-}

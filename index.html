@@ -1,15 +1,22 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Oneironaut</title>
-  
-    <script type="text/javascript" src="./gameengine.js"></script>
-    <script type="text/javascript" src="./background.js"></script>
+
     <script type="text/javascript" src="./assetmanager.js"></script>
-    <script type="text/javascript" src="./menuroomcontroller.js"></script>
     <script type="text/javascript" src="./timer.js"></script>
+
+    <script type="text/javascript" src="./inventory.js"></script>
+    <script type="text/javascript" src="./HUD.js"></script>
+    <script type="text/javascript" src="./OptionsOverlay.js"></script>
+
+    <script type="text/javascript" src="./gameengine.js"></script>
+    <script type="text/javascript" src="./menuroomcontroller.js"></script>
+
+    <script type="text/javascript" src="./background.js"></script>
     <script type="text/javascript" src="./boundingbox.js"></script>
     <script type="text/javascript" src="./util.js"></script>
     <script type="text/javascript" src="./animator.js"></script>
@@ -18,15 +25,21 @@
     <script type="text/javascript" src="./sleepyguy.js"></script>
     <script type="text/javascript" src="./enemies.js"></script>
     <script type="text/javascript" src="./endgame.js"></script>
+
+    <script type="text/javascript" src="./music.js"></script>
+    <script type="text/javascript" src="./items.js"></script>
+    <script type="text/javascript" src="./DreamBubbleOverlay.js"></script>
     <script type="text/javascript" src="./main.js"></script>
     <style>
-        html, body {
+        html,
+        body {
             margin: 0;
             height: 100%;
             overflow: hidden;
             background: #05060a;
             font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
         }
+
         .stage {
             height: 100%;
             display: grid;
@@ -34,15 +47,17 @@
             padding: 24px;
             box-sizing: border-box;
         }
+
         .frame {
             width: min(1400px, 92vw);
             height: min(820px, 92vh);
             border-radius: 28px;
-            border: 2px solid rgba(255,255,255,0.30);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.55);
+            border: 2px solid rgba(255, 255, 255, 0.30);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
             overflow: hidden;
-            background: rgba(0,0,0,0.35);
+            background: rgba(0, 0, 0, 0.35);
         }
+
         canvas {
             width: 100%;
             height: 100%;
@@ -59,7 +74,9 @@
     </div>
     <div>
         <br />
-        <input type="checkbox" id="debug"> Debug <input type="checkbox" id="mute"> Mute <input type="range" id="volume" min="0" max="1" value="0.1" step="0.05"> Volume
+        <input type="checkbox" id="debug"> Debug <input type="checkbox" id="mute"> Mute <input type="range" id="volume"
+            min="0" max="1" value="0.1" step="0.05"> Volume
     </div>
 </body>
+
 </html>
