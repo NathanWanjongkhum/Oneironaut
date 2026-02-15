@@ -28,22 +28,7 @@ class Monster extends Entity {
             this.aggroTimer -= this.game.clockTick;
         }
 
-        this.checkPlayerCollision();
         super.update();
-    }
-
-    /**
-     * Handles collision with the SleepyGuy.
-     * If a collision occurs, it triggers monster collision handling.
-     */
-    checkPlayerCollision() {
-        const guy = this.game.sleepyGuy;
-
-        if (!guy || guy.dead || !guy.BB || !this.BB) return;
-
-        if (this.BB.collide(guy.BB)) {
-            this.onCollision(guy);
-        }
     }
 
     /**
