@@ -25,6 +25,8 @@ ASSET_MANAGER.queueDownload("./assets/entities/sleepyguy.png")
 
 
 ASSET_MANAGER.downloadAll(() => {
+  PARAMS.BITWIDTH = 32;
+  PARAMS.SCALE = 1;
 	PARAMS.BLOCKWIDTH = PARAMS.BITWIDTH * PARAMS.SCALE;
 
 	const canvas = document.getElementById("gameWorld");
@@ -41,13 +43,24 @@ ASSET_MANAGER.downloadAll(() => {
     engine.addEntity(new Background(engine)); // keep first entity added!
 
     const spiderPath = [
-      { x: 400, y: 100 },
-      { x: 600, y: 100 },
-      { x: 600, y: 300 },
+      { x: 400, y: 0 },
+      { x: 600, y: 0 },
     ];
 
+    // Add blocks 
+    const builder = new LevelBuilder(engine);
+    // Spawn a floor
+    builder.spawnRow(15, 0, 20); 
+
+    // Spawn a random pillar
+    builder.spawnBlock(5, 14);
+    builder.spawnBlock(5, 13);
+
+    // This will be automatically rejected by the logic above!
+    builder.spawnBlock(5, 14);
+
+    engine.addEntity(new Sheep(engine, 100, 200));
     engine.addEntity(new Spider(engine, spiderPath));
-    engine.addEntity(new Sheep(engine, 500, 50));
     engine.addEntity(new Ghost(engine, 700, 50));
     engine.addEntity(new Ghost(engine, 775, 350));
     engine.addEntity(new Ghost(engine, 300, 400));
@@ -56,6 +69,17 @@ ASSET_MANAGER.downloadAll(() => {
     engine.addEntity(new WaypointBuilder(engine));
     engine.addEntity(new EndGame(engine));
     engine.addEntity(new MenuRoomController(engine));
+
+    engine.blockMap = {};
+
+    engine.entities.forEach(e => { // Keep this last
+        if (e instanceof Block) {
+            const gx = Math.floor(e.x / PARAMS.BLOCKWIDTH);
+            const gy = Math.floor(e.y / PARAMS.BLOCKWIDTH);
+            
+            engine.blockMap[`${gx},${gy}`] = e;
+        }
+    });  
   }
 
   // Clears current world state and rebuilds it

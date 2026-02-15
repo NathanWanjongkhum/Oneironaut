@@ -48,3 +48,18 @@ class Entity {
         );
     }
 }
+
+class Block extends Entity {
+    constructor(game, x, y) {
+        super(game, x, y);
+        this.width = PARAMS.BLOCKWIDTH;
+        this.height = PARAMS.BLOCKWIDTH;
+        this.updateBB();
+    }
+
+    draw(ctx) {
+        ctx.fillStyle = "saddlebrown";
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+        super.draw(ctx);
+    }
+}

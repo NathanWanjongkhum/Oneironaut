@@ -6,6 +6,7 @@ class Monster extends Entity {
 
         this.velocity = { x: 0, y: 0 };
         this.speed = 0;         // Pixels per second
+        this.gravity = 3;       // Not used for all monsters
     }
 
     /**
@@ -97,9 +98,13 @@ class Ghost extends Monster {
         this.updateBB();
     };
 
-    onCollision(guy) {
-        if (guy.onHitByGhost) {
-            guy.onHitByGhost(this);
+    onCollision(entity) {
+        switch (entity.constructor.name) {
+            case "SleepyGuy":
+                entity.onHitByGhost(this);
+                break;
+            default:
+                break;
         }
     }
 
@@ -214,6 +219,7 @@ class Sheep extends Monster {
         this.width = 32;
         this.height = 32;
         this.scale = 2;
+        this.speed = 150;
 
         this.alertRadius = 200;
         this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/sheep_shadow.png");
@@ -225,15 +231,58 @@ class Sheep extends Monster {
         this.loadAnimations();
         this.updateBB();
     }
+    onCollision(block) {
+        if (block instanceof Block) {
+            const sheepBB = this.BB;
+            const blockBB = block.BB;
+
+            const overlapX = (sheepBB.right > blockBB.left && sheepBB.left < blockBB.right);
+            const overlapY = (sheepBB.bottom > blockBB.top && sheepBB.top < blockBB.bottom);
+
+            if (overlapX && overlapY) {
+                const diffX = (sheepBB.right - blockBB.left) < (blockBB.right - sheepBB.left) 
+                            ? (sheepBB.right - blockBB.left) : (blockBB.right - sheepBB.left);
+                const diffY = (sheepBB.bottom - blockBB.top) < (blockBB.bottom - sheepBB.top) 
+                            ? (sheepBB.bottom - blockBB.top) : (blockBB.bottom - sheepBB.top);
+
+                if (diffY < diffX) {
+                    // Vertical Collision (Floor or Ceiling)
+                    if (this.velocity.y > 0 && sheepBB.bottom > blockBB.top) {
+                        // Standing on top of block
+                        this.y = blockBB.top - (this.height * this.scale);
+                        this.velocity.y = 0;
+                        this.onGround = true;
+                    } else if (this.velocity.y < 0) { 
+                        // Hitting head on ceiling
+                        this.y = blockBB.bottom;
+                        this.velocity.y = 0;
+                    }
+                } else {
+                    // Horizontal Collision (Walls)
+                    if (this.velocity.x > 0) { 
+                        // Hit left side of block
+                        this.x = blockBB.left - (this.width * this.scale);
+                    } else if (this.velocity.x < 0) { 
+                        // Hit right side of block
+                        this.x = blockBB.right;
+                    }
+                    this.velocity.x = 0;
+                }
+            }
+        }
+
+        // Update BB after snapping position
+        this.updateBB();
+    }
 
     update() {
         if (this.game.mode !== "gameplay") return;
         if (this.dead || this.game.gameOver) return;
 
         const TICK = this.game.clockTick;
+        this.onGround = false;
 
         // Run away from SleepyGuy
-        this.velocity = { x: 0, y: 0 };
         const ent = this.game.sleepyGuy;
 
         if (ent && !ent.dead) {
@@ -249,23 +298,30 @@ class Sheep extends Monster {
             const dist = Math.sqrt(dx*dx + dy*dy);
 
             if (dist !== 0 && dist < this.alertRadius) {
-                const speed = 150;
                 const nx = dx / dist;
 
-                this.velocity.x = -nx * speed;
-                this.velocity.y = 0;
-
-                this.facing = this.velocity.x > 0;
-                this.state = this.facing ? 3 : 2;
+                this.velocity.x = -nx * this.speed;
             } else {
-                this.state = 4;
+                this.velocity.x = 0;
             }
-        } else {
-            this.state = 0;
         }
+
+        // Update facing and state based on velocity
+        if (this.velocity.x !== 0) {
+            this.facing = this.velocity.x > 0;
+            this.state = this.facing ? 3 : 2; // panic right : panic left
+        } else {
+            this.state = 4; // idle
+        }
+
+        // Apply gravity
+        this.velocity.y += this.gravity;
+        if (this.velocity.y > 300) this.velocity.y = 300; // Max fall speed
 
         this.x += this.velocity.x * TICK;
         this.y += this.velocity.y * TICK;
+
+        this.updateBB();
 
         super.update();
     }
@@ -311,9 +367,13 @@ class Spider extends Monster {
         this.updateBB();
     };
 
-    onCollision(guy) {
-        if (guy.onHitByGhost) {
-            guy.onHitByGhost(this);
+    onCollision(entity) {
+        switch (entity.constructor.name) {
+            case "SleepyGuy":
+                entity.onHitByGhost(this);
+                break;
+            default:
+                break;
         }
     }
 

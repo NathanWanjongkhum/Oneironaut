@@ -52,30 +52,47 @@ class GameEngine {
             };
         });
 
-    canvas.addEventListener("mousemove", (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
+        canvas.addEventListener("mousemove", (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
 
-        this.mouse = {
-            x: (e.clientX - rect.left) * scaleX,
-            y: (e.clientY - rect.top) * scaleY
-        };
-    });
+            this.mouse = {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY
+            };
+        });
 
-    window.addEventListener("keydown", (e) => {
-        this.keys[e.code] = true;
-    });
-    window.addEventListener("keyup", (e) => {
-        this.keys[e.code] = false;
-    });
-  }
+        window.addEventListener("keydown", (e) => {
+            this.keys[e.code] = true;
+        });
+        window.addEventListener("keyup", (e) => {
+            this.keys[e.code] = false;
+        });
+    }
 
-  addEntity(entity) {
-    this.entities.push(entity);
-  }
+    addEntity(entity) {
+        this.entities.push(entity);
+    }
 
-  update() {
+    checkBlockCollision(entity) {
+        const left = Math.floor(entity.BB.left / PARAMS.BLOCKWIDTH);
+        const right = Math.floor(entity.BB.right / PARAMS.BLOCKWIDTH);
+        const top = Math.floor(entity.BB.top / PARAMS.BLOCKWIDTH);
+        const bottom = Math.floor(entity.BB.bottom / PARAMS.BLOCKWIDTH);
+
+        // Only check the cells the entity is overlapping
+        for (let x = left; x <= right; x++) {
+            for (let y = top; y <= bottom; y++) {
+                const block = this.engine.blockMap[`${x},${y}`];
+                if (block) {
+                    entity.onCollision(block);
+                }
+            }
+        }
+    }
+
+    update() {
         for (let i = 0; i < this.entities.length; i++) {
             const ent = this.entities[i];
             if (!ent.removeFromWorld && ent.update) ent.update();
@@ -83,7 +100,7 @@ class GameEngine {
 
         // remove entities marked for deletion
         this.entities = this.entities.filter(e => !e.removeFromWorld);
-  }
+    }
 
     draw() {
         // clear whole canvas
