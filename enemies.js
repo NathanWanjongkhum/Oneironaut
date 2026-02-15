@@ -49,7 +49,7 @@ class Monster extends Entity {
             y: player.y
         }
         
-        return getNormalVector(center, playerPos)
+        return getNormalVector(playerPos, center)
     }
 }
 
@@ -122,7 +122,6 @@ class Ghost extends Monster {
             this.state = 2;
 
             vector = this.getVectorToPlayer();
-            
         } else if (distToSpawn > 5) {
             this.speed = DEFEND_SPEED; // Walk
             this.state = 1;     
