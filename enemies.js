@@ -29,13 +29,23 @@ class Monster extends Entity {
     }
 
     draw(ctx) {
-        if (PARAMS.DEBUG && this.leashRadius > 0) {
-            ctx.beginPath();
-            ctx.strokeStyle = "yellow";
-            ctx.lineWidth = 1;
-            ctx.arc(this.spawn.x, this.spawn.y, this.leashRadius, 0, 2 * Math.PI);
-            ctx.stroke();
-            ctx.closePath();
+        if (PARAMS.DEBUG) {
+            if (this.leashRadius > 0) {
+                ctx.beginPath();
+                ctx.strokeStyle = "yellow";
+                ctx.lineWidth = 1;
+                ctx.arc(this.spawn.x, this.spawn.y, this.leashRadius, 0, 2 * Math.PI);
+                ctx.stroke();
+                ctx.closePath();
+            }
+
+            if (this.spawn !== undefined) {
+                ctx.beginPath();
+                ctx.fillStyle = "cyan";
+                ctx.arc(this.spawn.x, this.spawn.y, 2, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.closePath();
+            }
         }
 
         super.draw(ctx);
