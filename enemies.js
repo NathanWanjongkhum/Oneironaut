@@ -204,9 +204,9 @@ class Ghost extends Monster {
     }
 }
 
-class Sheep extends Entity {
-    constructor(game, positionX, positionY) {
-        super(game, positionX, positionY);
+class Sheep extends Monster {
+    constructor(game, x, y) {
+        super(game, x, y);
 
         this.SPRITE_WIDTH = 32;
         this.SPRITE_HEIGHT = 32;
