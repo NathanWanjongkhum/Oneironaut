@@ -86,7 +86,7 @@ class GameEngine {
         for (let x = left; x <= right; x++) {
             for (let y = top; y <= bottom; y++) {
                 const block = this.blockMap[`${x},${y}`];
-                if (block) {
+                if (block && entity.onCollision) {
                     entity.onCollision(block);
                 }
             }

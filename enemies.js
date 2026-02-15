@@ -1,9 +1,18 @@
 class Monster extends Entity {
-    constructor(game, x, y) {
-        super(game, x, y);
+    constructor(game, _x, _y) {
+        super(game, _x, _y);
 
+        this.spawn = {x: _x, y: _y}
+
+        // The radius within which the monster will actively chase the player
+        this.leashRadius = 200;
+        // Extends range monsters will chase player even if not directly in range
+        this.aggroTimer = 0; 
+        // If Sheep will alert this monsters
+        this.canBeAlerted = false; 
+        
+        // Marks monster for removal
         this.dead = false;
-
         this.velocity = { x: 0, y: 0 };
         this.speed = 0;         // Pixels per second
         this.gravity = 3;       // Not used for all monsters
@@ -14,6 +23,10 @@ class Monster extends Entity {
      */
     update() {
         if (this.dead) return;
+
+        if (this.aggroTimer > 0) {
+            this.aggroTimer -= this.game.clockTick;
+        }
 
         this.checkPlayerCollision();
         super.update();
@@ -34,24 +47,6 @@ class Monster extends Entity {
     }
 
     /**
-     * Get distance to the SleepyGuy.
-     * Returns Infinity if player is dead/missing.
-     */
-    getDistToPlayer() {
-        const player = this.game.sleepyGuy;
-        if (!player || player.dead) return Infinity;
-
-        // Calculate center-to-center distance
-        const thisCX = this.x + (this.width * this.scale) / 2;
-        const thisCY = this.y + (this.height * this.scale) / 2;
-
-        return Math.sqrt(
-            Math.pow(player.x - thisCX, 2) + 
-            Math.pow(player.y - thisCY, 2)
-        );
-    }
-
-    /**
      * Get a normalized vector {x, y} pointing toward the player.
      * Returns {x: 0, y: 0} if already at target or player missing.
      */
@@ -59,16 +54,17 @@ class Monster extends Entity {
         const player = this.game.sleepyGuy;
         if (!player || player.dead) return { x: 0, y: 0 };
 
-        const thisCX = this.x + (this.width * this.scale) / 2;
-        const thisCY = this.y + (this.height * this.scale) / 2;
-
-        const dx = player.x - thisCX;
-        const dy = player.y - thisCY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist === 0) return { x: 0, y: 0 };
-
-        return { x: dx / dist, y: dy / dist };
+        const center = {
+            x: this.x + (this.width * this.scale) / 2,
+            y: this.y + (this.height * this.scale) / 2
+        }
+        
+        const playerPos = {
+            x: player.x,
+            y: player.y
+        }
+        
+        return getNormalVector(center, playerPos)
     }
 }
 
@@ -78,12 +74,13 @@ class Ghost extends Monster {
 
         this.width = 128;
         this.height = 128;
+        this.scale = 1.5;
 
         this.radius = 100;
         this.visualRadius = 300;
-        this.scale = 1.5;
+        this.canBeAlerted = true;
+
         this.dead = false;
-        
         this.state = 0;
         this.type = 0;
         this.facing = { x: 0, y: 0 };
@@ -111,37 +108,48 @@ class Ghost extends Monster {
     update() {
         if (this.game.mode !== "gameplay") return;
         if (this.dead) return;
-
-        const TICK = this.game.clockTick;
-
         if (this.state === 3 || this.game.gameOver) return;
+
+        const AGGRO_SPEED = 120;
+        const DEFEND_SPEED = 80;
+        const TICK = this.game.clockTick;
 
         // Reset velocity
         this.velocity = { x: 0, y: 0 };
 
-        const dist = this.getDistToPlayer();
-        const vec = this.getVectorToPlayer();
-
-        if (dist !== Infinity && dist < this.visualRadius) {
-            if (dist < 200) {
-                this.speed = 120; // Run
-                this.state = 2;
-            } else {
-                this.speed = 80;  // Walk
-                this.state = 1;
-            }
-            
-            // Move towards player
-            this.velocity.x = vec.x * this.speed;
-            this.velocity.y = vec.y * this.speed;
-
-        } else {
-            // Idle
-            this.speed = 0;
-            this.state = 0;
+        const playerPos = {
+            x: this.game.sleepyGuy.x,
+            y: this.game.sleepyGuy.y
+        }
+        const thisPos = {
+            x: this.x,
+            y: this.y
         }
 
-        // Apply Movement
+        const distPlayerToSpawn = getDistance(playerPos, this.spawn)
+        const distToSpawn = getDistance(thisPos, this.spawn)
+
+        const isAggro = this.aggroTimer > 0;
+
+        let vector = null
+        if (isAggro || distPlayerToSpawn < this.leashRadius) {            
+            this.speed = AGGRO_SPEED; // Run
+            this.state = 2;
+
+            vector = this.getVectorToPlayer();
+            
+        } else if (distToSpawn > 5) {
+            this.speed = DEFEND_SPEED; // Walk
+            this.state = 1;     
+            
+            vector = getNormalVector(thisPos, this.spawn)
+        }
+        
+        if (vector) {
+            this.velocity.x = vector.x * this.speed;
+            this.velocity.y = vector.y * this.speed;
+        }
+
         this.x += this.velocity.x * TICK;
         this.y += this.velocity.y * TICK;
 
@@ -165,8 +173,8 @@ class Ghost extends Monster {
         super.draw(ctx);
     };
 
-    loadAnimations() { // states
-        for(let i = 0; i < 10; i++) { 
+    loadAnimations() {
+        for(let i = 0; i < 10; i++) { // states
             this.animations.push([]);
             for(let j = 0; j < 3; j++) { // ghost types 
                 this.animations.push([]);
@@ -219,9 +227,12 @@ class Sheep extends Monster {
         this.width = 32;
         this.height = 32;
         this.scale = 2;
+        
         this.speed = 150;
-
         this.alertRadius = 200;
+        this.broadcastRadius = 300;
+        this.canBeAlerted = true;
+
         this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/sheep_shadow.png");
         
         this.state = 4; // 0: left, 1: right, 2: panic L, 3: panic R, 4: idle
@@ -231,48 +242,53 @@ class Sheep extends Monster {
         this.loadAnimations();
         this.updateBB();
     }
+
     onCollision(block) {
-        if (block instanceof Block) {
-            const sheepBB = this.BB;
-            const blockBB = block.BB;
+        switch (block.constructor.name) {
+            case "Block":
+                const sheepBB = this.BB;
+                const blockBB = block.BB;
 
-            const overlapX = (sheepBB.right > blockBB.left && sheepBB.left < blockBB.right);
-            const overlapY = (sheepBB.bottom > blockBB.top && sheepBB.top < blockBB.bottom);
+                const overlapX = (sheepBB.right > blockBB.left && sheepBB.left < blockBB.right);
+                const overlapY = (sheepBB.bottom > blockBB.top && sheepBB.top < blockBB.bottom);
 
-            if (overlapX && overlapY) {
-                const diffX = (sheepBB.right - blockBB.left) < (blockBB.right - sheepBB.left) 
-                            ? (sheepBB.right - blockBB.left) : (blockBB.right - sheepBB.left);
-                const diffY = (sheepBB.bottom - blockBB.top) < (blockBB.bottom - sheepBB.top) 
-                            ? (sheepBB.bottom - blockBB.top) : (blockBB.bottom - sheepBB.top);
+                if (overlapX && overlapY) {
+                    const diffX = (sheepBB.right - blockBB.left) < (blockBB.right - sheepBB.left) 
+                                ? (sheepBB.right - blockBB.left) : (blockBB.right - sheepBB.left);
+                    const diffY = (sheepBB.bottom - blockBB.top) < (blockBB.bottom - sheepBB.top) 
+                                ? (sheepBB.bottom - blockBB.top) : (blockBB.bottom - sheepBB.top);
 
-                if (diffY < diffX) {
-                    // Vertical Collision (Floor or Ceiling)
-                    if (this.velocity.y > 0 && sheepBB.bottom > blockBB.top) {
-                        // Standing on top of block
-                        this.y = blockBB.top - (this.height * this.scale);
-                        this.velocity.y = 0;
-                        this.onGround = true;
-                    } else if (this.velocity.y < 0) { 
-                        // Hitting head on ceiling
-                        this.y = blockBB.bottom;
-                        this.velocity.y = 0;
+                    if (diffY < diffX) {
+                        // Vertical Collision (Floor or Ceiling)
+                        if (this.velocity.y > 0 && sheepBB.bottom > blockBB.top) {
+                            // Standing on top of block
+                            this.y = blockBB.top - (this.height * this.scale);
+                            this.velocity.y = 0;
+                            this.onGround = true;
+                        } else if (this.velocity.y < 0) { 
+                            // Hitting head on ceiling
+                            this.y = blockBB.bottom;
+                            this.velocity.y = 0;
+                        }
+                    } else {
+                        // Horizontal Collision (Walls)
+                        if (this.velocity.x > 0) { 
+                            // Hit left side of block
+                            this.x = blockBB.left - (this.width * this.scale);
+                        } else if (this.velocity.x < 0) { 
+                            // Hit right side of block
+                            this.x = blockBB.right;
+                        }
+                        this.velocity.x = 0;
                     }
-                } else {
-                    // Horizontal Collision (Walls)
-                    if (this.velocity.x > 0) { 
-                        // Hit left side of block
-                        this.x = blockBB.left - (this.width * this.scale);
-                    } else if (this.velocity.x < 0) { 
-                        // Hit right side of block
-                        this.x = blockBB.right;
-                    }
-                    this.velocity.x = 0;
                 }
-            }
-        }
 
-        // Update BB after snapping position
-        this.updateBB();
+                // Update BB after snapping position
+                this.updateBB();
+                break;
+            default:
+                break;
+        }
     }
 
     update() {
@@ -301,6 +317,8 @@ class Sheep extends Monster {
                 const nx = dx / dist;
 
                 this.velocity.x = -nx * this.speed;
+
+                this.alertOthers(thisCX, thisCY);
             } else {
                 this.velocity.x = 0;
             }
@@ -324,6 +342,24 @@ class Sheep extends Monster {
         this.updateBB();
 
         super.update();
+    }
+
+    alertOthers(myX, myY) {
+        for (let i = 0; i < this.game.entities.length; i++) {
+            const entity = this.game.entities[i];
+
+            // Checks if the entity is a Monster (but not itself) and can be alerted
+            if (entity instanceof Monster && entity !== this && entity.canBeAlerted) {
+                const entCX = entity.x + (entity.width * entity.scale) / 2;
+                const entCY = entity.y + (entity.height * entity.scale) / 2;
+                const dist = Math.sqrt(Math.pow(myX - entCX, 2) + Math.pow(myY - entCY, 2));
+
+                if (dist < this.broadcastRadius) {
+                    entity.aggro = true; 
+                    entity.target = this.game.sleepyGuy; 
+                }
+            }
+        }
     }
 
     loadAnimations() {
@@ -350,14 +386,15 @@ class Spider extends Monster {
     constructor(game, path) {
         super(game, path[0].x, path[0].y);
         
-        this.path = path; 
-        this.targetIndex = 1; 
-        
         this.width = 64;
         this.height = 64;
         this.scale = 2;
+        
         this.speed = 150;
         
+        this.path = path; 
+        this.targetIndex = 1; 
+
         // TODO: Replace with actual spider spritesheet
         this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/ghost1.png"); // Placeholder
 
