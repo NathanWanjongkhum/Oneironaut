@@ -5,7 +5,7 @@ class Monster extends Entity {
         this.spawn = {x: _x, y: _y}
 
         // The radius within which the monster will actively chase the player
-        this.leashRadius = 200;
+        this.leashRadius = 0;
         // Extends range monsters will chase player even if not directly in range
         this.aggroTimer = 0; 
         // If Sheep will alert this monsters
@@ -18,9 +18,6 @@ class Monster extends Entity {
         this.gravity = 3;       // Not used for all monsters
     }
 
-    /**
-     * Checks player collision.
-     */
     update() {
         if (this.dead) return;
 
@@ -29,6 +26,19 @@ class Monster extends Entity {
         }
 
         super.update();
+    }
+
+    draw(ctx) {
+        if (PARAMS.DEBUG && this.leashRadius > 0) {
+            ctx.beginPath();
+            ctx.strokeStyle = "yellow";
+            ctx.lineWidth = 1;
+            ctx.arc(this.spawn.x, this.spawn.y, this.leashRadius, 0, 2 * Math.PI);
+            ctx.stroke();
+            ctx.closePath();
+        }
+
+        super.draw(ctx);
     }
 
     /**
@@ -63,6 +73,7 @@ class Ghost extends Monster {
 
         this.radius = 100;
         this.visualRadius = 300;
+        this.leashRadius = 100
         this.canBeAlerted = true;
 
         this.dead = false;
@@ -436,9 +447,8 @@ class Spider extends Monster {
     }
 
     draw(ctx) {
-        // Web Drawer
         if (this.path && this.path.length > 1) {
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+            ctx.strokeStyle = "white";
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(this.path[0].x + (this.width*this.scale)/2, this.path[0].y + (this.height*this.scale)/2);
@@ -449,7 +459,6 @@ class Spider extends Monster {
             ctx.stroke();
         }
 
-        // Draw Sprite
         this.animations[0].drawFrame(this.game.clockTick, ctx, this.x, this.y, this.scale);
 
         super.draw(ctx);
