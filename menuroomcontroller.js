@@ -190,43 +190,31 @@ class MenuRoomController {
       }
     }
 
-    // ✅ CHANGED: centered “2x2 portal cards” layout like your screenshot
-  // ✅ CHANGED: make cards smaller + fit ALL rows on screen + center the grid
 if (this.scene === "levelSelect") {
   const cols = 2;
-
-  // Title sits around ch*0.17 in draw(), so reserve space above grid
   const titleTop = ch * 0.17;
-  const titleHeight = 70;     // roughly your 52px font + padding
+  const titleHeight = 70;
   const topSafe = titleTop + titleHeight + 25;
 
-  // Reserve a little space at the bottom so nothing kisses the edge
   const bottomSafe = 40;
 
   const gap = Math.max(22, cw * 0.018);
 
   const rows = Math.ceil(this.levels.length / cols);
 
-  // Available area for the grid
-  const availW = cw * 0.78; // keep the grid nicely centered, not too wide
+  const availW = cw * 0.78; 
   const availH = ch - topSafe - bottomSafe;
 
   // Compute max card sizes that guarantee everything fits
   const maxCardW = (availW - gap * (cols - 1)) / cols;
   const maxCardH = (availH - gap * (rows - 1)) / rows;
 
-  // Your card aspect ratio (keep consistent with your look)
-  const aspect = 1.05; // cardH = cardW * aspect
+  const aspect = 1.05;
 
-  // Fit by BOTH width and height:
-  // - width constraint: cardW <= maxCardW
-  // - height constraint: cardW*aspect <= maxCardH  => cardW <= maxCardH/aspect
   let cardW = Math.min(maxCardW, maxCardH / aspect);
 
-  // ✅ Make them a bit smaller than the max so it feels airy/centered
   cardW *= 0.92;
 
-  // Clamp to reasonable limits so it doesn't get huge/tiny
   cardW = Math.max(190, Math.min(290, cardW));
 
   const cardH = cardW * aspect;
@@ -234,7 +222,6 @@ if (this.scene === "levelSelect") {
   const gridW = cols * cardW + (cols - 1) * gap;
   const gridH = rows * cardH + (rows - 1) * gap;
 
-  // ✅ Center the whole grid in the available region
   const startX = (cw - gridW) / 2;
   const startY = topSafe + (availH - gridH) / 2;
 
@@ -286,10 +273,8 @@ if (this.scene === "levelSelect") {
 
 
     } else if (this.scene === "levelSelect") {
-      // ✅ CHANGED: fixed your braces/structure — levelSelect is its own else-if (not inside room)
       this.drawMenuButton(ctx, this.levelBackRect, "← Room");
 
-      // ✅ CHANGED: title looks like screenshot (no giant dark stripe)
       const titleY = ch * 0.17;
       ctx.save();
       ctx.fillStyle = "rgba(255,255,255,0.95)";
@@ -301,11 +286,9 @@ if (this.scene === "levelSelect") {
       ctx.fillText("Select Level", cw / 2, titleY);
       ctx.restore();
 
-      // ✅ CHANGED: portal “cards”
       for (const r of this.levelRects) {
         const L = this.levels[r.levelIndex];
 
-        // ✅ CHANGED: FIX “hover is not defined” — define it per card
         const hover =
           this.game.mouse && this.pointInRect(this.game.mouse.x, this.game.mouse.y, r);
 
@@ -438,7 +421,6 @@ if (this.scene === "levelSelect") {
           if (this.game.startLevel) {
             this.game.startLevel(this.selectedLevel);
           } else {
-            // fallback if you haven’t added startLevel yet
             this.game.mode = "gameplay";
           }
 
@@ -446,7 +428,7 @@ if (this.scene === "levelSelect") {
         }
       }
 
-  return; // ignore other clicks while on level select
+  return; 
 }
 
 
@@ -533,7 +515,6 @@ if (this.scene === "levelSelect") {
 
   const bubble = hover ? this.btnBubbleHover : this.btnBubbleNormal;
 
-  // ✅ safety guard (prevents drawImage crash if asset path is wrong)
   if (bubble) {
     ctx.drawImage(bubble, r.x, r.y, r.w, r.h);
   }
@@ -637,7 +618,6 @@ getBackground() {
     ctx.drawImage(img, dx, dy, dw, dh);
   }
 
-  // ✅ CHANGED: helper used by glass cards + locked overlay
   roundRect(ctx, x, y, w, h, r) {
     const rr = Math.min(r, w / 2, h / 2);
     ctx.beginPath();
@@ -649,7 +629,6 @@ getBackground() {
     ctx.closePath();
   }
 
-  // ✅ CHANGED: frosted-glass card look (like screenshot)
   drawGlassCard(ctx, r, { hover = false, locked = false } = {}) {
     ctx.save();
 
@@ -685,7 +664,6 @@ getBackground() {
     ctx.restore();
   }
 
-  // ✅ CHANGED: portal image clipped inside the rounded card
   drawImageClipped(ctx, img, r, pad = 14) {
     if (!img) return;
 
