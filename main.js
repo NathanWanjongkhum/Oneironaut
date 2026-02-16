@@ -10,6 +10,12 @@ ASSET_MANAGER.queueDownload("./assets/background/menu/endgamemessage.png");
 ASSET_MANAGER.queueDownload("./assets/background/menu/Selected.png");
 ASSET_MANAGER.queueDownload("./assets/background/menu/Unselected.png");
 
+// Level select background (corridor)
+ASSET_MANAGER.queueDownload("./assets/background/selectLevel/LevelSelectCorridor.png");
+ASSET_MANAGER.queueDownload("./assets/background/selectLevel/unlockedLevel.png");
+ASSET_MANAGER.queueDownload("./assets/background/selectLevel/lockedLevel.png");
+
+
 
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/1.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/2.png");
@@ -41,15 +47,25 @@ ASSET_MANAGER.downloadAll(() => {
 
   gameEngine.init(ctx);
 
+  gameEngine.currentLevel = 1;
+
+
   // Builds a fresh set of game entities (used for initial load and replay)
   function buildWorld(engine) {
-    engine.addEntity(new Background(engine)); // keep first entity added!
+  engine.addEntity(new Background(engine));
 
+  // Level-specific spawns
+  if (engine.currentLevel === 1) {
+    engine.addEntity(new Ghost(engine, 700, 50));
+    engine.addEntity(new Ghost(engine, 775, 350));
+    engine.addEntity(new Ghost(engine, 300, 400));
+    engine.addEntity(new Sheep(engine, 500, 50));
+
+  } else if (engine.currentLevel === 2) {
     const spiderPath = [
       { x: 400, y: 0 },
       { x: 600, y: 0 },
     ];
-
     // Add blocks 
     const builder = new LevelBuilder(engine);
 
@@ -61,13 +77,18 @@ ASSET_MANAGER.downloadAll(() => {
     engine.addEntity(new Sheep(engine, 100, 200));
     engine.addEntity(new Spider(engine, spiderPath));
     engine.addEntity(new Ghost(engine, 700, 50));
-    engine.addEntity(new Ghost(engine, 775, 350));
-    // engine.addEntity(new Ghost(engine, 300, 400));
-    engine.addEntity(new Bed(engine, 700, 300));
-    engine.addEntity(new SleepyGuy(engine, 100, 100));
-    engine.addEntity(new WaypointBuilder(engine));
-    engine.addEntity(new EndGame(engine));
-    engine.addEntity(new MenuRoomController(engine));
+
+  } else {
+    // default/fallback
+    engine.addEntity(new Ghost(engine, 700, 50));
+  }
+
+  // Common entities
+  engine.addEntity(new Bed(engine, 700, 300));
+  engine.addEntity(new SleepyGuy(engine, 100, 100));
+  engine.addEntity(new WaypointBuilder(engine));
+  engine.addEntity(new EndGame(engine));
+  engine.addEntity(new MenuRoomController(engine));
 
     engine.blockMap = {};
 
@@ -79,31 +100,35 @@ ASSET_MANAGER.downloadAll(() => {
             engine.blockMap[`${gx},${gy}`] = e;
         }
     });  
-  }
+}
+
 
   // Clears current world state and rebuilds it
-  function resetWorld(engine, mode) {
-    engine.gameOver = false;
-    engine.gameWon = false;
-    engine.mode = mode;
+  function resetWorld(engine, mode, levelId = engine.currentLevel) {
+  engine.gameOver = false;
+  engine.gameWon = false;
+  engine.mode = mode;
+  engine.currentLevel = levelId;
 
-    engine.entities = [];
-    engine.sleepyGuy = null;
-    engine.waypoints = [];
-    engine.click = null; // prevent button-click carryover
+  engine.entities = [];
+  engine.sleepyGuy = null;
+  engine.waypoints = [];
+  engine.click = null;
 
-    buildWorld(engine);
+  buildWorld(engine);
 
-    // Optional: music switch based on mode
-    if (window.setMusicMode) {
-      window.setMusicMode(mode === "menu" ? "menu" : "dream");
-    }
+  if (window.setMusicMode) {
+    window.setMusicMode(mode === "menu" ? "menu" : "dream");
   }
+}
 
-  gameEngine.restartToGameplay = () => resetWorld(gameEngine, "gameplay");
-  gameEngine.restartToMenu = () => resetWorld(gameEngine, "menu");
 
-  // Initial world
+  gameEngine.restartToGameplay = () => resetWorld(gameEngine, "gameplay", gameEngine.currentLevel);
+  gameEngine.restartToMenu = () => resetWorld(gameEngine, "menu", gameEngine.currentLevel);
+  gameEngine.startLevel = (levelId) => resetWorld(gameEngine, "gameplay", levelId);
+
+  // Initial world starts in menu mode
+  gameEngine.mode = "menu";
   buildWorld(gameEngine);
 
   // Start engine loop
