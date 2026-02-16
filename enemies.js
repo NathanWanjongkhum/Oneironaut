@@ -2,8 +2,6 @@ class Monster extends Entity {
     constructor(game, _x, _y) {
         super(game, _x, _y);
 
-        this.spawn = {x: _x, y: _y}
-
         // The radius within which the monster will actively chase the player
         this.leashRadius = 0;
         // Extends range monsters will chase player even if not directly in range
@@ -81,6 +79,11 @@ class Ghost extends Monster {
         this.height = 128;
         this.scale = 1.5;
 
+        this.spawn = {
+            x: this.x + (this.width * this.scale) / 2,
+            y: this.y + (this.height * this.scale) / 2
+        }
+        
         this.radius = 100;
         this.visualRadius = 300;
         this.leashRadius = 100
@@ -128,8 +131,8 @@ class Ghost extends Monster {
             y: this.game.sleepyGuy.y
         }
         const thisPos = {
-            x: this.x,
-            y: this.y
+            x: this.x + (this.width * this.scale) / 2,
+            y: this.y + (this.height * this.scale) / 2
         }
 
         const distPlayerToSpawn = getDistance(playerPos, this.spawn)
@@ -147,7 +150,7 @@ class Ghost extends Monster {
             this.speed = DEFEND_SPEED; // Walk
             this.state = 1;     
             
-            vector = getNormalVector(thisPos, this.spawn)
+            vector = getNormalVector(this.spawn, thisPos)
         }
         
         if (vector) {
@@ -162,13 +165,20 @@ class Ghost extends Monster {
     }
 
     updateBB() {
-        const w = 128 * this.scale;
-        const h = 128 * this.scale;
+        const xScaler = 4/6;
+        const yScaler = 2/3;
+
+        const bbWidth = this.width * this.scale * xScaler;
+        const bbHeight = this.height * this.scale * yScaler;
+
+        const xOffset = (this.width * this.scale - bbWidth) / 2;
+        const yOffset = (this.height * this.scale - bbHeight) / 2;
+
         this.BB = new BoundingBox(
-            this.x + (w / 6),
-            this.y + (h / 2),
-            w * 4/6,
-            h / 2
+            this.x + xOffset,
+            this.y + yOffset,
+            bbWidth,
+            bbHeight
         );
     }
 
@@ -232,6 +242,11 @@ class Sheep extends Monster {
         this.width = 32;
         this.height = 32;
         this.scale = 2;
+        
+        this.spawn = {
+            x: this.x + (this.width * this.scale) / 2,
+            y: this.y + (this.height * this.scale) / 2
+        }
         
         this.speed = 150;
         this.alertRadius = 200;
@@ -394,6 +409,11 @@ class Spider extends Monster {
         this.width = 64;
         this.height = 64;
         this.scale = 2;
+        
+        this.spawn = {
+            x: this.x + (this.width * this.scale) / 2,
+            y: this.y + (this.height * this.scale) / 2
+        }
         
         this.speed = 150;
         

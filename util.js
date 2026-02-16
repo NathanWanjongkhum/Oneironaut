@@ -62,7 +62,7 @@ const getNormalVector = (p1, p2) => {
     if (!(p1 || p2)) return { x: 0, y: 0 };
 
     const dx = p1.x - p2.x;
-    const dy = p1.x - p2.y;
+    const dy = p1.y - p2.y;
     const dist = getDistance(p1, p2)
 
     return (dist === 0) 
