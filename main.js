@@ -20,6 +20,9 @@ ASSET_MANAGER.queueDownload("./assets/background/clouds7/4.png");
 
 ASSET_MANAGER.queueDownload("./assets/entities/bed.png")
 ASSET_MANAGER.queueDownload("./assets/entities/ghost1.png");
+ASSET_MANAGER.queueDownload("./assets/entities/ghost3.png");
+ASSET_MANAGER.queueDownload("./assets/entities/spider.png");
+ASSET_MANAGER.queueDownload("./assets/entities/plant1_idle.png");
 ASSET_MANAGER.queueDownload("./assets/entities/sheep_shadow.png");
 ASSET_MANAGER.queueDownload("./assets/entities/sleepyguy.png")
 
@@ -54,7 +57,7 @@ ASSET_MANAGER.downloadAll(() => {
     builder.spawnBlock(5, 14);
     builder.spawnBlock(5, 13);
 
-    engine.addEntity(new Demon(engine, 300, 500))
+    engine.addEntity(new Demon(engine, 300, 400))
     engine.addEntity(new Sheep(engine, 100, 200));
     engine.addEntity(new Spider(engine, spiderPath));
     engine.addEntity(new Ghost(engine, 700, 50));
