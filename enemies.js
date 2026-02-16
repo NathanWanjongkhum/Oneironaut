@@ -86,7 +86,7 @@ class Ghost extends Monster {
         
         this.radius = 100;
         this.visualRadius = 300;
-        this.leashRadius = 100
+        this.leashRadius = 175
         this.canBeAlerted = true;
 
         this.dead = false;
@@ -195,40 +195,40 @@ class Ghost extends Monster {
                 this.animations.push([]);
             }
         }
-        
-        //spritesheet, xStart, yStart, width, height, frameCount, frameDuration, framePadding, reverse, loop
-        this.animations[0][0] = new Animator(this.spritesheet1, 0, 0, 128, 128, 5, 0.3, 0, 0, 1); //idle
-        this.animations[1][0] = new Animator(this.spritesheet1, 0, 128, 128, 128, 5, 0.2, 0, 0, 1); //walk
-        this.animations[2][0] = new Animator(this.spritesheet1, 0, 256, 128, 128, 5, 0.2, 0, 0, 1); //run
-        this.animations[3][0] = new Animator(this.spritesheet1, 0, 384, 128, 128, 4, 0.2, 0, 0, 1); //attack1
-        this.animations[4][0] = new Animator(this.spritesheet1, 0, 512, 128, 128, 4, 0.2, 0, 0, 1); //attack2
-        this.animations[5][0] = new Animator(this.spritesheet1, 0, 640, 128, 128, 7, 0.2, 0, 0, 1); //attack3
-        this.animations[6][0] = new Animator(this.spritesheet1, 0, 768, 128, 128, 7, 0.2, 0, 0, 1); //attack4
-        this.animations[7][0] = new Animator(this.spritesheet1, 0, 896, 128, 128, 4, 0.2, 0, 0, 1); //scream
-        this.animations[8][0] = new Animator(this.spritesheet1, 0, 1024, 128, 128, 3, 0.3, 0, 0, 1); //hurt
-        this.animations[9][0] = new Animator(this.spritesheet1, 0, 1152, 128, 128, 4, 0.3, 0, 0, 0); //dead
+                
+        // spritesheet, xStart, yStart, width, height, frameCount, frameDuration, framePadding, reverse, loop
+        this.animations[0][0] = new Animator(this.spritesheet1, 0, 30, 128, 128, 5, 0.3, 0, 0, 1); // idle
+        this.animations[1][0] = new Animator(this.spritesheet1, 0, 158, 128, 128, 5, 0.2, 0, 0, 1); // walk
+        this.animations[2][0] = new Animator(this.spritesheet1, 0, 286, 128, 128, 5, 0.2, 0, 0, 1); // run
+        this.animations[3][0] = new Animator(this.spritesheet1, 0, 414, 128, 128, 4, 0.2, 0, 0, 1); // attack1
+        this.animations[4][0] = new Animator(this.spritesheet1, 0, 542, 128, 128, 4, 0.2, 0, 0, 1); // attack2
+        this.animations[5][0] = new Animator(this.spritesheet1, 0, 670, 128, 128, 7, 0.2, 0, 0, 1); // attack3
+        this.animations[6][0] = new Animator(this.spritesheet1, 0, 798, 128, 128, 7, 0.2, 0, 0, 1); // attack4
+        this.animations[7][0] = new Animator(this.spritesheet1, 0, 926, 128, 128, 4, 0.2, 0, 0, 1); // scream
+        this.animations[8][0] = new Animator(this.spritesheet1, 0, 1054, 128, 128, 3, 0.3, 0, 0, 1); // hurt
+        this.animations[9][0] = new Animator(this.spritesheet1, 0, 1182, 128, 128, 4, 0.3, 0, 0, 0); // dead
 
-        this.animations[0][1] = new Animator(this.spritesheet2, 0, 0, 128, 128, 6, 0.3, 0, 0, 1); //idle
-        this.animations[1][1] = new Animator(this.spritesheet2, 0, 128, 128, 128, 7, 0.2, 0, 0, 1); //walk
-        this.animations[2][1] = new Animator(this.spritesheet2, 0, 256, 128, 128, 7, 0.2, 0, 0, 1); //run
-        this.animations[3][1] = new Animator(this.spritesheet2, 0, 384, 128, 128, 5, 0.2, 0, 0, 1); //attack1
-        this.animations[4][1] = new Animator(this.spritesheet2, 0, 512, 128, 128, 4, 0.2, 0, 0, 1); //attack2
-        this.animations[5][1] = new Animator(this.spritesheet2, 0, 640, 128, 128, 4, 0.2, 0, 0, 1); //idle
-        this.animations[6][1] = new Animator(this.spritesheet2, 0, 768, 128, 128, 7, 0.2, 0, 0, 1); //walk
-        this.animations[7][1] = new Animator(this.spritesheet2, 0, 896, 128, 128, 6, 0.2, 0, 0, 1); //run
-        this.animations[8][1] = new Animator(this.spritesheet2, 0, 1024, 128, 128, 3, 0.3, 0, 0, 1); //attack1
-        this.animations[9][1] = new Animator(this.spritesheet2, 0, 1152, 128, 128, 6, 0.3, 0, 0, 0); //attack2
+        this.animations[0][1] = new Animator(this.spritesheet2, 0, 30, 128, 128, 6, 0.3, 0, 0, 1); // idle
+        this.animations[1][1] = new Animator(this.spritesheet2, 0, 158, 128, 128, 7, 0.2, 0, 0, 1); // walk
+        this.animations[2][1] = new Animator(this.spritesheet2, 0, 286, 128, 128, 7, 0.2, 0, 0, 1); // run
+        this.animations[3][1] = new Animator(this.spritesheet2, 0, 414, 128, 128, 5, 0.2, 0, 0, 1); // attack1
+        this.animations[4][1] = new Animator(this.spritesheet2, 0, 542, 128, 128, 4, 0.2, 0, 0, 1); // attack2
+        this.animations[5][1] = new Animator(this.spritesheet2, 0, 670, 128, 128, 4, 0.2, 0, 0, 1); // idle
+        this.animations[6][1] = new Animator(this.spritesheet2, 0, 798, 128, 128, 7, 0.2, 0, 0, 1); // walk
+        this.animations[7][1] = new Animator(this.spritesheet2, 0, 926, 128, 128, 6, 0.2, 0, 0, 1); // run
+        this.animations[8][1] = new Animator(this.spritesheet2, 0, 1054, 128, 128, 3, 0.3, 0, 0, 1); // attack1
+        this.animations[9][1] = new Animator(this.spritesheet2, 0, 1182, 128, 128, 6, 0.3, 0, 0, 0); // attack2
 
-        this.animations[0][2] = new Animator(this.spritesheet3, 0, 0, 128, 128, 5, 0.3, 0, 0, 1); //idle
-        this.animations[1][2] = new Animator(this.spritesheet3, 0, 128, 128, 128, 6, 0.2, 0, 0, 1); //walk
-        this.animations[2][2] = new Animator(this.spritesheet3, 0, 256, 128, 128, 7, 0.2, 0, 0, 1); //run
-        this.animations[3][2] = new Animator(this.spritesheet3, 0, 384, 128, 128, 4, 0.2, 0, 0, 1); //attack1
-        this.animations[4][2] = new Animator(this.spritesheet3, 0, 512, 128, 128, 4, 0.2, 0, 0, 1); //attack2
-        this.animations[5][2] = new Animator(this.spritesheet3, 0, 640, 128, 128, 4, 0.2, 0, 0, 1); //attack3
-        this.animations[6][2] = new Animator(this.spritesheet3, 0, 768, 128, 128, 4, 0.2, 0, 0, 1); //scream
-        this.animations[7][2] = new Animator(this.spritesheet3, 0, 896, 128, 128, 9, 0.2, 0, 0, 1); //jump
-        this.animations[8][2] = new Animator(this.spritesheet3, 0, 1024, 128, 128, 3, 0.3, 0, 0, 1); //hurt
-        this.animations[9][2] = new Animator(this.spritesheet3, 0, 1152, 128, 128, 5, 0.3, 0, 0, 0); //dead
+        this.animations[0][2] = new Animator(this.spritesheet3, 0, 30, 128, 128, 5, 0.3, 0, 0, 1); // idle
+        this.animations[1][2] = new Animator(this.spritesheet3, 0, 158, 128, 128, 6, 0.2, 0, 0, 1); // walk
+        this.animations[2][2] = new Animator(this.spritesheet3, 0, 286, 128, 128, 7, 0.2, 0, 0, 1); // run
+        this.animations[3][2] = new Animator(this.spritesheet3, 0, 414, 128, 128, 4, 0.2, 0, 0, 1); // attack1
+        this.animations[4][2] = new Animator(this.spritesheet3, 0, 542, 128, 128, 4, 0.2, 0, 0, 1); // attack2
+        this.animations[5][2] = new Animator(this.spritesheet3, 0, 670, 128, 128, 4, 0.2, 0, 0, 1); // attack3
+        this.animations[6][2] = new Animator(this.spritesheet3, 0, 798, 128, 128, 4, 0.2, 0, 0, 1); // scream
+        this.animations[7][2] = new Animator(this.spritesheet3, 0, 926, 128, 128, 9, 0.2, 0, 0, 1); // jump
+        this.animations[8][2] = new Animator(this.spritesheet3, 0, 1054, 128, 128, 3, 0.3, 0, 0, 1); // hurt
+        this.animations[9][2] = new Animator(this.spritesheet3, 0, 1182, 128, 128, 5, 0.3, 0, 0, 0); // dead
     }
 }
 
