@@ -54,11 +54,12 @@ ASSET_MANAGER.downloadAll(() => {
     builder.spawnBlock(5, 14);
     builder.spawnBlock(5, 13);
 
+    engine.addEntity(new Demon(engine, 300, 500))
     engine.addEntity(new Sheep(engine, 100, 200));
     engine.addEntity(new Spider(engine, spiderPath));
     engine.addEntity(new Ghost(engine, 700, 50));
     engine.addEntity(new Ghost(engine, 775, 350));
-    engine.addEntity(new Ghost(engine, 300, 400));
+    // engine.addEntity(new Ghost(engine, 300, 400));
     engine.addEntity(new Bed(engine, 700, 300));
     engine.addEntity(new SleepyGuy(engine, 100, 100));
     engine.addEntity(new WaypointBuilder(engine));
