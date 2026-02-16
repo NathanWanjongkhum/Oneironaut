@@ -131,6 +131,8 @@ class SleepyGuy {
                         this.onHitByGhost(ent);
                     case "Demon":
                         this.onHitByGhost(ent);
+                    case "VenusFlyTrap":
+                        this.onHitByGhost(ent);
                     default:
                         break;
                 }
