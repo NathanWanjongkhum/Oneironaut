@@ -139,9 +139,7 @@ class Ghost extends Monster {
         const isAggro = this.aggroTimer > 0;
 
         let vector = null
-        if (isAggro || distPlayerToSpawn < this.leashRadius) {   
-            console.log(isAggro);
-                     
+        if (isAggro || distPlayerToSpawn < this.leashRadius) {                        
             this.speed = AGGRO_SPEED; // Run
             this.state = 2;
 
@@ -337,11 +335,11 @@ class Sheep extends Monster {
                 const nx = dx / dist;
 
                 this.velocity.x = -nx * this.speed;
-
-                this.alertOthers(thisCX, thisCY);
             } else {
                 this.velocity.x = 0;
             }
+
+            this.alertOthers(thisCX, thisCY);
         }
 
         // Update facing and state based on velocity
@@ -370,11 +368,19 @@ class Sheep extends Monster {
 
             // Checks if the entity is a Monster (but not itself) and can be alerted
             if (entity instanceof Monster && entity !== this && entity.canBeAlerted) {
-                const entCX = entity.x + (entity.width * entity.scale) / 2;
-                const entCY = entity.y + (entity.height * entity.scale) / 2;
-                const dist = getDistance(myX - entCX, myY - entCY)
+                const thisPos = {
+                    x: myX, 
+                    y: myY
+                }
 
-                if (dist < this.broadcastRadius) {
+                const entityPos = {
+                    x: entity.x + (entity.width * entity.scale) / 2,
+                    y: entity.y + (entity.height * entity.scale) / 2
+                }
+
+                const dist = getDistance(thisPos, entityPos)
+                
+                if (dist < entity.leashRadius) {
                     entity.aggroTimer = 0.5; 
                 }
             }
