@@ -1,3 +1,4 @@
+// MenuRoomController.js
 class MenuRoomController {
   constructor(game) {
     this.game = game;
@@ -18,7 +19,7 @@ class MenuRoomController {
     this.nextScene = null;
 
     // UI rects (computed every frame)
-    this.startRect = { x: 0, y: 0, w: 0, h: 0 }; // menu screen start
+    this.startRect = { x: 0, y: 0, w: 0, h: 0 };
 
     this.showHelp = false;
     this.helpPanelRect = { x: 0, y: 0, w: 0, h: 0 };
@@ -28,6 +29,7 @@ class MenuRoomController {
     this.newDreamRect = { x: 0, y: 0, w: 0, h: 0 };
     this.loadDreamRect = { x: 0, y: 0, w: 0, h: 0 };
     this.helpRect = { x: 0, y: 0, w: 0, h: 0 };
+    this.optionsRect = { x: 0, y: 0, w: 0, h: 0 };
     this.creditsRect = { x: 0, y: 0, w: 0, h: 0 };
 
     this.toggleRect = { x: 0, y: 0, w: 110, h: 46 };
@@ -71,6 +73,18 @@ class MenuRoomController {
 
    if (this.game.mode !== "menu") return;
     
+    // Options modal
+    this.showOptions = false;
+    this.optionsPanelRect = { x: 0, y: 0, w: 0, h: 0 };
+    this.optionsCloseRect = { x: 0, y: 0, w: 44, h: 44 };
+
+    // Options UI buttons inside modal
+    this.optMuteRect = { x: 0, y: 0, w: 0, h: 0 };
+    this.optVolDownRect = { x: 0, y: 0, w: 0, h: 0 };
+    this.optVolUpRect = { x: 0, y: 0, w: 0, h: 0 };
+  }
+
+  update() {
     const cw = this.game.ctx.canvas.width;
     const ch = this.game.ctx.canvas.height;
 
@@ -82,7 +96,7 @@ class MenuRoomController {
     this.toggleRect.x = cw - this.toggleRect.w - pad;
     this.toggleRect.y = pad;
 
-    // Back button top-left (only used in room)
+    // Back button top-left
     this.backRect.w = 150;
     this.backRect.h = 46;
     this.backRect.x = pad;
@@ -101,47 +115,68 @@ class MenuRoomController {
     this.startRect.x = (cw - this.startRect.w) / 2;
     this.startRect.y = (ch - this.startRect.h) / 2;
 
-    // ROOM screen buttons (only meaningful when scene === "room")
+    // ROOM screen buttons
     const buttonH = Math.min(86, Math.max(54, ch * 0.08));
 
-    // New Dream (center, over portal)
+    // New Dream (center)
     this.newDreamRect.w = Math.min(360, Math.max(240, cw * 0.28));
     this.newDreamRect.h = Math.min(90, Math.max(56, ch * 0.09));
     this.newDreamRect.x = (cw - this.newDreamRect.w) / 2;
     this.newDreamRect.y = ch * 0.46 - this.newDreamRect.h / 2;
 
-    // Load Dream (bottom-left, over bed)
+    // Load Dream (bottom-left)
     this.loadDreamRect.w = Math.min(320, Math.max(220, cw * 0.22));
     this.loadDreamRect.h = buttonH;
-    this.loadDreamRect.x = cw * 0.10;          // tweak this if you want it more on the bed
-    this.loadDreamRect.y = ch - pad - buttonH; // near bottom
+    this.loadDreamRect.x = cw * 0.10;
+    this.loadDreamRect.y = ch - pad - buttonH;
 
-    // Help (bottom-middle/right, cabinets area)
-    this.helpRect.w = Math.min(300, Math.max(210, cw * 0.20));
+    // Bottom row: Help | Options | Credits
+    const gap = 14;
+    let btnW = Math.min(260, Math.max(170, cw * 0.16));
+
+    const leftEdge = this.loadDreamRect.x + this.loadDreamRect.w + gap;
+    const rightEdge = cw - pad;
+
+    const totalNeed = btnW * 3 + gap * 2;
+    const available = rightEdge - leftEdge;
+
+    if (available < totalNeed) {
+      btnW = Math.max(120, (available - gap * 2) / 3);
+    }
+
+    this.creditsRect.w = btnW;
+    this.creditsRect.h = buttonH;
+    this.creditsRect.x = rightEdge - btnW;
+    this.creditsRect.y = ch - pad - buttonH;
+
+    this.optionsRect.w = btnW;
+    this.optionsRect.h = buttonH;
+    this.optionsRect.x = this.creditsRect.x - gap - btnW;
+    this.optionsRect.y = ch - pad - buttonH;
+
+    this.helpRect.w = btnW;
     this.helpRect.h = buttonH;
-    this.helpRect.x = cw * 0.67 - this.helpRect.w / 2;
+    this.helpRect.x = this.optionsRect.x - gap - btnW;
     this.helpRect.y = ch - pad - buttonH;
 
-    // Help modal sizing (centered)
+    // Help modal sizing
     this.helpPanelRect.w = Math.min(720, cw * 0.75);
     this.helpPanelRect.h = Math.min(420, ch * 0.55);
     this.helpPanelRect.x = (cw - this.helpPanelRect.w) / 2;
     this.helpPanelRect.y = (ch - this.helpPanelRect.h) / 2;
 
-    // Close button inside the panel (top-right of panel)
     this.helpCloseRect.w = 44;
     this.helpCloseRect.h = 44;
     this.helpCloseRect.x =
       this.helpPanelRect.x + this.helpPanelRect.w - this.helpCloseRect.w - 12;
     this.helpCloseRect.y = this.helpPanelRect.y + 12;
 
-    // Credits modal sizing (centered)
+    // Credits modal sizing
     this.creditsPanelRect.w = Math.min(720, cw * 0.75);
     this.creditsPanelRect.h = Math.min(360, ch * 0.50);
     this.creditsPanelRect.x = (cw - this.creditsPanelRect.w) / 2;
     this.creditsPanelRect.y = (ch - this.creditsPanelRect.h) / 2;
 
-    // Close button inside the credits panel (top-right)
     this.creditsCloseRect.w = 44;
     this.creditsCloseRect.h = 44;
     this.creditsCloseRect.x =
@@ -151,11 +186,40 @@ class MenuRoomController {
       12;
     this.creditsCloseRect.y = this.creditsPanelRect.y + 12;
 
-    // Credits (bottom-right)
-    this.creditsRect.w = Math.min(280, Math.max(190, cw * 0.18));
-    this.creditsRect.h = buttonH;
-    this.creditsRect.x = cw - pad - this.creditsRect.w;
-    this.creditsRect.y = ch - pad - buttonH;
+    // Options modal sizing
+    this.optionsPanelRect.w = Math.min(720, cw * 0.70);
+    this.optionsPanelRect.h = Math.min(360, ch * 0.50);
+    this.optionsPanelRect.x = (cw - this.optionsPanelRect.w) / 2;
+    this.optionsPanelRect.y = (ch - this.optionsPanelRect.h) / 2;
+
+    this.optionsCloseRect.w = 44;
+    this.optionsCloseRect.h = 44;
+    this.optionsCloseRect.x =
+      this.optionsPanelRect.x +
+      this.optionsPanelRect.w -
+      this.optionsCloseRect.w -
+      12;
+    this.optionsCloseRect.y = this.optionsPanelRect.y + 12;
+
+    // Buttons inside options modal
+    const p = this.optionsPanelRect;
+    const optBtnW = Math.min(260, p.w * 0.55);
+    const optBtnH = 56;
+    const cx = p.x + p.w / 2 - optBtnW / 2;
+
+    this.optMuteRect = { x: cx, y: p.y + 110, w: optBtnW, h: optBtnH };
+    this.optVolDownRect = {
+      x: cx,
+      y: p.y + 110 + 80,
+      w: (optBtnW - 16) / 2,
+      h: optBtnH,
+    };
+    this.optVolUpRect = {
+      x: cx + (optBtnW + 16) / 2,
+      y: p.y + 110 + 80,
+      w: (optBtnW - 16) / 2,
+      h: optBtnH,
+    };
 
     // Level Select (top-middle-ish or wherever you want)
     this.levelSelectRect.w = Math.min(320, Math.max(220, cw * 0.22));
@@ -334,8 +398,8 @@ if (this.scene === "levelSelect") {
       this.drawMenuButton(ctx, this.backRect, "← Room");
     }
 
-    // Modals
     if (this.showHelp) this.drawHelpModal(ctx);
+    if (this.showOptions) this.drawOptionsModal(ctx);
     if (this.showCredits) this.drawCreditsModal(ctx);
 
 
@@ -350,54 +414,15 @@ if (this.scene === "levelSelect") {
 
 
   handleClick(x, y) {
-
-    // 1. Credits modal has priority
+    // Credits modal priority
     if (this.showCredits) {
-      if (this.pointInRect(x, y, this.creditsCloseRect)) {
-        this.showCredits = false;
-        return;
+      if (this.pointInRect(x, y, this.creditsCloseRect)) this.showCredits = false;
+      else {
+        const p = this.creditsPanelRect;
+        const inside =
+          x >= p.x && x <= p.x + p.w && y >= p.y && y <= p.y + p.h;
+        if (!inside) this.showCredits = false;
       }
-
-      const p = this.creditsPanelRect;
-      const inside =
-        x >= p.x && x <= p.x + p.w && y >= p.y && y <= p.y + p.h;
-
-      if (!inside) {
-        this.showCredits = false;
-        return;
-      }
-
-      return; // clicks inside credits panel do nothing
-    }
-
-    // 2. Help modal has priority
-    if (this.showHelp) {
-      if (this.pointInRect(x, y, this.helpCloseRect)) {
-        this.showHelp = false;
-        return;
-      }
-
-      const p = this.helpPanelRect;
-      const inside =
-        x >= p.x && x <= p.x + p.w && y >= p.y && y <= p.y + p.h;
-
-      if (!inside) {
-        this.showHelp = false;
-        return;
-      }
-
-      return; // clicks inside help panel do nothing
-    }
-
-    // 3. Dream scene back button
-    if (this.scene === "dream") {
-      if (this.pointInRect(x, y, this.backRect)) {
-        this.transitionTo("room");
-        if (window.setMusicMode) window.setMusicMode("menu"); // Oneironaut music
-        return;
-      }
-
-      // Ignore other clicks in dream scene for now
       return;
     }
 
@@ -433,6 +458,60 @@ if (this.scene === "levelSelect") {
 
 
     // 4. Theme toggle (works in menu/room)
+    // Options modal priority
+    if (this.showOptions) {
+      if (this.pointInRect(x, y, this.optionsCloseRect)) {
+        this.showOptions = false;
+        return;
+      }
+
+      if (this.pointInRect(x, y, this.optMuteRect)) {
+        if (window.Music) {
+          Music.setMuted(!Music.muted);
+          const muteEl = document.getElementById("mute");
+          if (muteEl) muteEl.checked = Music.muted;
+        }
+        return;
+      }
+
+      if (this.pointInRect(x, y, this.optVolDownRect)) {
+        if (window.Music) {
+          Music.setVolume(Math.max(0, Music.userVolume - 0.05));
+          const volEl = document.getElementById("volume");
+          if (volEl) volEl.value = String(Music.userVolume);
+        }
+        return;
+      }
+
+      if (this.pointInRect(x, y, this.optVolUpRect)) {
+        if (window.Music) {
+          Music.setVolume(Math.min(1, Music.userVolume + 0.05));
+          const volEl = document.getElementById("volume");
+          if (volEl) volEl.value = String(Music.userVolume);
+        }
+        return;
+      }
+
+      const p = this.optionsPanelRect;
+      const inside =
+        x >= p.x && x <= p.x + p.w && y >= p.y && y <= p.y + p.h;
+      if (!inside) this.showOptions = false;
+      return;
+    }
+
+    // Help modal priority
+    if (this.showHelp) {
+      if (this.pointInRect(x, y, this.helpCloseRect)) this.showHelp = false;
+      else {
+        const p = this.helpPanelRect;
+        const inside =
+          x >= p.x && x <= p.x + p.w && y >= p.y && y <= p.y + p.h;
+        if (!inside) this.showHelp = false;
+      }
+      return;
+    }
+
+    // Theme toggle
     if (this.pointInRect(x, y, this.toggleRect)) {
       this.theme = this.theme === "night" ? "day" : "night";
       return;
@@ -440,18 +519,16 @@ if (this.scene === "levelSelect") {
 
     if (this.transitioning) return;
 
-    // 5. Menu -> Room
+    // Menu -> Room
     if (this.scene === "menu" && this.pointInRect(x, y, this.startRect)) {
       this.transitionTo("room");
       return;
       
     }
 
-    // 6. Room buttons
+    // Room buttons
     if (this.scene === "room") {
       if (this.pointInRect(x, y, this.backRect)) {
-        this.dead = false;
-        this.deadCounter = 0;
         this.transitionTo("menu");
         return;
       }
@@ -462,15 +539,23 @@ if (this.scene === "levelSelect") {
         }
 
 
+      // ✅ FIX: call game.startGameplay() so entities spawn
       if (this.pointInRect(x, y, this.newDreamRect)) {
         this.transitionTo("dream");
         if (window.setMusicMode) window.setMusicMode("dream"); // Lucid Journey
         this.showHelp = false;
         this.showCredits = false;
 
-        
-        this.game.mode = "gameplay";
+      
+        if (this.game.startGameplay) {
+          this.game.startGameplay();
+        } else {
+          // fallback (shouldn't happen)
+          this.game.mode = "gameplay";
+          if (window.setMusicMode) window.setMusicMode("dream");
+        }
 
+        this.removeFromWorld = true;
         return;
       }
 
@@ -481,6 +566,14 @@ if (this.scene === "levelSelect") {
 
       if (this.pointInRect(x, y, this.helpRect)) {
         this.showHelp = true;
+        this.showOptions = false;
+        this.showCredits = false;
+        return;
+      }
+
+      if (this.pointInRect(x, y, this.optionsRect)) {
+        this.showOptions = true;
+        this.showHelp = false;
         this.showCredits = false;
         return;
       }
@@ -488,6 +581,7 @@ if (this.scene === "levelSelect") {
       if (this.pointInRect(x, y, this.creditsRect)) {
         this.showCredits = true;
         this.showHelp = false;
+        this.showOptions = false;
         return;
       }
     }
@@ -496,8 +590,8 @@ if (this.scene === "levelSelect") {
   transitionTo(sceneKey) {
     if (this.transitioning) return;
 
-    // Close modals when switching scenes
     this.showHelp = false;
+    this.showOptions = false;
     this.showCredits = false;
 
     this.transitioning = true;
@@ -509,6 +603,13 @@ if (this.scene === "levelSelect") {
 
  drawMenuButton(ctx, r, label) {
   ctx.save();
+
+  //ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
+  // ctx.strokeStyle = "rgba(255, 255, 255, 0.55)";
+  // ctx.lineWidth = 2;
+  // this.roundRectPath(ctx, r.x, r.y, r.w, r.h, 18);
+  // ctx.fill();
+  // ctx.stroke();
 
   const hover =
     this.game.mouse && this.pointInRect(this.game.mouse.x, this.game.mouse.y, r);
@@ -525,6 +626,7 @@ if (this.scene === "levelSelect") {
   ctx.textBaseline = "middle";
   ctx.fillText(label, r.x + r.w / 2, r.y + r.h / 2);
 
+
   ctx.restore();
  }
 
@@ -535,7 +637,6 @@ if (this.scene === "levelSelect") {
     const isNight = this.theme === "night";
 
     ctx.save();
-
     ctx.fillStyle = isNight
       ? "rgba(10,20,60,0.55)"
       : "rgba(255,255,255,0.35)";
@@ -559,13 +660,10 @@ if (this.scene === "levelSelect") {
     ctx.textBaseline = "middle";
     ctx.fillStyle = "rgba(255,255,255,0.9)";
     ctx.fillText(isNight ? "Night" : "Day", r.x + r.w / 2, r.y + r.h + 14);
-
     ctx.restore();
   }
 
-  // Backgrounds
-
-getBackground() {
+  getBackground() {
     if (this.scene === "menu") {
       return this.theme === "night"
         ? ASSET_MANAGER.getAsset("./assets/background/menu/NightDream.png")
@@ -584,10 +682,6 @@ getBackground() {
 
     return ASSET_MANAGER.getAsset("./assets/background/menu/newDream.png");
   }
-
-
-
-  // Helpers
 
   pointInRect(px, py, r) {
     return px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h;
@@ -729,7 +823,6 @@ getBackground() {
     // Close button (X)
     this.drawCloseButton(ctx, this.helpCloseRect);
 
-    // Body text (centered block)
     const body =
       "New Dream: Start a fresh run.\n" +
       "Load Dream: Continue from a saved dream.\n" +
@@ -741,11 +834,11 @@ getBackground() {
       "- Click + hold on an existing node: drags the node; connected links redraw on release.\n\n" +
       "Right Mouse Click (Planning):\n" +
       "- Right click a hovered node to remove it.\n" +
-      "- Deletes that node AND all nodes after it (order based on the first placed node / starter node).\n\n" +
+      "- Deletes that node AND all nodes after it.\n\n" +
       "Return Key:\n" +
       "- Begins the next phase.\n\n" +
       "T Key:\n" +
-      "- Takes the current dream bubble item (if present) and places it into the selected cursor slot.\n\n" +
+      "- Takes the current dream bubble item.\n\n" +
       "P Key:\n" +
       "- Selects the edit path option.\n\n" +
       "Space Bar:\n" +
@@ -766,6 +859,49 @@ getBackground() {
       p.h - 120,
       16
     );
+  }
+
+  drawOptionsModal(ctx) {
+    const cw = this.game.ctx.canvas.width;
+    const ch = this.game.ctx.canvas.height;
+
+    // Dim background
+    ctx.save();
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, cw, ch);
+    ctx.restore();
+
+    // Panel
+    const p = this.optionsPanelRect;
+
+    ctx.save();
+    ctx.fillStyle = "rgba(20, 24, 40, 0.85)";
+    ctx.strokeStyle = "rgba(255,255,255,0.45)";
+    ctx.lineWidth = 2;
+    this.roundRectPath(ctx, p.x, p.y, p.w, p.h, 22);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    // Title
+    ctx.save();
+    ctx.fillStyle = "rgba(255,255,255,0.95)";
+    ctx.font = "700 28px serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillText("Options", p.x + p.w / 2, p.y + 18);
+    ctx.restore();
+
+    // Close button (X)
+    this.drawCloseButton(ctx, this.optionsCloseRect);
+
+    const muteLabel = window.Music && Music.muted ? "Unmute" : "Mute";
+    const volPct = window.Music ? Math.round(Music.userVolume * 100) : 10;
+
+    this.drawMenuButton(ctx, this.optMuteRect, muteLabel);
+    this.drawMenuButton(ctx, this.optVolDownRect, "Vol -");
+    this.drawMenuButton(ctx, this.optVolUpRect, `Vol + (${volPct}%)`);
   }
 
   drawCreditsModal(ctx) {
@@ -803,7 +939,6 @@ getBackground() {
     // Close button (X)
     this.drawCloseButton(ctx, this.creditsCloseRect);
 
-    // Names (centered)
     const body =
       "Developers:\n" +
       "Cristian Acevedo-Villasana\n" +
@@ -852,9 +987,7 @@ getBackground() {
     const lines = [];
     const paragraphs = text.split("\n");
 
-    // Build wrapped lines
     for (const para of paragraphs) {
-      // keep intentional blank lines
       if (para.trim() === "") {
         lines.push("");
         continue;
@@ -877,11 +1010,8 @@ getBackground() {
       if (line) lines.push(line);
     }
 
-    // Draw lines from top (not vertically centered)
     const lineH = Math.floor(fontSize * 1.35);
     const startY = y;
-
-    // Only draw what fits inside the box
     const maxLines = Math.floor(h / lineH);
 
     for (let i = 0; i < lines.length && i < maxLines; i++) {
