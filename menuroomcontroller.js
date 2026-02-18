@@ -1,4 +1,3 @@
-// MenuRoomController.js
 class MenuRoomController {
   constructor(game) {
     this.game = game;
@@ -187,19 +186,24 @@ class MenuRoomController {
     this.creditsCloseRect.y = this.creditsPanelRect.y + 12;
 
     // Options modal sizing
-    this.optionsPanelRect.w = Math.min(720, cw * 0.70);
-    this.optionsPanelRect.h = Math.min(360, ch * 0.50);
-    this.optionsPanelRect.x = (cw - this.optionsPanelRect.w) / 2;
-    this.optionsPanelRect.y = (ch - this.optionsPanelRect.h) / 2;
+    //TODO: something weird occurd with this part in merge from main
+    try {
+      this.optionsPanelRect.w = Math.min(720, cw * 0.70);
+      this.optionsPanelRect.h = Math.min(360, ch * 0.50);
+      this.optionsPanelRect.x = (cw - this.optionsPanelRect.w) / 2;
+      this.optionsPanelRect.y = (ch - this.optionsPanelRect.h) / 2;
+    
 
-    this.optionsCloseRect.w = 44;
-    this.optionsCloseRect.h = 44;
-    this.optionsCloseRect.x =
-      this.optionsPanelRect.x +
-      this.optionsPanelRect.w -
-      this.optionsCloseRect.w -
-      12;
-    this.optionsCloseRect.y = this.optionsPanelRect.y + 12;
+      this.optionsCloseRect.w = 44;
+      this.optionsCloseRect.h = 44;
+      this.optionsCloseRect.x =
+        this.optionsPanelRect.x +
+        this.optionsPanelRect.w -
+        this.optionsCloseRect.w -
+        12;
+      this.optionsCloseRect.y = this.optionsPanelRect.y + 12;
+
+  
 
     // Buttons inside options modal
     const p = this.optionsPanelRect;
@@ -220,6 +224,10 @@ class MenuRoomController {
       w: (optBtnW - 16) / 2,
       h: optBtnH,
     };
+
+    } catch {
+      console.log("optionsPanelRect invalid");
+    }
 
     // Level Select (top-middle-ish or wherever you want)
     this.levelSelectRect.w = Math.min(320, Math.max(220, cw * 0.22));

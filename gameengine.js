@@ -1,4 +1,3 @@
-// gameengine.js
 class GameEngine {
     constructor(options) {
         this.ctx = null;
@@ -114,14 +113,15 @@ class GameEngine {
     this.prevB = false;
     if (this.dreamBubble) this.dreamBubble.close(true);
 
+    //Part of extra commit, handled in main.js
     // Spawn gameplay entities
-    this.addEntity(new Background(this));
-    this.addEntity(new Ghost(this, 700, 50));
-    this.addEntity(new Ghost(this, 775, 350));
-    this.addEntity(new Ghost(this, 300, 400));
-    this.addEntity(new Bed(this, 700, 300));
-    this.addEntity(new SleepyGuy(this, 100, 100));
-    this.addEntity(new WaypointBuilder(this));
+    // this.addEntity(new Background(this));
+    // this.addEntity(new Ghost(this, 700, 50));
+    // this.addEntity(new Ghost(this, 775, 350));
+    // this.addEntity(new Ghost(this, 300, 400));
+    // this.addEntity(new Bed(this, 700, 300));
+    // this.addEntity(new SleepyGuy(this, 100, 100));
+    // this.addEntity(new WaypointBuilder(this));
 
     // Spawn ALL items (test)
     const cw = this.ctx.canvas.width;

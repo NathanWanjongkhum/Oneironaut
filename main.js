@@ -22,7 +22,7 @@ ASSET_MANAGER.queueDownload("./assets/background/clouds7/2.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/3.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/4.png");
 
-ASSET_MANAGER.queueDownload("./assets/InventorySlots.png");
+//ASSET_MANAGER.queueDownload("./assets/InventorySlots.png");
   
 
 
@@ -39,7 +39,7 @@ ASSET_MANAGER.queueDownload("./assets/items/Sword.png");
 ASSET_MANAGER.queueDownload("./assets/items/ToothBrush.png");
 ASSET_MANAGER.queueDownload("./assets/items/TeddyBear.png");
 ASSET_MANAGER.queueDownload("./assets/items/SleepDust.png");
-ASSET_MANAGER.queueDownload("./assets/items/SandBag1.png");
+//ASSET_MANAGER.queueDownload("./assets/items/SandBag1.png");
 ASSET_MANAGER.queueDownload("./assets/items/SandBag3.png");
 
 ASSET_MANAGER.queueDownload("./assets/items/DreamCatcher.png");
@@ -72,51 +72,51 @@ ASSET_MANAGER.downloadAll(() => {
 
   // Builds a fresh set of game entities (used for initial load and replay)
   function buildWorld(engine) {
-  engine.addEntity(new Background(engine));
+    engine.addEntity(new Background(engine));
 
-  // Level-specific spawns
-  if (engine.currentLevel === 1) {
-    engine.addEntity(new Ghost(engine, 700, 50));
-    engine.addEntity(new Ghost(engine, 775, 350));
-    engine.addEntity(new Ghost(engine, 300, 400));
-    engine.addEntity(new Sheep(engine, 500, 50));
+    // Level-specific spawns
+    if (engine.currentLevel === 1) {
+      engine.addEntity(new Ghost(engine, 700, 50));
+      engine.addEntity(new Ghost(engine, 775, 350));
+      engine.addEntity(new Ghost(engine, 300, 400));
+      engine.addEntity(new Sheep(engine, 500, 50));
 
-  } else if (engine.currentLevel === 2) {
-    const spiderPath = [
-      { x: 400, y: 0 },
-      { x: 600, y: 0 },
-    ];
-    // Add blocks 
-    const builder = new LevelBuilder(engine);
+    } else if (engine.currentLevel === 2) {
+      const spiderPath = [
+        { x: 400, y: 0 },
+        { x: 600, y: 0 },
+      ];
+      // Add blocks 
+      const builder = new LevelBuilder(engine);
 
-    builder.spawnRow(15, 0, 20); 
-    builder.spawnBlock(5, 14);
-    builder.spawnBlock(5, 13);
+      builder.spawnRow(15, 0, 20); 
+      builder.spawnBlock(5, 14);
+      builder.spawnBlock(5, 13);
 
-    engine.addEntity(new Demon(engine, 300, 400))
-    engine.addEntity(new Sheep(engine, 100, 200));
-    engine.addEntity(new Spider(engine, spiderPath));
-    engine.addEntity(new Ghost(engine, 700, 50));
+      engine.addEntity(new Demon(engine, 300, 400))
+      engine.addEntity(new Sheep(engine, 100, 200));
+      engine.addEntity(new Spider(engine, spiderPath));
+      engine.addEntity(new Ghost(engine, 700, 50));
 
-  } else {
-    // default/fallback
-    engine.addEntity(new Ghost(engine, 700, 50));
-    // Collection of some items - for demonstration purposes
-    gameEngine.addEntity(new PickupItem(gameEngine, 220, 140, "Sword"));
-    gameEngine.addEntity(new PickupItem(gameEngine, 280, 140, "ToothBrush"));
-    gameEngine.addEntity(new PickupItem(gameEngine, 340, 140, "TeddyBear"));
+    } else {
+      // default/fallback
+      engine.addEntity(new Ghost(engine, 700, 50));
+      // Collection of some items - for demonstration purposes
+      gameEngine.addEntity(new PickupItem(gameEngine, 220, 140, "Sword"));
+      gameEngine.addEntity(new PickupItem(gameEngine, 280, 140, "ToothBrush"));
+      gameEngine.addEntity(new PickupItem(gameEngine, 340, 140, "TeddyBear"));
 
-    gameEngine.addEntity(new PickupItem(gameEngine, 220, 220, "DreamCatcher"));
-    gameEngine.addEntity(new PickupItem(gameEngine, 280, 220, "Rocket"));
-    gameEngine.addEntity(new PickupItem(gameEngine, 340, 220, "Pajama"));
-  }
+      gameEngine.addEntity(new PickupItem(gameEngine, 220, 220, "DreamCatcher"));
+      gameEngine.addEntity(new PickupItem(gameEngine, 280, 220, "Rocket"));
+      gameEngine.addEntity(new PickupItem(gameEngine, 340, 220, "Pajama"));
+    }
 
-  // Common entities
-  engine.addEntity(new Bed(engine, 700, 300));
-  engine.addEntity(new SleepyGuy(engine, 100, 100));
-  engine.addEntity(new WaypointBuilder(engine));
-  engine.addEntity(new EndGame(engine));
-  engine.addEntity(new MenuRoomController(engine));
+    // Common entities
+    engine.addEntity(new Bed(engine, 700, 300));
+    engine.addEntity(new SleepyGuy(engine, 100, 100));
+    engine.addEntity(new WaypointBuilder(engine));
+    engine.addEntity(new EndGame(engine));
+    engine.addEntity(new MenuRoomController(engine));
 
     engine.blockMap = {};
 
@@ -133,22 +133,22 @@ ASSET_MANAGER.downloadAll(() => {
 
   // Clears current world state and rebuilds it
   function resetWorld(engine, mode, levelId = engine.currentLevel) {
-  engine.gameOver = false;
-  engine.gameWon = false;
-  engine.mode = mode;
-  engine.currentLevel = levelId;
+    engine.gameOver = false;
+    engine.gameWon = false;
+    engine.mode = mode;
+    engine.currentLevel = levelId;
 
-  engine.entities = [];
-  engine.sleepyGuy = null;
-  engine.waypoints = [];
-  engine.click = null;
+    engine.entities = [];
+    engine.sleepyGuy = null;
+    engine.waypoints = [];
+    engine.click = null;
 
-  buildWorld(engine);
+    buildWorld(engine);
 
-  if (window.setMusicMode) {
-    window.setMusicMode(mode === "menu" ? "menu" : "dream");
+    if (window.setMusicMode) {
+      window.setMusicMode(mode === "menu" ? "menu" : "dream");
+    }
   }
-}
 
 
   gameEngine.restartToGameplay = () => resetWorld(gameEngine, "gameplay", gameEngine.currentLevel);
@@ -163,23 +163,24 @@ ASSET_MANAGER.downloadAll(() => {
   gameEngine.start();
 
   // Start music after any user interaction
-  canvas.addEventListener("pointerdown", tryStartMusic);
+  canvas.addEventListener("pointerdown", Music.tryStartMusic);
 
   window.addEventListener("keydown", (e) => {
       if (!gameEngine.gameOver) return;
       if (e.key === "r" || e.key === "R") gameEngine.restartToGameplay();
       if (e.key === "Escape") gameEngine.restartToMenu();
   });
+
+
+  Music.init();
+  if (window.setMusicMode) window.setMusicMode("menu");
+
+  // tryStart once (prevents repeated calls)
+  canvas.addEventListener("pointerdown", () => Music.tryStart(), { once: true });
+
 });
 
 
-
-
-Music.init();
-if (window.setMusicMode) window.setMusicMode("menu");
-
-// tryStart once (prevents repeated calls)
-canvas.addEventListener("pointerdown", () => Music.tryStart(), { once: true });
 
 
 
