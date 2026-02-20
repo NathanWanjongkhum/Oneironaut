@@ -1,7 +1,7 @@
 //Use this file to build specific level layouts.
 class Levels {
 
-    buildLevel(engine) {
+    static buildLevel(engine) {
         const levelMap = {
             0: this.testLevel,
             1: this.level1,
@@ -13,14 +13,14 @@ class Levels {
         engine.addEntity(new WaypointBuilder(engine));
     }
 
-    level1(engine) {
+    static level1(engine) {
         engine.addEntity(new Ghost(engine, 700, 50));
         engine.addEntity(new Ghost(engine, 775, 350));
         engine.addEntity(new Ghost(engine, 300, 400));
         engine.addEntity(new Sheep(engine, 500, 50));
     }
 
-    level2(engine) {
+    static level2(engine) {
         const spiderPath = [
             { x: 400, y: 0 },
             { x: 600, y: 0 },
@@ -39,11 +39,11 @@ class Levels {
     }
 
 
-    defaultLevel(engine) {
+    static defaultLevel(engine) {
         this.testLevel(engine);
     }
 
-    testLevel(engine) {
+    static testLevel(engine) {
         engine.addEntity(new Ghost(engine, 700, 50));
         // Collection of some items - for demonstration purposes
         engine.addEntity(new PickupItem(engine, 220, 140, "Sword"));
