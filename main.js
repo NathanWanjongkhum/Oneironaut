@@ -23,7 +23,7 @@ ASSET_MANAGER.queueDownload("./assets/background/clouds7/3.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/4.png");
 
 //ASSET_MANAGER.queueDownload("./assets/InventorySlots.png");
-  
+	
 
 
 ASSET_MANAGER.queueDownload("./assets/entities/bed.png");
@@ -52,8 +52,8 @@ ASSET_MANAGER.queueDownload("./assets/items/DreamBubble.png");
 
 
 ASSET_MANAGER.downloadAll(() => {
-  PARAMS.BITWIDTH = 32;
-  PARAMS.SCALE = 1;
+	PARAMS.BITWIDTH = 32;
+	PARAMS.SCALE = 1;
 	PARAMS.BLOCKWIDTH = PARAMS.BITWIDTH * PARAMS.SCALE;
 
 	const canvas = document.getElementById("gameWorld");
@@ -63,89 +63,83 @@ ASSET_MANAGER.downloadAll(() => {
 	PARAMS.CANVAS_HEIGHT = canvas.height;
 	PARAMS.DEBUG = true;
 
-  gameEngine.init(ctx);
+	gameEngine.init(ctx);
 
-  gameEngine.mode = "menu";
+	gameEngine.mode = "menu";
 
-  gameEngine.currentLevel = 1; //switch to 0 as initial state marking not yet in level?
+	gameEngine.currentLevel = 1; //switch to 0 as initial state marking not yet in level?
 
 
-  // Builds a fresh set of game entities (used for initial load and replay)
-  function buildWorld(engine) {
-    engine.addEntity(new Background(engine));
+	// Builds a fresh set of game entities (used for initial load and replay)
+	function buildWorld(engine) {
+		engine.addEntity(new Background(engine));
 
-    //Place specific levels in their own file for better organization
-    // Level-specific spawns
-    Levels.buildLevel(engine)
+		// Level-specific spawns
+		Levels.buildLevel(engine)
 
-    // Common entities
-    engine.addEntity(new EndGame(engine));
-    engine.addEntity(new MenuRoomController(engine));
+		// Common entities
+		engine.addEntity(new EndGame(engine));
+		engine.addEntity(new MenuRoomController(engine));
 
-    engine.blockMap = {};
+		engine.blockMap = {};
 
-    engine.entities.forEach(e => { // Keep this last
-        if (e instanceof Block) {
-            const gx = Math.floor(e.x / PARAMS.BLOCKWIDTH);
-            const gy = Math.floor(e.y / PARAMS.BLOCKWIDTH);
-            
-            engine.blockMap[`${gx},${gy}`] = e;
-        }
-    });  
+		engine.entities.forEach(e => { // Keep this last
+				if (e instanceof Block) {
+						const gx = Math.floor(e.x / PARAMS.BLOCKWIDTH);
+						const gy = Math.floor(e.y / PARAMS.BLOCKWIDTH);
+						
+						engine.blockMap[`${gx},${gy}`] = e;
+				}
+		});  
 }
 
 
-  // Clears current world state and rebuilds it
-  function resetWorld(engine, mode, levelId = engine.currentLevel) {
-    engine.gameOver = false;
-    engine.gameWon = false;
-    engine.mode = mode;
-    engine.currentLevel = levelId;
+	// Clears current world state and rebuilds it
+	function resetWorld(engine, mode, levelId = engine.currentLevel) {
+		engine.gameOver = false;
+		engine.gameWon = false;
+		engine.mode = mode;
+		engine.currentLevel = levelId;
 
-    engine.entities = [];
-    engine.sleepyGuy = null;
-    engine.waypoints = [];
-    engine.click = null;
+		engine.entities = [];
+		engine.sleepyGuy = null;
+		engine.waypoints = [];
+		engine.click = null;
 
-    buildWorld(engine);
+		buildWorld(engine);
 
-    if (window.setMusicMode) {
-      window.setMusicMode(mode === "menu" ? "menu" : "dream");
-    }
-  }
-
-
-  gameEngine.restartToGameplay = () => resetWorld(gameEngine, "gameplay", gameEngine.currentLevel);
-  gameEngine.restartToMenu = () => resetWorld(gameEngine, "menu", gameEngine.currentLevel);
-  gameEngine.startLevel = (levelId) => resetWorld(gameEngine, "gameplay", levelId);
-
-  // Initial world starts in menu mode
-  gameEngine.mode = "menu";
-  buildWorld(gameEngine);
-
-  // Start engine loop
-  gameEngine.start();
-
-  // Start music after any user interaction
-  canvas.addEventListener("pointerdown", Music.tryStartMusic);
-
-  window.addEventListener("keydown", (e) => {
-      if (!gameEngine.gameOver) return;
-      if (e.key === "r" || e.key === "R") gameEngine.restartToGameplay();
-      if (e.key === "Escape") gameEngine.restartToMenu();
-  });
+		if (window.setMusicMode) {
+			window.setMusicMode(mode === "menu" ? "menu" : "dream");
+		}
+	}
 
 
-  Music.init();
-  if (window.setMusicMode) window.setMusicMode("menu");
+	gameEngine.restartToGameplay = () => resetWorld(gameEngine, "gameplay", gameEngine.currentLevel);
+	gameEngine.restartToMenu = () => resetWorld(gameEngine, "menu", gameEngine.currentLevel);
+	gameEngine.startLevel = (levelId) => resetWorld(gameEngine, "gameplay", levelId);
 
-  // tryStart once (prevents repeated calls)
-  canvas.addEventListener("pointerdown", () => Music.tryStart(), { once: true });
+	// Initial world starts in menu mode
+	gameEngine.mode = "menu";
+	buildWorld(gameEngine);
+
+	// Start engine loop
+	gameEngine.start();
+
+	// Start music after any user interaction
+	canvas.addEventListener("pointerdown", Music.tryStartMusic);
+
+	window.addEventListener("keydown", (e) => {
+			if (!gameEngine.gameOver) return;
+			if (e.key === "r" || e.key === "R") gameEngine.restartToGameplay();
+			if (e.key === "Escape") gameEngine.restartToMenu();
+	});
+
+
+	Music.init();
+	if (window.setMusicMode) window.setMusicMode("menu");
+
+	// tryStart once (prevents repeated calls)
+	canvas.addEventListener("pointerdown", () => Music.tryStart(), { once: true });
 
 });
-
-
-
-
-
 

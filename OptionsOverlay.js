@@ -1,4 +1,3 @@
-// OptionsOverlay.js
 class OptionsOverlay {
 	constructor(game) {
 		this.game = game;

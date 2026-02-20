@@ -107,39 +107,62 @@ class GameEngine {
     this.mode = "gameplay";
     if (window.setMusicMode) window.setMusicMode("dream");
 
+    this.currentLevel = 1;
     // clear menu + reset overlay
     this.entities = [];
     this.optionsOverlay = null;
 
-    // reset dream bubble state
-    this.prevB = false;
-    if (this.dreamBubble) this.dreamBubble.close(true);
+    this.addEntity(new Background(this));
 
-    const cw = this.ctx.canvas.width;
-    const ch = this.ctx.canvas.height;
+		// Level-specific spawns
+		Levels.buildLevel(this)
 
-    const keys = Object.keys(ITEM_DEFS);
-    const startX = 260;
-    const startY = 160;
-    const gapX = 140;
-    const gapY = 120;
-    const cols = 3;
+		// Common entities
+		this.addEntity(new EndGame(this));
+		this.addEntity(new MenuRoomController(this));
 
-    for (let i = 0; i < keys.length; i++) {
-      const id = keys[i];
-      const col = i % cols;
-      const row = Math.floor(i / cols);
+		this.blockMap = {};
 
-      let x = startX + col * gapX;
-      let y = startY + row * gapY;
+		this.entities.forEach(e => { // Keep this last
+				if (e instanceof Block) {
+						const gx = Math.floor(e.x / PARAMS.BLOCKWIDTH);
+						const gy = Math.floor(e.y / PARAMS.BLOCKWIDTH);
+						
+						engine.blockMap[`${gx},${gy}`] = e;
+				}
+		});
 
-      x = Math.min(cw - 120, Math.max(120, x));
-      y = Math.min(ch - 120, Math.max(120, y));
+    
 
-      this.addEntity(new PickupItem(this, x, y, id));
-    }
+    // // reset dream bubble state
+    // this.prevB = false;
+    // if (this.dreamBubble) this.dreamBubble.close(true);
 
-    this.addEntity(new EndGame(this));
+    // const cw = this.ctx.canvas.width;
+    // const ch = this.ctx.canvas.height;
+
+    // const keys = Object.keys(ITEM_DEFS);
+    // const startX = 260;
+    // const startY = 160;
+    // const gapX = 140;
+    // const gapY = 120;
+    // const cols = 3;
+
+    // for (let i = 0; i < keys.length; i++) {
+    //   const id = keys[i];
+    //   const col = i % cols;
+    //   const row = Math.floor(i / cols);
+
+    //   let x = startX + col * gapX;
+    //   let y = startY + row * gapY;
+
+    //   x = Math.min(cw - 120, Math.max(120, x));
+    //   y = Math.min(ch - 120, Math.max(120, y));
+
+    //   this.addEntity(new PickupItem(this, x, y, id));
+    // }
+
+    // this.addEntity(new EndGame(this));
   }
 
   goToMainMenu() {
