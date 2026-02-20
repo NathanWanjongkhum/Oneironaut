@@ -19,6 +19,8 @@ class GameEngine {
     this.options = options || { debugging: false };
     this.inLevel = true;
 
+    this.currentLevel = 0; //initial state 0 marks not in a level
+
     // Dream Bubble (create lazily later)
     this.dreamBubble = null;
     this.prevB = false;
@@ -113,17 +115,6 @@ class GameEngine {
     this.prevB = false;
     if (this.dreamBubble) this.dreamBubble.close(true);
 
-    //Part of extra commit, handled in main.js
-    // Spawn gameplay entities
-    // this.addEntity(new Background(this));
-    // this.addEntity(new Ghost(this, 700, 50));
-    // this.addEntity(new Ghost(this, 775, 350));
-    // this.addEntity(new Ghost(this, 300, 400));
-    // this.addEntity(new Bed(this, 700, 300));
-    // this.addEntity(new SleepyGuy(this, 100, 100));
-    // this.addEntity(new WaypointBuilder(this));
-
-    // Spawn ALL items (test)
     const cw = this.ctx.canvas.width;
     const ch = this.ctx.canvas.height;
 
@@ -165,7 +156,7 @@ class GameEngine {
     this.addEntity(new MenuRoomController(this));
   }
 
-    update() {
+  update() {
     const cw = this.ctx.canvas.width;
     const ch = this.ctx.canvas.height;
 
@@ -231,9 +222,9 @@ class GameEngine {
             }
     }
 
-        // remove entities marked for deletion
-        this.entities = this.entities.filter(e => !e.removeFromWorld);
-    }
+    // remove entities marked for deletion
+    this.entities = this.entities.filter(e => !e.removeFromWorld);
+  }
 
   draw() {
     this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
