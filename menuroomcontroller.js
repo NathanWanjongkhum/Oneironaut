@@ -61,29 +61,25 @@ class MenuRoomController {
     this.portalLocked =
       ASSET_MANAGER.getAsset("./assets/background/selectLevel/lockedLevel.png");
 
-    
- 
-
-
-    
   }
 
   update() {
-
-   if (this.game.mode !== "menu") return;
     
     // Options modal
-    this.showOptions = false;
-    this.optionsPanelRect = { x: 0, y: 0, w: 0, h: 0 };
-    this.optionsCloseRect = { x: 0, y: 0, w: 44, h: 44 };
+    
+    
 
     // Options UI buttons inside modal
     this.optMuteRect = { x: 0, y: 0, w: 0, h: 0 };
     this.optVolDownRect = { x: 0, y: 0, w: 0, h: 0 };
     this.optVolUpRect = { x: 0, y: 0, w: 0, h: 0 };
+    console.log("other update called");
   }
 
   update() {
+
+    if (this.game.mode !== "menu") return;
+
     const cw = this.game.ctx.canvas.width;
     const ch = this.game.ctx.canvas.height;
 
@@ -187,6 +183,9 @@ class MenuRoomController {
 
     // Options modal sizing
     //TODO: something weird occurd with this part in merge from main
+    // this.showOptions = false;
+    // this.optionsPanelRect = { x: 0, y: 0, w: 0, h: 0 };
+    // this.optionsCloseRect = { x: 0, y: 0, w: 44, h: 44 };
     try {
       this.optionsPanelRect.w = Math.min(720, cw * 0.70);
       this.optionsPanelRect.h = Math.min(360, ch * 0.50);
@@ -796,15 +795,15 @@ if (this.scene === "levelSelect") {
     const ch = this.game.ctx.canvas.height;
 
     // Dim background
-  ctx.save();
-  ctx.fillStyle = "white";
-  ctx.font = "700 46px serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "top";
-  ctx.shadowColor = "rgba(0,0,0,0.7)";
-  ctx.shadowBlur = 12;
-  ctx.fillText("Select Level", cw/2, titleY);
-  ctx.restore();
+    ctx.save();
+    ctx.fillStyle = "white";
+    ctx.font = "700 46px serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.shadowColor = "rgba(0,0,0,0.7)";
+    ctx.shadowBlur = 12;
+    ctx.fillText("Select Level", cw/2, titleY);
+    ctx.restore();
 
 
     // Panel
