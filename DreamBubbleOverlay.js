@@ -125,7 +125,7 @@ class DreamBubbleOverlay {
     }
 
     draw(ctx) {
-        if (!this.isOpen) return;
+        if (!this.isOpen || this.game.gameOver) return;
 
         const r = this.bubbleRect;
 
