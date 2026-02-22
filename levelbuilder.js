@@ -42,4 +42,37 @@ class LevelBuilder {
             this.spawnBlock(gx, y);
         }
     }
+
+    /**
+     * @param {number} gx - Grid X (Column)
+     * @param {number} gy - Grid Y (Row)
+     */
+    spawnSpikes(gx, gy) {
+        const cellKey = `${gx},${gy}`;
+
+        // Prevent overlapping spikes with other entities
+        if (this.occupiedCells.has(cellKey)) {
+            if (PARAMS.DEBUG) console.log(`Spikes placement rejected at ${gx},${gy}: Already occupied.`);
+            return;
+        }
+
+        // Stay within Canvas bounds
+        const canvasX = gx * PARAMS.BLOCKWIDTH;
+        const canvasY = gy * PARAMS.BLOCKWIDTH;
+
+        if (canvasX < 0 || canvasX >= PARAMS.CANVAS_WIDTH || 
+            canvasY < 0 || canvasY >= PARAMS.CANVAS_HEIGHT) {
+            if (PARAMS.DEBUG) console.log(`Spikes placement rejected: Out of bounds.`);
+            return;
+        }
+
+        this.game.addEntity(new Spikes(this.game, canvasX, canvasY));
+        this.occupiedCells.add(cellKey);
+    }
+
+    spawnSpikesRow(gy, startGx, endGx) {
+        for (let x = startGx; x <= endGx; x++) {
+            this.spawnSpikes(x, gy);
+        }
+    }
 }

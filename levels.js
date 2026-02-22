@@ -31,8 +31,9 @@ class Levels {
         builder.spawnRow(15, 0, 20); 
         builder.spawnBlock(5, 14);
         builder.spawnBlock(5, 13);
+        builder.spawnSpikesRow(14, 0, 4)
 
-        engine.addEntity(new Demon(engine, 300, 400))
+        engine.addEntity(new Demon(engine, 300, 500))
         engine.addEntity(new Sheep(engine, 100, 200));
         engine.addEntity(new Spider(engine, spiderPath));
         engine.addEntity(new Ghost(engine, 700, 50));
