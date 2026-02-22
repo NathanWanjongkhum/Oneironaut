@@ -309,6 +309,8 @@ class Sheep extends Monster {
                 // Update BB after snapping position
                 this.updateBB();
                 break;
+            case "Spikes":
+                this.dead = true;
             default:
                 break;
         }
@@ -430,8 +432,7 @@ class Spider extends Monster {
         this.path = path; 
         this.targetIndex = 1; 
 
-        // TODO: Replace with actual spider spritesheet
-        this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/spider.png"); // Placeholder
+        this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/spider.png");
 
         this.animations = [];
         this.loadAnimations();
@@ -522,7 +523,6 @@ class Demon extends Monster {
         this.leashRadius = 175
         this.canBeAlerted = true;
 
-        this.dead = false;
         this.state = 0;
         this.type = 2;
         this.facing = { x: 0, y: 0 };
@@ -674,7 +674,6 @@ class Demon extends Monster {
         }
                 
         // spritesheet, xStart, yStart, width, height, frameCount, frameDuration, framePadding, reverse, loop
-
         this.animations[0][2] = new Animator(this.spritesheet, 0, 30, 128, 128, 5, 0.3, 0, 0, 1); // idle
         this.animations[1][2] = new Animator(this.spritesheet, 0, 158, 128, 128, 6, 0.2, 0, 0, 1); // walk
         this.animations[2][2] = new Animator(this.spritesheet, 0, 286, 128, 128, 7, 0.2, 0, 0, 1); // run
@@ -704,7 +703,6 @@ class VenusFlyTrap extends Monster {
         this.leashRadius = 175
         this.canBeAlerted = true;
 
-        this.dead = false;
         this.state = 0;
         this.type = 0;
         this.facing = { x: 0, y: 0 };

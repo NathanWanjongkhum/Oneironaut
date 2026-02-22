@@ -1,7 +1,7 @@
 class GameEngine {
-    constructor(options) {
-        this.ctx = null;
-        this.entities = [];
+  constructor(options) {
+    this.ctx = null;
+    this.entities = [];
 
     this.click = null;
     this.mouse = null;
@@ -20,6 +20,7 @@ class GameEngine {
     this.inLevel = true;
 
     this.currentLevel = 0; //initial state 0 marks not in a level
+    this.gridMap = {};
 
     // Dream Bubble (create lazily later)
     this.dreamBubble = null;
@@ -60,47 +61,49 @@ class GameEngine {
       };
     });
 
-        canvas.addEventListener("mousemove", (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
+    canvas.addEventListener("mousemove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
 
-            this.mouse = {
-                x: (e.clientX - rect.left) * scaleX,
-                y: (e.clientY - rect.top) * scaleY
-            };
-        });
+      this.mouse = {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY,
+      };
+    });
 
-        window.addEventListener("keydown", (e) => {
-            this.keys[e.code] = true;
-        });
-        window.addEventListener("keyup", (e) => {
-            this.keys[e.code] = false;
-        });
-    }
+    window.addEventListener("keydown", (e) => {
+      this.keys[e.code] = true;
+    });
+    window.addEventListener("keyup", (e) => {
+      this.keys[e.code] = false;
+    });
+  }
 
-    addEntity(entity) {
-        this.entities.push(entity);
-    }
+  addEntity(entity) {
+    this.entities.push(entity);
+  }
 
-    checkBlockCollision(entity) {
-        if (!entity.BB) return;
+  checkGridCollision(entity) {
+    if (!entity.BB) return;
 
-        const left = Math.floor(entity.BB.left / PARAMS.BLOCKWIDTH);
-        const right = Math.floor(entity.BB.right / PARAMS.BLOCKWIDTH);
-        const top = Math.floor(entity.BB.top / PARAMS.BLOCKWIDTH);
-        const bottom = Math.floor(entity.BB.bottom / PARAMS.BLOCKWIDTH);
+    const left = Math.floor(entity.BB.left / PARAMS.BLOCKWIDTH);
+    const right = Math.floor(entity.BB.right / PARAMS.BLOCKWIDTH);
+    const top = Math.floor(entity.BB.top / PARAMS.BLOCKWIDTH);
+    const bottom = Math.floor(entity.BB.bottom / PARAMS.BLOCKWIDTH);
 
-        // Only check the cells the entity is overlapping
-        for (let x = left; x <= right; x++) {
-            for (let y = top; y <= bottom; y++) {
-                const block = this.blockMap[`${x},${y}`];
-                if (block && entity.onCollision) {
-                    entity.onCollision(block);
-                }
-            }
+    for (let x = left; x <= right; x++) {
+      for (let y = top; y <= bottom; y++) {
+        const gridEntity = this.gridMap[`${x},${y}`];
+
+        if (gridEntity && entity.onCollision) {
+          if (entity.BB.collide(gridEntity.BB)) {
+            entity.onCollision(gridEntity);
+          }
         }
+      }
     }
+  }
 
   // Call when you press "New Dream"
   startGameplay() {
@@ -114,25 +117,24 @@ class GameEngine {
 
     this.addEntity(new Background(this));
 
-		// Level-specific spawns
-		Levels.buildLevel(this)
+    // Level-specific spawns
+    Levels.buildLevel(this);
 
-		// Common entities
-		this.addEntity(new EndGame(this));
-		this.addEntity(new MenuRoomController(this));
+    // Common entities
+    this.addEntity(new EndGame(this));
+    this.addEntity(new MenuRoomController(this));
 
-		this.blockMap = {};
+    this.blockMap = {};
 
-		this.entities.forEach(e => { // Keep this last
-				if (e instanceof Block) {
-						const gx = Math.floor(e.x / PARAMS.BLOCKWIDTH);
-						const gy = Math.floor(e.y / PARAMS.BLOCKWIDTH);
-						
-						engine.blockMap[`${gx},${gy}`] = e;
-				}
-		});
+    this.entities.forEach((e) => {
+      // Keep this last
+      if (e instanceof Block) {
+        const gx = Math.floor(e.x / PARAMS.BLOCKWIDTH);
+        const gy = Math.floor(e.y / PARAMS.BLOCKWIDTH);
 
-    
+        engine.blockMap[`${gx},${gy}`] = e;
+      }
+    });
 
     // // reset dream bubble state
     // this.prevB = false;
@@ -240,13 +242,13 @@ class GameEngine {
       const ent = this.entities[i];
       if (!ent.removeFromWorld && ent.update) ent.update();
 
-            if (!(ent instanceof Block)) {
-                this.checkBlockCollision(ent);
-            }
+      if (!(ent instanceof Block || ent instanceof Spikes)) {
+        this.checkGridCollision(ent);
+      }
     }
 
     // remove entities marked for deletion
-    this.entities = this.entities.filter(e => !e.removeFromWorld);
+    this.entities = this.entities.filter((e) => !e.removeFromWorld || !e.dead);
   }
 
   draw() {

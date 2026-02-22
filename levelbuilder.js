@@ -13,7 +13,7 @@ class LevelBuilder {
 
         // Prevent overlapping blocks
         if (this.occupiedCells.has(cellKey)) {
-            if (PARAMS.DEBUG) console.warn(`Block placement rejected at ${gx},${gy}: Already occupied.`);
+            if (PARAMS.DEBUG) console.warn(`Placement rejected at ${gx},${gy}: Already occupied.`);
             return;
         }
 
@@ -23,12 +23,14 @@ class LevelBuilder {
 
         if (canvasX < 0 || canvasX >= PARAMS.CANVAS_WIDTH || 
             canvasY < 0 || canvasY >= PARAMS.CANVAS_HEIGHT) {
-            if (PARAMS.DEBUG) console.warn(`Block placement rejected: Out of bounds.`);
+            if (PARAMS.DEBUG) console.warn(`Placement rejected: Out of bounds.`);
             return;
         }
 
-        this.game.addEntity(new Block(this.game, canvasX, canvasY));
+        const block = new Block(this.game, canvasX, canvasY)
+        this.game.addEntity(block);
         this.occupiedCells.add(cellKey);
+        this.game.gridMap[cellKey] = block;
     }
 
     spawnRow(gy, startGx, endGx) {
@@ -50,9 +52,9 @@ class LevelBuilder {
     spawnSpikes(gx, gy) {
         const cellKey = `${gx},${gy}`;
 
-        // Prevent overlapping spikes with other entities
+        // Prevent overlapping blocks
         if (this.occupiedCells.has(cellKey)) {
-            if (PARAMS.DEBUG) console.log(`Spikes placement rejected at ${gx},${gy}: Already occupied.`);
+            if (PARAMS.DEBUG) console.warn(`Placement rejected at ${gx},${gy}: Already occupied.`);
             return;
         }
 
@@ -62,12 +64,14 @@ class LevelBuilder {
 
         if (canvasX < 0 || canvasX >= PARAMS.CANVAS_WIDTH || 
             canvasY < 0 || canvasY >= PARAMS.CANVAS_HEIGHT) {
-            if (PARAMS.DEBUG) console.log(`Spikes placement rejected: Out of bounds.`);
+            if (PARAMS.DEBUG) console.warn(`Placement rejected: Out of bounds.`);
             return;
         }
 
-        this.game.addEntity(new Spikes(this.game, canvasX, canvasY));
+        const spike = new Spikes(this.game, canvasX, canvasY);
+        this.game.addEntity(spike);
         this.occupiedCells.add(cellKey);
+        this.game.gridMap[cellKey] = spike;
     }
 
     spawnSpikesRow(gy, startGx, endGx) {

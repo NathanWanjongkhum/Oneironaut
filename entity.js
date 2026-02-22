@@ -14,7 +14,6 @@ class Entity {
         // Physics
         this.velocity = { x: 0, y: 0 };
         this.BB = null;
-        this.dead = false;
     }
 
     update() {
