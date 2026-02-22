@@ -260,44 +260,49 @@ class Sheep extends Monster {
         this.loadAnimations();
         this.updateBB();
     }
-
     onCollision(entity) {
         switch (entity.constructor.name) {
             case "Block":
-                const sheepBB = this.BB;
+                const thisBB = this.BB;
                 const blockBB = entity.BB;
 
-                const overlapX = (sheepBB.right > blockBB.left && sheepBB.left < blockBB.right);
-                const overlapY = (sheepBB.bottom > blockBB.top && sheepBB.top < blockBB.bottom);
+                const overlapX = (thisBB.right > blockBB.left && thisBB.left < blockBB.right);
+                const overlapY = (thisBB.bottom > blockBB.top && thisBB.top < blockBB.bottom);
 
                 if (overlapX && overlapY) {
-                    const diffX = (sheepBB.right - blockBB.left) < (blockBB.right - sheepBB.left) 
-                                ? (sheepBB.right - blockBB.left) : (blockBB.right - sheepBB.left);
-                    const diffY = (sheepBB.bottom - blockBB.top) < (blockBB.bottom - sheepBB.top) 
-                                ? (sheepBB.bottom - blockBB.top) : (blockBB.bottom - sheepBB.top);
+                    // Calculate penetration depths from all 4 sides
+                    const penLeft = thisBB.right - blockBB.left;
+                    const penRight = blockBB.right - thisBB.left;
+                    const penTop = thisBB.bottom - blockBB.top;
+                    const penBottom = blockBB.bottom - thisBB.top;
+
+                    // Find the smallest penetration on each axis
+                    const diffX = Math.min(penLeft, penRight);
+                    const diffY = Math.min(penTop, penBottom);
 
                     if (diffY < diffX) {
-                        // Vertical Collision (Floor or Ceiling)
-                        if (this.velocity.y > 0 && sheepBB.bottom > blockBB.top) {
+                        // Vertical Collision
+                        if (penTop < penBottom) {
                             // Standing on top of block
-                            this.y = blockBB.top - (this.height * this.scale);
+                            this.y -= penTop;
                             this.velocity.y = 0;
                             this.onGround = true;
-                        } else if (this.velocity.y < 0) { 
+                        } else {
                             // Hitting head on ceiling
-                            this.y = blockBB.bottom;
+                            this.y += penBottom;
                             this.velocity.y = 0;
                         }
                     } else {
-                        // Horizontal Collision (Walls)
-                        if (this.velocity.x > 0) { 
+                        // Horizontal Collision
+                        if (penLeft < penRight) {
                             // Hit left side of block
-                            this.x = blockBB.left - (this.width * this.scale);
-                        } else if (this.velocity.x < 0) { 
+                            this.x -= penLeft;
+                            this.velocity.x = 0;
+                        } else {
                             // Hit right side of block
-                            this.x = blockBB.right;
+                            this.x += penRight;
+                            this.velocity.x = 0;
                         }
-                        this.velocity.x = 0;
                     }
                 }
 
@@ -536,40 +541,46 @@ class Demon extends Monster {
                 entity.onHitByGhost(this);
                 break;
             case "Block":
-                const sheepBB = this.BB;
+                const thisBB = this.BB;
                 const blockBB = entity.BB;
 
-                const overlapX = (sheepBB.right > blockBB.left && sheepBB.left < blockBB.right);
-                const overlapY = (sheepBB.bottom > blockBB.top && sheepBB.top < blockBB.bottom);
+                const overlapX = (thisBB.right > blockBB.left && thisBB.left < blockBB.right);
+                const overlapY = (thisBB.bottom > blockBB.top && thisBB.top < blockBB.bottom);
 
                 if (overlapX && overlapY) {
-                    const diffX = (sheepBB.right - blockBB.left) < (blockBB.right - sheepBB.left) 
-                                ? (sheepBB.right - blockBB.left) : (blockBB.right - sheepBB.left);
-                    const diffY = (sheepBB.bottom - blockBB.top) < (blockBB.bottom - sheepBB.top) 
-                                ? (sheepBB.bottom - blockBB.top) : (blockBB.bottom - sheepBB.top);
+                    // Calculate penetration depths from all 4 sides
+                    const penLeft = thisBB.right - blockBB.left;
+                    const penRight = blockBB.right - thisBB.left;
+                    const penTop = thisBB.bottom - blockBB.top;
+                    const penBottom = blockBB.bottom - thisBB.top;
+
+                    // Find the smallest penetration on each axis
+                    const diffX = Math.min(penLeft, penRight);
+                    const diffY = Math.min(penTop, penBottom);
 
                     if (diffY < diffX) {
-                        // Vertical Collision (Floor or Ceiling)
-                        if (this.velocity.y > 0 && sheepBB.bottom > blockBB.top) {
+                        // Vertical Collision
+                        if (penTop < penBottom) {
                             // Standing on top of block
-                            this.y = blockBB.top - (this.height * this.scale);
+                            this.y -= penTop;
                             this.velocity.y = 0;
                             this.onGround = true;
-                        } else if (this.velocity.y < 0) { 
+                        } else {
                             // Hitting head on ceiling
-                            this.y = blockBB.bottom;
+                            this.y += penBottom;
                             this.velocity.y = 0;
                         }
                     } else {
-                        // Horizontal Collision (Walls)
-                        if (this.velocity.x > 0) { 
+                        // Horizontal Collision
+                        if (penLeft < penRight) {
                             // Hit left side of block
-                            this.x = blockBB.left - (this.width * this.scale);
-                        } else if (this.velocity.x < 0) { 
+                            this.x -= penLeft;
+                            this.velocity.x = 0;
+                        } else {
                             // Hit right side of block
-                            this.x = blockBB.right;
+                            this.x += penRight;
+                            this.velocity.x = 0;
                         }
-                        this.velocity.x = 0;
                     }
                 }
 
@@ -800,72 +811,5 @@ class VenusFlyTrap extends Monster {
                 
         //spritesheet, xStart, yStart, width, height, frameCount, frameDuration, framePadding, reverse, loop
         this.animations[0][0] = new Animator(this.spritesheet, 0, 0, 64, 64, 4, 0.4, 0, 0, 1); // idle
-    }
-}
-
-class Spikes extends Entity {
-    constructor(game, x, y) {
-        super(game, x, y);
-
-        this.width = 32;
-        this.height = 32;
-        this.scale = 1;
-
-        // Use a placeholder spritesheet - spikes will be drawn as triangles
-        this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/spider.png");
-        
-        this.updateBB();
-    }
-
-    onCollision(entity) {
-        // Spikes don't block movement, they just trigger the hazard
-    }
-
-    update() {
-        // Spikes are static, no update needed
-    }
-
-    updateBB() {
-        // Smaller hitbox for spikes (just the sharp part)
-        const xScaler = 0.8;
-        const yScaler = 0.5;
-
-        const bbWidth = this.width * this.scale * xScaler;
-        const bbHeight = this.height * this.scale * yScaler;
-
-        const xOffset = (this.width * this.scale - bbWidth) / 2;
-        const yOffset = (this.height * this.scale - bbHeight);
-
-        this.BB = new BoundingBox(
-            this.x + xOffset,
-            this.y + yOffset,
-            bbWidth,
-            bbHeight
-        );
-    }
-
-    draw(ctx) {
-        // Draw spikes as triangles
-        ctx.fillStyle = "#888888";
-        const spikeWidth = this.width * this.scale;
-        const spikeHeight = this.height * this.scale;
-        
-        // Draw 3 spikes
-        const spikeCount = 3;
-        const spikeSpacing = spikeWidth / spikeCount;
-        
-        for (let i = 0; i < spikeCount; i++) {
-            ctx.beginPath();
-            ctx.moveTo(this.x + i * spikeSpacing, this.y + spikeHeight);
-            ctx.lineTo(this.x + i * spikeSpacing + spikeSpacing / 2, this.y);
-            ctx.lineTo(this.x + (i + 1) * spikeSpacing, this.y + spikeHeight);
-            ctx.closePath();
-            ctx.fill();
-        }
-
-        if (PARAMS.DEBUG && this.BB) {
-            ctx.strokeStyle = "red";
-            ctx.strokeRect(this.BB.x, this.BB.y, this.BB.width, this.BB.height);
-        }
     }
 }
