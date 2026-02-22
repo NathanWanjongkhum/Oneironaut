@@ -151,13 +151,7 @@ class Ghost extends Monster {
   }
 
   onCollision(entity) {
-    switch (entity.constructor.name) {
-      case "SleepyGuy":
-        entity.onHitByGhost(this);
-        break;
-      default:
-        break;
-    }
+    // Does nothing
   }
 
   update() {
@@ -655,6 +649,7 @@ class Sheep extends Monster {
         break;
       case "Spikes":
         this.dead = true;
+        this.removeFromWorld = true;
         break;
       default:
         break;
@@ -847,13 +842,7 @@ class Spider extends Monster {
   }
 
   onCollision(entity) {
-    switch (entity.constructor.name) {
-      case "SleepyGuy":
-        entity.onHitByGhost(this);
-        break;
-      default:
-        break;
-    }
+    // Does nothing
   }
 
   //spritesheet, xStart, yStart, width, height, frameCount, frameDuration, framePadding, reverse, loop
@@ -973,9 +962,6 @@ class Demon extends Monster {
     switch (entity.constructor.name) {
       case "Block":
         this.handleBlockPhysics(entity);
-        break;
-      case "SleepyGuy":
-        entity.onHitByGhost(this);
         break;
       default:
         break;
@@ -1224,13 +1210,7 @@ class VenusFlyTrap extends Monster {
   }
 
   onCollision(entity) {
-    switch (entity.constructor.name) {
-      case "SleepyGuy":
-        entity.onHitByGhost(this);
-        break;
-      default:
-        break;
-    }
+    // Does nothing
   }
 
   update() {

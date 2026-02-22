@@ -121,8 +121,8 @@ class SleepyGuy {
         }
       }
     }
+
     this.updateBB();
-    this.onCollision();
   }
 
   handleBlockPhysics(entity) {
@@ -173,34 +173,25 @@ class SleepyGuy {
     this.updateBB();
   }
 
-  onCollision() {
-    if (!this.BB || this.dead) return;
+  onCollision(entity) {
+    if (this.dead) return;
 
-    for (let i = 0; i < this.game.entities.length; i++) {
-      const ent = this.game.entities[i];
-      if (ent === this || ent.dead) continue;
-      if (!ent.BB) continue;
-
-      if (this.BB.collide(ent.BB)) {
-        const entType = ent.constructor.name;
-        switch (entType) {
-          case "Bed":
-            this.onReachBed(ent);
-            break;
-          case "Block":
-            this.handleBlockPhysics(ent);
-            break;
-          case "Ghost":
-          case "Spider":
-          case "Demon":
-          case "VenusFlyTrap":
-          case "Spikes":
-            this.onHitByGhost(ent);
-            break;
-          default:
-            break;
-        }
-      }
+    switch (entity.constructor.name) {
+      case "Block":
+        this.handleBlockPhysics(entity);
+        break;
+      case "Spikes":
+      case "Ghost":
+      case "Spider":
+      case "Demon":
+      case "VenusFlyTrap":
+        this.onTakeDamage(entity);
+        break;
+      case "Bed":
+        this.onReachBed(entity);
+        break;
+      default:
+        break;
     }
   }
 
@@ -210,7 +201,7 @@ class SleepyGuy {
     this.game.gameOver = true;
   }
   //triggers lose condition when SleepyGuy hit by ghost
-  onHitByGhost(_ghost) {
+  onTakeDamage(_ghost) {
     this.dead = true;
     this.attackTimer = 0;
   }

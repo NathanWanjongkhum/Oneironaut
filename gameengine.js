@@ -237,18 +237,56 @@ class GameEngine {
       return;
     }
 
-    // Update entities
+    // Update all entities
     for (let i = 0; i < this.entities.length; i++) {
       const ent = this.entities[i];
-      if (!ent.removeFromWorld && ent.update) ent.update();
+      if (!ent.removeFromWorld && ent.update) {
+        ent.update();
+      }
+    }
 
-      if (!(ent instanceof Block || ent instanceof Spikes)) {
+    // Grid Collisions
+    for (let i = 0; i < this.entities.length; i++) {
+      const ent = this.entities[i];
+
+      // grid-aligned static entities
+      if (
+        !ent.removeFromWorld &&
+        !(ent instanceof Block) &&
+        !(ent instanceof Spikes)
+      ) {
         this.checkGridCollision(ent);
       }
     }
 
-    // remove entities marked for deletion
-    this.entities = this.entities.filter((e) => !e.removeFromWorld || !e.dead);
+    // Dynamic Collisions
+    for (let i = 0; i < this.entities.length; i++) {
+      const entA = this.entities[i];
+
+      // Skip entities that don't participate in collisions
+      if (!entA.BB || entA.removeFromWorld) continue;
+
+      // Skip checking the same pair twice
+      for (let j = i + 1; j < this.entities.length; j++) {
+        const entB = this.entities[j];
+        
+        if (!entB.BB || entB.removeFromWorld) continue;
+
+        // If their bounding boxes overlap, trigger the collision response
+        if (entA.BB.collide(entB.BB)) {
+          // Notify both entities so they can react independently
+          if (entA.onCollision) entA.onCollision(entB);
+          if (entB.onCollision) entB.onCollision(entA);
+        }
+      }
+    }
+
+    // Clean up dead entities
+    for (let i = this.entities.length - 1; i >= 0; --i) {
+      if (this.entities[i].removeFromWorld) {
+        this.entities.splice(i, 1);
+      }
+    }
   }
 
   draw() {
