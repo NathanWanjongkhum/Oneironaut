@@ -76,14 +76,14 @@ class Spikes extends Entity {
     this.height = 32;
     this.scale = 1;
 
-    this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/spider.png");
+    this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/spikes.png");
 
     this.updateBB();
   }
 
   updateBB() {
-    const xScaler = 0.8;
-    const yScaler = 0.5;
+    const xScaler = 1;
+    const yScaler = 0.6;
 
     const bbWidth = this.width * this.scale * xScaler;
     const bbHeight = this.height * this.scale * yScaler;
@@ -100,28 +100,33 @@ class Spikes extends Entity {
   }
 
   draw(ctx) {
-    // Draw spikes as triangles
-    ctx.fillStyle = "#888888";
-    const spikeWidth = this.width * this.scale;
-    const spikeHeight = this.height * this.scale;
+    const frameWidth = 48;
+    const frameHeight = 48;
 
-    // Draw 3 spikes
-    const spikeCount = 3;
-    const spikeSpacing = spikeWidth / spikeCount;
+    ctx.drawImage(
+      this.spritesheet,
+      frameWidth * 2,
+      frameHeight / 2,
+      frameWidth,
+      frameHeight / 2,
+      this.x - 16,
+      this.y + 8,
+      frameWidth * this.scale,
+      (frameHeight / 2) * this.scale,
+    );
+    ctx.drawImage(
+      this.spritesheet,
+      frameWidth * 2,
+      frameHeight / 2,
+      frameWidth,
+      frameHeight / 2,
+      this.x,
+      this.y + 8,
+      frameWidth * this.scale,
+      (frameHeight / 2) * this.scale,
+    );
 
-    for (let i = 0; i < spikeCount; i++) {
-      ctx.beginPath();
-      ctx.moveTo(this.x + i * spikeSpacing, this.y + spikeHeight);
-      ctx.lineTo(this.x + i * spikeSpacing + spikeSpacing / 2, this.y);
-      ctx.lineTo(this.x + (i + 1) * spikeSpacing, this.y + spikeHeight);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    if (PARAMS.DEBUG && this.BB) {
-      ctx.strokeStyle = "red";
-      ctx.strokeRect(this.BB.x, this.BB.y, this.BB.width, this.BB.height);
-    }
+    super.draw(ctx);
   }
 }
 
@@ -131,11 +136,13 @@ class StickyBush extends Entity {
   constructor(game, x, y) {
     super(game, x, y);
 
-    this.width = 64;
-    this.height = 64;
-    this.scale = 1;
+    this.width = 32;
+    this.height = 32;
+    this.scale = 2;
 
-    // this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/bush.png");
+    this.spritesheet = ASSET_MANAGER.getAsset(
+      "./assets/entities/Bush_simple2_1.png",
+    );
 
     this.updateBB();
   }
@@ -156,14 +163,17 @@ class StickyBush extends Entity {
   }
 
   draw(ctx) {
-    // this.animations[0].drawFrame(this.game.clockTick, ctx, this.x, this.y, this.scale);
-
-    // Placeholder
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, 50, 0, Math.PI * 2);
-    ctx.fillStyle = "green";
-    ctx.fill();
-    ctx.closePath();
+    ctx.drawImage(
+      this.spritesheet,
+      0,
+      0,
+      this.width,
+      this.height,
+      this.x,
+      this.y,
+      this.width * this.scale,
+      this.height * this.scale,
+    );
 
     super.draw(ctx);
   }

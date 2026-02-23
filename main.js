@@ -33,6 +33,10 @@ ASSET_MANAGER.queueDownload("./assets/entities/spider.png");
 ASSET_MANAGER.queueDownload("./assets/entities/plant1_idle.png");
 ASSET_MANAGER.queueDownload("./assets/entities/sheep_shadow.png");
 ASSET_MANAGER.queueDownload("./assets/entities/sleepyguy.png");
+ASSET_MANAGER.queueDownload("./assets/entities/Bush_simple2_1.png");
+ASSET_MANAGER.queueDownload("./assets/entities/Bush_simple2_2.png");
+ASSET_MANAGER.queueDownload("./assets/entities/Bush_simple2_3.png");
+ASSET_MANAGER.queueDownload("./assets/entities/spikes.png");
 
 // Items
 ASSET_MANAGER.queueDownload("./assets/items/Sword.png");

@@ -1209,10 +1209,6 @@ class VenusFlyTrap extends Monster {
     this.updateBB();
   }
 
-  onCollision(entity) {
-    // Does nothing
-  }
-
   update() {
     if (this.game.mode !== "gameplay") return;
     if (this.dead) return;
