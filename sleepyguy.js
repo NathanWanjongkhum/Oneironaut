@@ -19,6 +19,7 @@ class SleepyGuy {
     this.state = 0; // 0: idle, 1: damaged
     this.currentFrame = 0;
     this.attackTimer = 0;
+    this.isStickyBush = false;
 
     this.targetWaypointIndex = 0;
 
@@ -62,27 +63,25 @@ class SleepyGuy {
     // Move along waypoints if they exist
     const waypoints = this.game.waypoints;
     if (waypoints && waypoints.length > 0) {
-      // Set target waypoint (use explicit index)
-      const targetIndex = this.targetWaypointIndex;
-      this.target = waypoints[targetIndex];
-
-      let dx = this.target.x - this.x;
-      let dy = this.target.y - this.y;
-      let distance = Math.sqrt(dx * dx + dy * dy);
-      const velocityLength = Math.sqrt(
+      let velocityLength = Math.sqrt(
         this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y,
       );
 
+      let slowEffect = this.isStickyBush ? StickyBush.slowFactor : 1;
+      velocityLength *= slowEffect;      
+      console.log(velocityLength);
+      
+
       // Use remaining movement this frame
       let remaining = velocityLength * TICK;
-      let currentIndex = targetIndex;
+      let currentIndex = this.targetWaypointIndex;
 
       while (remaining > 0) {
         // Recompute target and deltas for current index
         this.target = waypoints[currentIndex];
-        dx = this.target.x - this.x;
-        dy = this.target.y - this.y;
-        distance = Math.sqrt(dx * dx + dy * dy);
+        let dx = this.target.x - this.x;
+        let dy = this.target.y - this.y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
 
         if (distance === 0) {
           // Exactly on the point so advance if possible, otherwise stop
@@ -122,6 +121,8 @@ class SleepyGuy {
       }
     }
 
+    // Reset collision flag
+    this.isStickyBush = false;
     this.updateBB();
   }
 
@@ -186,6 +187,9 @@ class SleepyGuy {
       case "Demon":
       case "VenusFlyTrap":
         this.onTakeDamage(entity);
+        break;
+      case "StickyBush":
+        this.isStickyBush = true;
         break;
       case "Bed":
         this.onReachBed(entity);
