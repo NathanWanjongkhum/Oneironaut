@@ -99,6 +99,11 @@ class GameEngine {
     this.strangeLampTimer = 0;       // seconds remaining
     this.strangeLampDuration = 3.0;  // tweak duration (seconds)
 
+
+    this.nextBtnRect = { x: 0, y: 0, w: 0, h: 0, visible: false };
+    this.maxLevel = 4;
+
+
   }
 
   init(ctx) {
@@ -313,7 +318,7 @@ class GameEngine {
         const gx = Math.floor(e.x / PARAMS.BLOCKWIDTH);
         const gy = Math.floor(e.y / PARAMS.BLOCKWIDTH);
 
-        engine.blockMap[`${gx},${gy}`] = e;
+        this.blockMap[`${gx},${gy}`] = e;
       }
     });
 
@@ -476,9 +481,23 @@ class GameEngine {
     }
 
     // HUD consumes clicks in gameplay
-    if (this.mode === "gameplay" && this.click) {
-      const { x, y } = this.click;
-      if (this.hud.handleClick(x, y)) this.click = null;
+    // Next Level button consumes click too
+    // if (this.mode === "gameplay" && this.click && this.nextBtnRect.visible) {
+    //   const { x, y } = this.click;
+    //   const r = this.nextBtnRect;
+
+    //   const hit = x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
+    //   if (hit) {
+    //     this.click = null;
+    //     if (this.startLevel) this.startLevel(this.currentLevel + 1);
+    //     return;
+    //   }
+    // }
+      if (this.mode === "gameplay" && this.click) {
+        const { x, y } = this.click;
+        if (this.hud && this.hud.handleClick(x, y)) {
+          this.click = null; // 🚨 kill the click so gameplay/pathing never sees it
+      }
     }
 
     // ===== Sword weapon (inventory item) =====
@@ -913,7 +932,8 @@ if (this.mode === "gameplay" && this.rightClickDown && this.mouse && this.waypoi
   }
 
   draw() {
-    this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+  const ctx = this.ctx;
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
     for (let i = 0; i < this.entities.length; i++) {
       const ent = this.entities[i];
@@ -1082,15 +1102,39 @@ if (this.mode === "gameplay" && this.rightClickDown && this.mouse && this.waypoi
         this.ctx.restore();
       }
 
-      this.hud.draw(this.ctx);
+    this.hud.draw(ctx);
+    this.drawLevelBadge(ctx);
 
-      if (this.optionsOverlay) {
-        const cw = this.ctx.canvas.width;
-        const ch = this.ctx.canvas.height;
-        this.optionsOverlay.draw(this.ctx, cw, ch);
-      }
+    if (this.optionsOverlay) {
+      const cw = ctx.canvas.width;
+      const ch = ctx.canvas.height;
+      this.optionsOverlay.draw(ctx, cw, ch);
     }
   }
+}
+
+ drawLevelBadge(ctx) {
+  const pad = 18;
+  const y = 18, w = 130, h = 36;
+  const x = PARAMS.CANVAS_WIDTH - w - pad; // ✅ top-right
+
+  ctx.save();
+  ctx.globalAlpha = 0.75;
+  ctx.fillStyle = "rgba(20, 24, 40, 0.85)";
+  ctx.fillRect(x, y, w, h);
+
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = "rgba(255,255,255,0.35)";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x, y, w, h);
+
+  ctx.fillStyle = "rgba(255,255,255,0.95)";
+  ctx.font = "700 18px serif";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillText(`Level ${this.currentLevel}`, x + 14, y + h / 2 + 1);
+  ctx.restore();
+}
 
   loop() {
     this.clockTick = this.timer.tick();

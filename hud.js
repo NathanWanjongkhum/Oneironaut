@@ -62,6 +62,8 @@ class HUD {
     this.exitRect.y = this.optRect.y + bh + 10;
     this.exitRect.w = this.panelRect.w - panelPad * 2;
     this.exitRect.h = bh;
+
+    this.topBarH = this.menuRect.y + this.menuRect.h + 10;
   }
 
   // Return true if HUD consumed the click
@@ -103,7 +105,8 @@ class HUD {
     }
 
     return false;
-  }
+  
+}
 
   draw(ctx) {
     this.drawHamburgerButton(ctx);

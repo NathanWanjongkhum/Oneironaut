@@ -127,13 +127,13 @@ class Ghost extends Monster {
     this.height = 128;
     this.scale = 1.5;
 
-    this.spawn = {
-      x: this.x + (this.width * this.scale) / 2,
-      y: this.y + (this.height * this.scale) / 2,
-    };
-
-    this.leashRadius = 175;
-    this.canBeAlerted = true;
+        this.spawn = {
+            x: this.x + (this.width * this.scale) / 2,
+            y: this.y + (this.height * this.scale) / 2
+        }
+        
+        this.leashRadius = 175;
+        this.canBeAlerted = true;
 
     this.dead = false;
     this.state = 0;
@@ -155,8 +155,10 @@ class Ghost extends Monster {
   }
 
   update() {
+        
     if (this.game.mode !== "gameplay") return;
     if (this.dead) return;
+        if (!this.game.sleepyGuy) return; // 
     if (this.state === 3 || this.game.gameOver) return;
 
     const AGGRO_SPEED = 120;
