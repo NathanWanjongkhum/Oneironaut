@@ -244,6 +244,12 @@ class SleepyGuy {
   }
   onTakeDamage(_ghost) {
     if ((this.game.strangeLampTimer ?? 0) > 0) return;
+
+    if (this.game.pajamaArmorActive) {
+      this.game.pajamaArmorActive = false; 
+      return; 
+    }
+
     this.dead = true;
     this.attackTimer = 0;
   }
@@ -337,6 +343,24 @@ class SleepyGuy {
       }
     }
 
+    // ===== Pajama overlay (drawn when armor is active) =====
+    if (this.game.pajamaArmorActive) {
+      const pajamaImg = ASSET_MANAGER.getAsset("./assets/items/Pijama.png");
+      if (pajamaImg) {
+        const pw = drawW * 0.65; // Scale relative to SleepyGuy
+        const ph = pw * (pajamaImg.height / pajamaImg.width);
+        
+        // Position on his body
+        const px = this.x - pw / 2;
+        const py = this.y - drawH * 0.15 - ph / 2;
+
+        ctx.save();
+        ctx.globalAlpha = 0.9;
+        ctx.drawImage(pajamaImg, px, py, pw, ph);
+        ctx.restore();
+      }
+    }
+    
     if (PARAMS.DEBUG && this.BB) {
       ctx.strokeStyle = "red";
       ctx.strokeRect(this.BB.x, this.BB.y, this.BB.width, this.BB.height);

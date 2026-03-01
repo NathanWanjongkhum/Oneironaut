@@ -89,6 +89,9 @@ class GameEngine {
     this.sleepMaskTimer = 0;       // seconds remaining
     this.sleepMaskDuration = 4.0;  // tweak (4 sec is a good start)
 
+    // ===== Pajama Armor passive =====
+    this.pajamaArmorActive = false;
+
     // ===== Strange Lamp passive =====
     // While > 0: SleepyGuy is invulnerable + drawn semi-transparent
     this.strangeLampTimer = 0;       // seconds remaining
@@ -222,6 +225,7 @@ class GameEngine {
     this.dreamCatcherActive = false;
     this.sleepMaskTimer = 0;
     this.strangeLampTimer = 0;
+    this.pajamaArmorActive = false;
 
     // reset bubble state too
     this.prevB = false;
@@ -265,6 +269,7 @@ class GameEngine {
     this.dreamCatcherActive = false;
     this.sleepMaskTimer = 0;
     this.strangeLampTimer = 0;
+    this.pajamaArmorActive = false;
 
     this.prevB = false;
     if (this.dreamBubble) this.dreamBubble.close(true);
@@ -995,6 +1000,10 @@ class GameEngine {
 
       case "TheStrangeLamp":
         this.strangeLampTimer = this.strangeLampDuration;
+        break;
+
+      case "Pajama":
+        this.pajamaArmorActive = true;
         break;
 
       default:
