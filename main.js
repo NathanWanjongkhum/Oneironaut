@@ -22,10 +22,6 @@ ASSET_MANAGER.queueDownload("./assets/background/clouds7/2.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/3.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/4.png");
 
-//ASSET_MANAGER.queueDownload("./assets/InventorySlots.png");
-	
-
-
 ASSET_MANAGER.queueDownload("./assets/entities/bed.png");
 ASSET_MANAGER.queueDownload("./assets/entities/ghost1.png");
 ASSET_MANAGER.queueDownload("./assets/entities/ghost3.png");
@@ -88,14 +84,14 @@ ASSET_MANAGER.downloadAll(() => {
 		engine.blockMap = {};
 
 		engine.entities.forEach(e => { // Keep this last
-				if (e instanceof Block) {
-						const gx = Math.floor(e.x / PARAMS.BLOCKWIDTH);
-						const gy = Math.floor(e.y / PARAMS.BLOCKWIDTH);
-						
-						engine.blockMap[`${gx},${gy}`] = e;
-				}
-		});  
-}
+			if (e instanceof Block) {
+				const gx = Math.floor(e.x / PARAMS.BLOCKWIDTH);
+				const gy = Math.floor(e.y / PARAMS.BLOCKWIDTH);
+
+				engine.blockMap[`${gx},${gy}`] = e;
+			}
+		});
+	}
 
 
 	// Clears current world state and rebuilds it
@@ -110,13 +106,59 @@ ASSET_MANAGER.downloadAll(() => {
 		engine.waypoints = [];
 		engine.click = null;
 
+		engine.inventory?.clear?.();
+		engine.swordSwing = null;
+		engine.swordCooldown = 0;
+		engine.swordSwingId = 0;
+
+		engine.brushSwing = null;
+		engine.brushCooldown = 0;
+		engine.brushSwingId = 0;
+
+		engine.gridMap = {};        // IMPORTANT: clears old blocks/spikes/sandbags
+		engine.blockMap = {};       // optional (you rebuild this anyway)
+
+		engine.brushSwing = null;   // if ToothBrush exists in your build
+		engine.brushCooldown = 0;
+		engine.brushSwingId = 0;
+
+		engine.prevT = false;
+		engine.dreamCatcherActive = false;
+
+		// keep half-sized defaults
+		engine.dreamCatcherRadius = 85;
+		engine.dreamCatcherMinRadius = 30;
+		engine.dreamCatcherMaxRadius = 210;
+		engine.dreamCatcherRadiusStep = 10;
+
+		engine.prevLBracket = false;
+		engine.prevRBracket = false;
+
+		engine.sandbagCooldown = 0; // so sandbags feel fresh on restart
+
+		// reset SleepDust + TeddyBear state too
+		engine.sleepDustCooldown = 0;
+		engine.sleepDustSplash = null;
+
+		engine.rocketActive = false;
+
+		engine.sleepMaskTimer = 0;
+
+		engine.teddyCooldown = 0;
+		if (engine.teddyDecoy) engine.teddyDecoy.removeFromWorld = true;
+		engine.teddyDecoy = null;
+
+		engine.strangeLampTimer = 0;
+
+		engine.prevB = false;
+		if (engine.dreamBubble) engine.dreamBubble.close(true);
+
 		buildWorld(engine);
 
 		if (window.setMusicMode) {
 			window.setMusicMode(mode === "menu" ? "menu" : "dream");
 		}
 	}
-
 
 	gameEngine.restartToGameplay = () => resetWorld(gameEngine, "gameplay", gameEngine.currentLevel);
 	gameEngine.restartToMenu = () => resetWorld(gameEngine, "menu", gameEngine.currentLevel);
@@ -133,9 +175,9 @@ ASSET_MANAGER.downloadAll(() => {
 	canvas.addEventListener("pointerdown", Music.tryStartMusic);
 
 	window.addEventListener("keydown", (e) => {
-			if (!gameEngine.gameOver) return;
-			if (e.key === "r" || e.key === "R") gameEngine.restartToGameplay();
-			if (e.key === "Escape") gameEngine.restartToMenu();
+		if (!gameEngine.gameOver) return;
+		if (e.key === "r" || e.key === "R") gameEngine.restartToGameplay();
+		if (e.key === "Escape") gameEngine.restartToMenu();
 	});
 
 

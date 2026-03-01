@@ -10,7 +10,7 @@
 
     tracks: {
       menu: new Audio("./assets/music/Oneironaut.mp3"),
-      dream: new Audio("./assets/music/Lucid_Journey.mp3"),
+      dream: new Audio("./assets/music/DayDream1-1.mp3"),
     },
 
     init() {

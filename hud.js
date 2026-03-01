@@ -214,6 +214,16 @@ class HUD {
       const dh = ih * scale;
 
       ctx.drawImage(item.img, cx - dw / 2, cy - dh / 2, dw, dh);
+      // show stack count (sandbags)
+      if (typeof item.count === "number" && item.count > 1) {
+        ctx.save();
+        ctx.font = "14px Arial";
+        ctx.fillStyle = "rgba(0,0,0,0.7)";
+        ctx.fillText(String(item.count), cx + dw / 2 - 14, cy + dh / 2 - 2);
+        ctx.fillStyle = "white";
+        ctx.fillText(String(item.count), cx + dw / 2 - 15, cy + dh / 2 - 3);
+        ctx.restore();
+      }
     }
 
     ctx.restore();

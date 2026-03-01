@@ -41,8 +41,14 @@ class DreamBubbleOverlay {
         // start empty: do not auto-roll
     }
 
-    close() {
+    close(clearItem = false) {
         this.isOpen = false;
+
+        if (clearItem) {
+            this.item = null;
+            this.lastSGX = null;
+            this.lastSGY = null;
+        }
     }
 
     toggle() {
