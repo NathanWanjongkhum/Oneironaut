@@ -31,23 +31,34 @@ class WaypointBuilder {
         ctx.stroke();
 
         // Draw current mouse position as a waypoint preview
-        if (gameEngine.mouse) {
+        if (this.game.mouse) {
             ctx.fillStyle = "green";
             ctx.beginPath();
-            ctx.arc(gameEngine.mouse.x, gameEngine.mouse.y, 5, 0, Math.PI * 2);
+            ctx.arc(this.game.mouse.x, this.game.mouse.y, 5, 0, Math.PI * 2);
             ctx.fill();
         }
     }
 
     update() {
         if (this.game.mode !== "gameplay" || this.game.gameOver) return;
-        // Add waypoint on click
-        if (gameEngine.click) {
-            this.addPoint(gameEngine.click.x, gameEngine.click.y);
+        
+        if (this.game.click) {
+            this.addPoint(this.game.click.x, this.game.click.y);
+            this.game.click = null; 
         }
     }
 
     addPoint(x, y) {
+        // Prevent placing nodes too close together
+        if (this.waypoints.length > 0) {
+            const lastWp = this.waypoints[this.waypoints.length - 1];
+            const dist = Math.sqrt((x - lastWp.x) ** 2 + (y - lastWp.y) ** 2);
+            
+            if (dist < 10) {
+                return;
+            }
+        }
+
         this.waypoints.push({ x: x, y: y });
     }
 }

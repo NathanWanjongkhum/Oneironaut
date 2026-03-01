@@ -4,6 +4,7 @@ class GameEngine {
     this.entities = [];
 
     this.click = null;
+    this.rightClick = null;
     this.mouse = null;
     this.wheel = null;
     this.keys = {};
@@ -49,6 +50,18 @@ class GameEngine {
 
   startInput() {
     const canvas = this.ctx.canvas;
+
+    canvas.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+
+      this.rightClick = {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY,
+      };
+    });
 
     canvas.addEventListener("click", (e) => {
       const rect = canvas.getBoundingClientRect();
@@ -222,6 +235,33 @@ class GameEngine {
     if (this.mode === "gameplay" && this.click) {
       const { x, y } = this.click;
       if (this.hud.handleClick(x, y)) this.click = null;
+    }
+
+    // HUD consumes right clicks in gameplay
+    if (this.mode === "gameplay" && this.rightClick && this.waypoints) {
+      const clickX = this.rightClick.x;
+      const clickY = this.rightClick.y;
+      const clickRadius = 30; 
+
+      let foundIndex = -1;
+
+      for (let i = 0; i < this.waypoints.length; i++) {
+        const wp = this.waypoints[i];
+        const dist = Math.sqrt((wp.x - clickX) ** 2 + (wp.y - clickY) ** 2);
+
+        if (dist <= clickRadius) {
+          foundIndex = i;
+          break;
+        }
+      }
+
+      if (foundIndex !== -1) {
+        this.waypoints.splice(foundIndex);
+        console.log(this.waypoints);
+        
+      }
+      
+      this.rightClick = null; 
     }
 
     // HUD requests

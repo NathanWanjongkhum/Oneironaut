@@ -22,6 +22,7 @@ class SleepyGuy {
     this.isStickyBush = false;
 
     this.targetWaypointIndex = 0;
+    this.lastSafeSpot = { x: this.x, y: this.y };
 
     this.animations = [];
     this.loadAnimations();
@@ -62,57 +63,58 @@ class SleepyGuy {
 
     // Move along waypoints if they exist
     const waypoints = this.game.waypoints;
+    let targetPoint = null;
+
     if (waypoints && waypoints.length > 0) {
+      this.isRetreating = false;
+      targetPoint = waypoints[0];
+    } else {
+      // The path is empty (or was deleted). Check if we need to retreat.
+      const distToSafe = Math.sqrt((this.lastSafeSpot.x - this.x)**2 + (this.lastSafeSpot.y - this.y)**2);
+      if (distToSafe > 1) {
+        this.isRetreating = true;
+        targetPoint = this.lastSafeSpot;
+      }
+    }
+
+    if (targetPoint) {
       let velocityLength = Math.sqrt(
-        this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y,
+        this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y
       );
 
       let slowEffect = this.isStickyBush ? StickyBush.slowFactor : 1;
       velocityLength *= slowEffect;      
-      console.log(velocityLength);
-      
 
-      // Use remaining movement this frame
       let remaining = velocityLength * TICK;
-      let currentIndex = this.targetWaypointIndex;
 
       while (remaining > 0) {
-        // Recompute target and deltas for current index
-        this.target = waypoints[currentIndex];
-        let dx = this.target.x - this.x;
-        let dy = this.target.y - this.y;
+        let dx = targetPoint.x - this.x;
+        let dy = targetPoint.y - this.y;
         let distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance === 0) {
-          // Exactly on the point so advance if possible, otherwise stop
-          if (currentIndex + 1 < waypoints.length) {
-            currentIndex++;
-            this.targetWaypointIndex = currentIndex;
-            continue;
-          } else {
-            this.targetWaypointIndex = currentIndex;
-            break;
-          }
-        }
-
         if (distance <= remaining) {
-          // Snap to this waypoint and consume movement, then try next
-          this.x = this.target.x;
-          this.y = this.target.y;
+          this.x = targetPoint.x;
+          this.y = targetPoint.y;
           remaining -= distance;
 
-          if (currentIndex + 1 < waypoints.length) {
-            currentIndex++;
-            this.targetWaypointIndex = currentIndex;
-            // loop to attempt to use leftover movement on next waypoint
-            continue;
+          if (this.isRetreating) {
+            // Reached last spot. Stop moving.
+            this.isRetreating = false;
+            break; 
           } else {
-            // Reached final waypoint
-            this.targetWaypointIndex = currentIndex;
-            break;
+            this.lastSafeSpot = { x: this.x, y: this.y }; 
+            
+            let reachedNode = waypoints.shift(); 
+            if (reachedNode) reachedNode.removeFromWorld = true;
+
+            if (waypoints.length > 0) {
+              targetPoint = waypoints[0];
+            } else {
+              break;
+            }
           }
         } else {
-          // Move part-way towards the current target and finish this frame
+          // Move part-way towards the target and finish this frame
           const angle = Math.atan2(dy, dx);
           this.x += Math.cos(angle) * remaining;
           this.y += Math.sin(angle) * remaining;
@@ -120,7 +122,6 @@ class SleepyGuy {
         }
       }
     }
-
     // Reset collision flag
     this.isStickyBush = false;
     this.updateBB();
