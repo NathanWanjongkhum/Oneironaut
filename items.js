@@ -73,7 +73,16 @@ class PickupItem {
         // ===== Inventory items =====
         if (this.def.pickable) {
             if (this.BB && sg.BB && this.BB.collide(sg.BB)) {
-                const ok = this.game.inventory.addItem({ id: this.id, img: this.sprite });
+
+                const item = { id: this.id, img: this.sprite };
+
+                // Sandbags carry charges (SandBag3 -> 3 uses)
+                if (this.id && this.id.startsWith("SandBag")) {
+                    const n = parseInt(this.id.replace("SandBag", ""), 10);
+                    item.count = Number.isFinite(n) ? n : 1;
+                }
+
+                const ok = this.game.inventory.addItem(item);
                 if (ok) this.removeFromWorld = true;
             }
             return;

@@ -14,6 +14,82 @@ class Monster extends Entity {
     this.velocity = { x: 0, y: 0 };
     this.speed = 0; // Pixels per second
     this.gravity = 3; // Not used for all monsters
+
+    // ===== Weapon effects (Sword knockback) =====
+    this.knockbackTimer = 0;
+    this.knockbackVel = { x: 0, y: 0 };
+    this.lastSwordSwingId = 0;
+
+    // ===== Sleep Dust effect =====
+    this.sleepTimer = 0; // seconds remaining
+
+  }
+
+  /**
+ * Applies a timed knockback impulse.
+ * @param {number} vx pixels/sec
+ * @param {number} vy pixels/sec
+ * @param {number} duration seconds
+ * @param {number} swingId used to prevent multi-hits per swing
+ */
+  applyKnockback(vx, vy, duration = 0.18, swingId = 0) {
+    if (swingId && this.lastSwordSwingId === swingId) return false;
+    if (swingId) this.lastSwordSwingId = swingId;
+
+    this.knockbackVel.x = vx;
+    this.knockbackVel.y = vy;
+    this.knockbackTimer = Math.max(this.knockbackTimer, duration);
+    return true;
+  }
+
+  /**
+   * If currently being knocked back, moves the monster and returns true.
+   * Call this at the start of each monster's update() to "stun" their AI.
+   */
+  doKnockbackMotion() {
+    if (this.knockbackTimer <= 0) return false;
+
+    const TICK = this.game.clockTick;
+    if (this.aggroTimer > 0) this.aggroTimer -= TICK;
+
+    this.x += this.knockbackVel.x * TICK;
+    this.y += this.knockbackVel.y * TICK;
+
+    this.knockbackTimer -= TICK;
+    if (this.knockbackTimer < 0) this.knockbackTimer = 0;
+
+    this.updateBB();
+    return true;
+  }
+
+  /**
+ * Puts this monster to sleep for duration seconds (extends if already sleeping).
+ */
+  applySleep(duration = 3.0) {
+    if (this.dead) return false;
+    this.sleepTimer = Math.max(this.sleepTimer, duration);
+    return true;
+  }
+
+  /**
+   * If asleep, freezes motion/AI and returns true.
+   * Call after knockback so sword can still push sleeping enemies.
+   */
+  doSleepMotion() {
+    if (this.sleepTimer <= 0) return false;
+
+    const TICK = this.game.clockTick;
+    this.sleepTimer -= TICK;
+    if (this.sleepTimer < 0) this.sleepTimer = 0;
+
+    // Freeze movement
+    if (this.velocity) {
+      this.velocity.x = 0;
+      this.velocity.y = 0;
+    }
+
+    this.updateBB?.();
+    return true;
   }
 
   update() {
@@ -48,26 +124,31 @@ class Monster extends Entity {
 
     super.draw(ctx);
   }
-
+  
   /**
-   * Get a normalized vector {x, y} pointing toward the player.
-   * Returns {x: 0, y: 0} if already at target or player missing.
+   * Get a normalized vector {x, y} pointing toward the target (SleepyGuy or Teddy).
+   * SleepMask: mobs are blinded -> return {0,0} and clear aggro.
    */
   getVectorToPlayer() {
-    const player = this.game.sleepyGuy;
-    if (!player || player.dead) return { x: 0, y: 0 };
+    // ===== SleepMask: blinded mobs don't chase =====
+    if (this.game?.sleepMaskTimer > 0) {
+      this.aggroTimer = 0;
+      return { x: 0, y: 0 };
+    }
+
+    // Prefer Teddy target if your GameEngine supports it (safe fallback to SleepyGuy)
+    const target =
+      this.game?.getLureTargetFor ? this.game.getLureTargetFor(this) : this.game.sleepyGuy;
+
+    if (!target || target.dead || target.removeFromWorld) return { x: 0, y: 0 };
 
     const center = {
       x: this.x + (this.width * this.scale) / 2,
       y: this.y + (this.height * this.scale) / 2,
     };
 
-    const playerPos = {
-      x: player.x,
-      y: player.y,
-    };
-
-    return getNormalVector(playerPos, center);
+    const targetPos = { x: target.x, y: target.y };
+    return getNormalVector(targetPos, center);
   }
 
   handleBlockPhysics(entity) {
@@ -151,13 +232,25 @@ class Ghost extends Monster {
   }
 
   onCollision(entity) {
-    // Does nothing
+    if (entity.constructor.name === "Block") {
+      this.handleBlockPhysics(entity);
+    }
   }
 
   update() {
     if (this.game.mode !== "gameplay") return;
     if (this.dead) return;
     if (this.state === 3 || this.game.gameOver) return;
+
+    // Sword knockback stun
+    if (this.doKnockbackMotion()) return;
+
+    // Sleep Dust
+    if (this.doSleepMotion()) {
+      this.state = 0; // idle
+      super.update();
+      return;
+    }
 
     const AGGRO_SPEED = 120;
     const DEFEND_SPEED = 80;
@@ -166,31 +259,41 @@ class Ghost extends Monster {
     // Reset velocity
     this.velocity = { x: 0, y: 0 };
 
-    const playerPos = {
-      x: this.game.sleepyGuy.x,
-      y: this.game.sleepyGuy.y,
+    const target =
+      (this.game.getLureTargetFor && this.game.getLureTargetFor(this)) ||
+      this.game.sleepyGuy;
+
+    const targetPos = {
+      x: target?.x ?? this.game.sleepyGuy.x,
+      y: target?.y ?? this.game.sleepyGuy.y,
     };
+
     const thisPos = {
       x: this.x + (this.width * this.scale) / 2,
       y: this.y + (this.height * this.scale) / 2,
     };
 
-    const distPlayerToSpawn = getDistance(playerPos, this.spawn);
     const distToSpawn = getDistance(thisPos, this.spawn);
+    const distTargetToSpawn = getDistance(targetPos, this.spawn);
+
+    const leashBoost =
+      target && target.constructor && target.constructor.name === "TeddyDecoy"
+        ? 250
+        : 0;
 
     const isAggro = this.aggroTimer > 0;
 
     let vector = null;
-    if (isAggro || distPlayerToSpawn < this.leashRadius) {
+    if (isAggro || distTargetToSpawn < this.leashRadius + leashBoost) {
       this.speed = AGGRO_SPEED; // Run
       this.state = 2;
-
       vector = this.getVectorToPlayer();
     } else if (distToSpawn > 5) {
       this.speed = DEFEND_SPEED; // Walk
       this.state = 1;
-
       vector = getNormalVector(this.spawn, thisPos);
+    } else {
+      this.state = 0; // idle at spawn
     }
 
     if (vector) {
@@ -200,6 +303,15 @@ class Ghost extends Monster {
 
     this.x += this.velocity.x * TICK;
     this.y += this.velocity.y * TICK;
+
+    // Sleep Mask (blind): mobs can't chase while active
+    if (this.game.sleepMaskTimer > 0) {
+      this.aggroTimer = 0;
+      this.state = 0; // idle (if your mob has states)
+      this.velocity = { x: 0, y: 0 };
+      super.update();
+      return;
+    }
 
     super.update();
   }
@@ -659,6 +771,15 @@ class Sheep extends Monster {
   update() {
     if (this.game.mode !== "gameplay") return;
     if (this.dead || this.game.gameOver) return;
+    // Sword knockback stun
+    if (this.doKnockbackMotion()) return;
+
+    // Sleep Dust
+    if (this.doSleepMotion()) {
+      this.state = 0; // idle
+      super.update();
+      return;
+    }
 
     const TICK = this.game.clockTick;
     this.onGround = false;
@@ -703,6 +824,15 @@ class Sheep extends Monster {
 
     this.x += this.velocity.x * TICK;
     this.y += this.velocity.y * TICK;
+
+    // Sleep Mask (blind): mobs can't chase while active
+    if (this.game.sleepMaskTimer > 0) {
+      this.aggroTimer = 0;
+      this.state = 0; // idle (if your mob has states)
+      this.velocity = { x: 0, y: 0 };
+      super.update();
+      return;
+    }
 
     this.updateBB();
 
@@ -842,7 +972,9 @@ class Spider extends Monster {
   }
 
   onCollision(entity) {
-    // Does nothing
+    if (entity.constructor.name === "Block") {
+      this.handleBlockPhysics(entity);
+    }
   }
 
   //spritesheet, xStart, yStart, width, height, frameCount, frameDuration, framePadding, reverse, loop
@@ -864,8 +996,21 @@ class Spider extends Monster {
   }
 
   update() {
+    if (this.game.sleepMaskTimer > 0) {
+      super.update();
+      return;
+    }
     if (this.game.mode !== "gameplay") return;
     if (this.dead) return;
+    // Sword knockback stun
+    if (this.doKnockbackMotion()) return;
+
+    // Sleep Dust
+    if (this.doSleepMotion()) {
+      this.state = 0; // idle
+      super.update();
+      return;
+    }
 
     const TICK = this.game.clockTick;
 
@@ -891,6 +1036,15 @@ class Spider extends Monster {
         this.x += (dx / dist) * move;
         this.y += (dy / dist) * move;
       }
+    }
+
+    // Sleep Mask (blind): mobs can't chase while active
+    if (this.game.sleepMaskTimer > 0) {
+      this.aggroTimer = 0;
+      this.state = 0; // idle (if your mob has states)
+      this.velocity = { x: 0, y: 0 };
+      super.update();
+      return;
     }
 
     super.update();
@@ -973,6 +1127,16 @@ class Demon extends Monster {
     if (this.dead) return;
     if (this.state === 3 || this.game.gameOver) return;
 
+    // Sword knockback stun
+    if (this.doKnockbackMotion()) return;
+
+    // Sleep Dust
+    if (this.doSleepMotion()) {
+      this.state = 0; // idle
+      super.update();
+      return;
+    }
+
     const AGGRO_SPEED = 120;
     const DEFEND_SPEED = 80;
     const TICK = this.game.clockTick;
@@ -980,31 +1144,41 @@ class Demon extends Monster {
     // Reset velocity
     this.velocity = { x: 0, y: 0 };
 
-    const playerPos = {
-      x: this.game.sleepyGuy.x,
-      y: this.game.sleepyGuy.y,
+    const target =
+      (this.game.getLureTargetFor && this.game.getLureTargetFor(this)) ||
+      this.game.sleepyGuy;
+
+    const targetPos = {
+      x: target?.x ?? this.game.sleepyGuy.x,
+      y: target?.y ?? this.game.sleepyGuy.y,
     };
+
     const thisPos = {
       x: this.x + (this.width * this.scale) / 2,
       y: this.y + (this.height * this.scale) / 2,
     };
 
-    const distPlayerToSpawn = getDistance(playerPos, this.spawn);
     const distToSpawn = getDistance(thisPos, this.spawn);
+    const distTargetToSpawn = getDistance(targetPos, this.spawn);
+
+    const leashBoost =
+      target && target.constructor && target.constructor.name === "TeddyDecoy"
+        ? 250
+        : 0;
 
     const isAggro = this.aggroTimer > 0;
 
     let vector = null;
-    if (isAggro || distPlayerToSpawn < this.leashRadius) {
+    if (isAggro || distTargetToSpawn < this.leashRadius + leashBoost) {
       this.speed = AGGRO_SPEED; // Run
       this.state = 2;
-
       vector = this.getVectorToPlayer();
     } else if (distToSpawn > 5) {
       this.speed = DEFEND_SPEED; // Walk
       this.state = 1;
-
       vector = getNormalVector(this.spawn, thisPos);
+    } else {
+      this.state = 0; // idle at spawn
     }
 
     if (vector) {
@@ -1014,6 +1188,15 @@ class Demon extends Monster {
 
     this.x += this.velocity.x * TICK;
     this.y += this.velocity.y * TICK;
+
+    // Sleep Mask (blind): mobs can't chase while active
+    if (this.game.sleepMaskTimer > 0) {
+      this.aggroTimer = 0;
+      this.state = 0; // idle (if your mob has states)
+      this.velocity = { x: 0, y: 0 };
+      super.update();
+      return;
+    }
 
     super.update();
   }
@@ -1214,6 +1397,16 @@ class VenusFlyTrap extends Monster {
     if (this.dead) return;
     if (this.state === 3 || this.game.gameOver) return;
 
+    // Sword knockback stun
+    if (this.doKnockbackMotion()) return;
+
+    // Sleep Dust
+    if (this.doSleepMotion()) {
+      this.state = 0; // idle
+      super.update();
+      return;
+    }
+
     const AGGRO_SPEED = 120;
     const DEFEND_SPEED = 80;
     const TICK = this.game.clockTick;
@@ -1221,31 +1414,41 @@ class VenusFlyTrap extends Monster {
     // Reset velocity
     this.velocity = { x: 0, y: 0 };
 
-    const playerPos = {
-      x: this.game.sleepyGuy.x,
-      y: this.game.sleepyGuy.y,
+    const target =
+      (this.game.getLureTargetFor && this.game.getLureTargetFor(this)) ||
+      this.game.sleepyGuy;
+
+    const targetPos = {
+      x: target?.x ?? this.game.sleepyGuy.x,
+      y: target?.y ?? this.game.sleepyGuy.y,
     };
+
     const thisPos = {
       x: this.x + (this.width * this.scale) / 2,
       y: this.y + (this.height * this.scale) / 2,
     };
 
-    const distPlayerToSpawn = getDistance(playerPos, this.spawn);
     const distToSpawn = getDistance(thisPos, this.spawn);
+    const distTargetToSpawn = getDistance(targetPos, this.spawn);
+
+    const leashBoost =
+      target && target.constructor && target.constructor.name === "TeddyDecoy"
+        ? 250
+        : 0;
 
     const isAggro = this.aggroTimer > 0;
 
     let vector = null;
-    if (isAggro || distPlayerToSpawn < this.leashRadius) {
+    if (isAggro || distTargetToSpawn < this.leashRadius + leashBoost) {
       this.speed = AGGRO_SPEED; // Run
       this.state = 2;
-
       vector = this.getVectorToPlayer();
     } else if (distToSpawn > 5) {
       this.speed = DEFEND_SPEED; // Walk
       this.state = 1;
-
       vector = getNormalVector(this.spawn, thisPos);
+    } else {
+      this.state = 0; // idle at spawn
     }
 
     if (vector) {
@@ -1255,6 +1458,15 @@ class VenusFlyTrap extends Monster {
 
     this.x += this.velocity.x * TICK;
     this.y += this.velocity.y * TICK;
+
+    // Sleep Mask (blind): mobs can't chase while active
+    if (this.game.sleepMaskTimer > 0) {
+      this.aggroTimer = 0;
+      this.state = 0; // idle (if your mob has states)
+      this.velocity = { x: 0, y: 0 };
+      super.update();
+      return;
+    }
 
     super.update();
   }

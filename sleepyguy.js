@@ -68,9 +68,12 @@ class SleepyGuy {
       );
 
       let slowEffect = this.isStickyBush ? StickyBush.slowFactor : 1;
-      velocityLength *= slowEffect;      
-      console.log(velocityLength);
-      
+      velocityLength *= slowEffect;
+
+      // Rocket passive speed boost (after you press T on the Rocket in the dream bubble)
+      const rocketBoost = this.game.rocketActive ? (this.game.rocketSpeedMultiplier ?? 1.6) : 1;
+      velocityLength *= rocketBoost;
+
 
       // Use remaining movement this frame
       let remaining = velocityLength * TICK;
@@ -126,6 +129,39 @@ class SleepyGuy {
     this.updateBB();
   }
 
+  // Put this helper RIGHT ABOVE handleBlockPhysics(entity)
+  hasBlockBetween(other) {
+    const bw = PARAMS.BLOCKWIDTH;
+    if (!this.game.gridMap) return false;
+
+    const ax = this.x;
+    const ay = this.y;
+
+    // enemy center
+    const bx = other?.BB ? (other.BB.x + other.BB.width / 2) : other.x;
+    const by = other?.BB ? (other.BB.y + other.BB.height / 2) : other.y;
+
+    const dx = bx - ax;
+    const dy = by - ay;
+    const dist = Math.hypot(dx, dy);
+    if (dist <= bw) return false;
+
+    // sample along the line (skip endpoints)
+    const steps = Math.ceil(dist / (bw / 2));
+    for (let i = 1; i < steps; i++) {
+      const t = i / steps;
+      const px = ax + dx * t;
+      const py = ay + dy * t;
+
+      const gx = Math.floor(px / bw);
+      const gy = Math.floor(py / bw);
+
+      const hit = this.game.gridMap[`${gx},${gy}`];
+      if (hit instanceof Block) return true;
+    }
+    return false;
+  }
+
   handleBlockPhysics(entity) {
     const thisBB = this.BB;
     const blockBB = entity.BB;
@@ -134,66 +170,68 @@ class SleepyGuy {
     const overlapY = thisBB.bottom > blockBB.top && thisBB.top < blockBB.bottom;
 
     if (overlapX && overlapY) {
-      // Calculate penetration depths from all 4 sides
       const penLeft = thisBB.right - blockBB.left;
       const penRight = blockBB.right - thisBB.left;
       const penTop = thisBB.bottom - blockBB.top;
       const penBottom = blockBB.bottom - thisBB.top;
 
-      // Find the smallest penetration on each axis
       const diffX = Math.min(penLeft, penRight);
       const diffY = Math.min(penTop, penBottom);
 
       if (diffY < diffX) {
-        // Vertical Collision
-        if (penTop < penBottom) {
-          // Standing on top of block
-          this.y -= penTop;
-          this.velocity.y = 0;
-          this.onGround = true;
-        } else {
-          // Hitting head on ceiling
-          this.y += penBottom;
-          this.velocity.y = 0;
-        }
+        // Vertical
+        if (penTop < penBottom) this.y -= penTop;
+        else this.y += penBottom;
       } else {
-        // Horizontal Collision
-        if (penLeft < penRight) {
-          // Hit left side of block
-          this.x -= penLeft;
-          this.velocity.x = 0;
-        } else {
-          // Hit right side of block
-          this.x += penRight;
-          this.velocity.x = 0;
-        }
+        // Horizontal
+        if (penLeft < penRight) this.x -= penLeft;
+        else this.x += penRight;
       }
     }
 
-    // Update BB after snapping position
     this.updateBB();
+
+    // IMPORTANT for click-to-move: stop the current path so you don't "fight" the wall forever
+    if (this.game.waypoints) this.game.waypoints.length = 0;
+    this.targetWaypointIndex = 0;
   }
 
   onCollision(entity) {
     if (this.dead) return;
 
+    const lampActive = (this.game.strangeLampTimer ?? 0) > 0;
+
     switch (entity.constructor.name) {
       case "Block":
         this.handleBlockPhysics(entity);
         break;
+
       case "Spikes":
+        if (!lampActive) this.onTakeDamage(entity);
+        break;
+
       case "Ghost":
       case "Spider":
       case "Demon":
       case "VenusFlyTrap":
-        this.onTakeDamage(entity);
+        // SleepMask: mobs can't “catch” you while blinded
+        if (this.game.sleepMaskTimer > 0) break;
+
+        // Strange Lamp: invulnerable
+        if (lampActive) break;
+
+        // Prevent "hit through walls"
+        if (!this.hasBlockBetween(entity)) this.onTakeDamage(entity);
         break;
+
       case "StickyBush":
         this.isStickyBush = true;
         break;
+
       case "Bed":
         this.onReachBed(entity);
         break;
+
       default:
         break;
     }
@@ -204,8 +242,8 @@ class SleepyGuy {
     this.game.gameWon = true;
     this.game.gameOver = true;
   }
-  //triggers lose condition when SleepyGuy hit by ghost
   onTakeDamage(_ghost) {
+    if ((this.game.strangeLampTimer ?? 0) > 0) return;
     this.dead = true;
     this.attackTimer = 0;
   }
@@ -251,6 +289,13 @@ class SleepyGuy {
     const offsetX = this.x - drawW / 2;
     const offsetY = this.y - drawH / 2;
 
+    // ===== Strange Lamp (semi-transparent while active) =====
+    const lampActive = (this.game.strangeLampTimer ?? 0) > 0;
+    const lampAlpha = lampActive ? 0.45 : 1.0;
+
+    ctx.save();
+    ctx.globalAlpha *= lampAlpha;
+
     if (this.game.options.debugging) {
       ctx.fillStyle = "blue";
       ctx.fillRect(offsetX, offsetY, drawW, drawH); // debug box
@@ -266,10 +311,31 @@ class SleepyGuy {
       offsetX,
       offsetY,
       drawW,
-      drawH,
+      drawH
     );
-    // ctx.fillStyle = "Blue";
-    // ctx.fillRect(this.x, this.y, this.width, this.height);
+
+    ctx.restore();
+
+    // ===== Sleep Mask overlay (drawn in front of SleepyGuy) =====
+    if (this.game.sleepMaskTimer > 0) {
+      const maskImg = ASSET_MANAGER.getAsset("./assets/items/SleepMask.png");
+      if (maskImg) {
+        // Size relative to SleepyGuy draw size
+        const mw = drawW * 0.55;
+        const mh = mw * (maskImg.height / maskImg.width);
+
+        // Position near the face (slightly above center)
+        const mx = this.x - mw / 2;
+        const my = this.y - drawH * 0.10 - mh / 2;
+
+        ctx.save();
+        // Optional: slight fade when about to end
+        const a = Math.min(1, this.game.sleepMaskTimer / 0.5);
+        ctx.globalAlpha = Math.max(0.4, Math.min(1, a));
+        ctx.drawImage(maskImg, mx, my, mw, mh);
+        ctx.restore();
+      }
+    }
 
     if (PARAMS.DEBUG && this.BB) {
       ctx.strokeStyle = "red";

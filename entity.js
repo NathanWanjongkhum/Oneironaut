@@ -54,16 +54,105 @@ class Entity {
 }
 
 class Block extends Entity {
-  constructor(game, x, y) {
+  constructor(game, x, y, opts = {}) {
     super(game, x, y);
     this.width = PARAMS.BLOCKWIDTH;
     this.height = PARAMS.BLOCKWIDTH;
+
+    // Optional sprite rendering (used by sandbags)
+    this.sprite = opts.sprite || null;          // Image object
+    this.spriteScale = opts.spriteScale ?? 1;   // draw scale (visual only)
+    this.spriteYOffset = opts.spriteYOffset ?? 0; // pixel offset (visual only)
+
     this.updateBB();
   }
 
   draw(ctx) {
-    ctx.fillStyle = "saddlebrown";
-    ctx.fillRect(this.x, this.y, this.width, this.height);
+    if (this.sprite) {
+      // Bottom-align sprite inside the tile
+      const w = this.width * this.spriteScale;
+      const h = this.height * this.spriteScale;
+      const dx = this.x + (this.width - w) / 2;
+      const dy = this.y + (this.height - h) + this.spriteYOffset;
+      ctx.drawImage(this.sprite, dx, dy, w, h);
+    } else {
+      ctx.fillStyle = "saddlebrown";
+      ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
+    super.draw(ctx);
+  }
+}
+
+// ===== TeddyBear decoy entity =====
+class TeddyDecoy extends Entity {
+  constructor(game, x, y, opts = {}) {
+    super(game, x, y);
+
+    // draw
+    this.img = ASSET_MANAGER.getAsset("./assets/items/TeddyBear.png");
+    this.scale = opts.scale ?? 0.55;
+
+    // time alive (seconds)
+    this.lifetime = opts.lifetime ?? 15.0;
+    this.age = 0;
+
+    // OPTIONAL: break after N enemy touches (Infinity = never breaks)
+    this.maxHits = opts.maxHits ?? Infinity;
+    this.hits = 0;
+    this.hitCooldown = 0; // small i-frames so it doesn't “multi-hit” instantly
+
+    // Treat x,y as CENTER
+    this.baseW = this.img ? this.img.width : 64;
+    this.baseH = this.img ? this.img.height : 64;
+
+    this.updateBB();
+  }
+
+  updateBB() {
+    const w = this.baseW * this.scale;
+    const h = this.baseH * this.scale;
+    this.BB = new BoundingBox(this.x - w / 2, this.y - h / 2, w, h);
+  }
+
+  update() {
+    if (this.game.mode !== "gameplay") return;
+
+    const TICK = this.game.clockTick;
+    this.age += TICK;
+
+    if (this.hitCooldown > 0) this.hitCooldown -= TICK;
+
+    if (this.age >= this.lifetime) {
+      this.removeFromWorld = true;
+    }
+
+    this.updateBB();
+  }
+
+  onCollision(other) {
+    // IMPORTANT: do NOT insta-delete on touch (that causes the “<1 sec” disappear)
+    if (!(other instanceof Monster)) return;
+
+    // stop spam hits if already overlapping
+    if (this.hitCooldown > 0) return;
+    this.hitCooldown = 0.25;
+
+    // OPTIONAL: keep monster committed to the decoy briefly
+    other.aggroTimer = Math.max(other.aggroTimer ?? 0, 0.6);
+
+    // OPTIONAL: if you want it breakable, set maxHits = 3 (or any number)
+    if (Number.isFinite(this.maxHits)) {
+      this.hits++;
+      if (this.hits >= this.maxHits) this.removeFromWorld = true;
+    }
+  }
+
+  draw(ctx) {
+    if (this.img) {
+      const w = this.baseW * this.scale;
+      const h = this.baseH * this.scale;
+      ctx.drawImage(this.img, this.x - w / 2, this.y - h / 2, w, h);
+    }
     super.draw(ctx);
   }
 }
