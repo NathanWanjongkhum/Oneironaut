@@ -49,9 +49,6 @@ class GameEngine {
     this.swordSwingId = 0;
     this.swordCooldown = 0;
 
-    this.currentLevel = 0; //initial state 0 marks not in a level
-    this.gridMap = {};
-
     // Dream Bubble (create lazily later)
     this.dreamBubble = null;
     this.prevB = false;
@@ -287,14 +284,6 @@ class GameEngine {
     if (this.dreamBubble) this.dreamBubble.close(true);
 
     this.addEntity(new Background(this));
-
-    // Level-specific spawns
-    Levels.buildLevel(this);
-
-    // Common entities
-    this.gridMap = {};
-
-    this.rocketActive = false;
 
     // Level-specific spawns
     Levels.buildLevel(this);

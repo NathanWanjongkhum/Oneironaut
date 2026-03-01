@@ -44,26 +44,7 @@ class WaypointBuilder {
 
     if (this.game.click) {
       this.addPoint(this.game.click.x, this.game.click.y);
-      this.game.click = null;
-
-      const sel = this.game.inventory?.getSelectedItem?.();
-      const weaponSelected = !!(
-        sel &&
-        (sel.id === "Sword" ||
-          sel.id === "ToothBrush" ||
-          sel.id === "SleepDust" ||
-          sel.id === "TeddyBear" ||
-          (sel.id && sel.id.startsWith("SandBag")))
-      );
-      if (weaponSelected) return;
-
-      if (gameEngine.click) {
-        this.addPoint(gameEngine.click.x, gameEngine.click.y);
-
-        // consume click so it only adds once
-        gameEngine.click = null;
-        this.game.click = null;
-      }
+      this.game.click = null; 
     }
   }
 
