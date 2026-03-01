@@ -57,3 +57,15 @@ window.requestAnimFrame = (() => {
 const getDistance = (p1, p2) => {
     return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
 };
+
+const getNormalVector = (p1, p2) => {
+    if (!(p1 || p2)) return { x: 0, y: 0 };
+
+    const dx = p1.x - p2.x;
+    const dy = p1.y - p2.y;
+    const dist = getDistance(p1, p2)
+
+    return (dist === 0) 
+        ? { x: 0, y: 0 }
+        : { x: dx / dist, y: dy / dist };
+}

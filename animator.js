@@ -28,10 +28,12 @@ class Animator {
             this.width * scale,
             this.height * scale);
 
-
         if (PARAMS.DEBUG) {
-            ctx.strokeStyle = 'Green';
-            ctx.strokeRect(x, y, this.width * scale, this.height * scale);
+            ctx.beginPath();
+            ctx.strokeStyle = 'green';
+            ctx.rect(x, y, this.width * scale, this.height * scale)
+            ctx.stroke();
+            ctx.closePath();
         }
     };
 

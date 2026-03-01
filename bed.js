@@ -4,10 +4,10 @@ class Bed {
         this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/bed.png");
 
         
-        this.x = positionX;//top left corner position
+        this.x = positionX;
         this.y = postionY;
         this.radius = 100;
-        this.scale = 0.2;
+        this.scale = 0.5;
         this.BB = null;
 
         this.animations = [];
@@ -24,20 +24,7 @@ class Bed {
     }
 
     update() {
-        if (this.game.mode !== "gameplay") return;
-        //TODO: this should be handled in sleepy guy, this is just a temp setup for prototype
-
-        //Collision
-        for(var i = 0; i < this.game.entities.length; i++) {
-            if(!(this.game.entities[i] instanceof SleepyGuy)) continue; //if not sleepy guy ignore
-
-            if(this.BB.collide(this.game.entities[i].BB)) {
-                //Win condition
-                this.game.gameWon = true;
-                this.game.gameOver = true;
-            }
-        }
-    
+    if (this.game.mode !== "gameplay") return;
     };
 
     updateBB() {

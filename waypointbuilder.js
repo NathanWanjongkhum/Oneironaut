@@ -8,7 +8,7 @@ class WaypointBuilder {
     draw(ctx) {
         if (this.waypoints.length === 0) return;
         if (this.game.inLevel === false) return;
-        
+
         // Draw waypoints
         ctx.fillStyle = "red";
         ctx.beginPath();
@@ -41,9 +41,26 @@ class WaypointBuilder {
 
     update() {
         if (this.game.mode !== "gameplay" || this.game.gameOver) return;
-        // Add waypoint on click
+
+        const sel = this.game.inventory?.getSelectedItem?.();
+        const weaponSelected = !!(
+            sel &&
+            (
+                sel.id === "Sword" ||
+                sel.id === "ToothBrush" ||
+                sel.id === "SleepDust" ||
+                sel.id === "TeddyBear" ||
+                (sel.id && sel.id.startsWith("SandBag"))
+            )
+        );
+        if (weaponSelected) return;
+
         if (gameEngine.click) {
             this.addPoint(gameEngine.click.x, gameEngine.click.y);
+
+            // consume click so it only adds once
+            gameEngine.click = null;
+            this.game.click = null;
         }
     }
 
