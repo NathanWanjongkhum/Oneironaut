@@ -6,6 +6,7 @@ class GameEngine {
     this.click = null;
     this.rightClick = null;
     this.mouse = null;
+    this.rightClickDown = false;
     this.wheel = null;
     this.keys = {};
 
@@ -50,6 +51,22 @@ class GameEngine {
 
   startInput() {
     const canvas = this.ctx.canvas;
+
+    canvas.addEventListener("contextmenu", (e) => {
+      e.preventDefault(); 
+    });
+
+    canvas.addEventListener("mousedown", (e) => {
+      if (e.button === 2) {
+        this.rightClickDown = true;
+      }
+    });
+
+    canvas.addEventListener("mouseup", (e) => {
+      if (e.button === 2) {
+        this.rightClickDown = false;
+      }
+    });
 
     canvas.addEventListener("contextmenu", (e) => {
       e.preventDefault();
@@ -238,9 +255,9 @@ class GameEngine {
     }
 
     // HUD consumes right clicks in gameplay
-    if (this.mode === "gameplay" && this.rightClick && this.waypoints) {
-      const clickX = this.rightClick.x;
-      const clickY = this.rightClick.y;
+if (this.mode === "gameplay" && this.rightClickDown && this.mouse && this.waypoints) {
+      const clickX = this.mouse.x;
+      const clickY = this.mouse.y;
       const clickRadius = 30; 
 
       let foundIndex = -1;
@@ -257,8 +274,6 @@ class GameEngine {
 
       if (foundIndex !== -1) {
         this.waypoints.splice(foundIndex);
-        console.log(this.waypoints);
-        
       }
       
       this.rightClick = null; 
