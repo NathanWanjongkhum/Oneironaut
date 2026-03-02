@@ -14,6 +14,8 @@ class Levels {
     }
 
     static level1(engine) {
+        
+        engine.addEntity(new PickupItem(engine, 0, 0, "Pajama"));
         engine.addEntity(new PickupItem(engine, 170, 100, "Sword")); // near SleepyGuy spawn (100,100)
         engine.addEntity(new PickupItem(engine, 400, 140, "SandBag3"));
         engine.addEntity(new PickupItem(engine, 260, 120, "SleepDust"));

@@ -49,6 +49,10 @@ class SleepyGuy {
     ); // idle
   }
 
+  applyPajamaEffect() {
+    this.hasPajamaProtection = true;
+  }
+
   update() {
     if (this.game.mode !== "gameplay") return;
     const TICK = this.game.clockTick;
@@ -70,7 +74,10 @@ class SleepyGuy {
       targetPoint = waypoints[0];
     } else {
       // The path is empty (or was deleted). Check if we need to retreat.
-      const distToSafe = Math.sqrt((this.lastSafeSpot.x - this.x)**2 + (this.lastSafeSpot.y - this.y)**2);
+      const distToSafe = Math.sqrt(
+        (this.lastSafeSpot.x - this.x) ** 2 +
+          (this.lastSafeSpot.y - this.y) ** 2,
+      );
       if (distToSafe > 1) {
         this.isRetreating = true;
         targetPoint = this.lastSafeSpot;
@@ -79,11 +86,11 @@ class SleepyGuy {
 
     if (targetPoint) {
       let velocityLength = Math.sqrt(
-        this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y
+        this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y,
       );
 
       let slowEffect = this.isStickyBush ? StickyBush.slowFactor : 1;
-      velocityLength *= slowEffect;      
+      velocityLength *= slowEffect;
 
       let remaining = velocityLength * TICK;
 
@@ -100,11 +107,11 @@ class SleepyGuy {
           if (this.isRetreating) {
             // Reached last spot. Stop moving.
             this.isRetreating = false;
-            break; 
+            break;
           } else {
-            this.lastSafeSpot = { x: this.x, y: this.y }; 
-            
-            let reachedNode = waypoints.shift(); 
+            this.lastSafeSpot = { x: this.x, y: this.y };
+
+            let reachedNode = waypoints.shift();
             if (reachedNode) reachedNode.removeFromWorld = true;
 
             if (waypoints.length > 0) {
@@ -205,8 +212,13 @@ class SleepyGuy {
     this.game.gameWon = true;
     this.game.gameOver = true;
   }
-  //triggers lose condition when SleepyGuy hit by ghost
-  onTakeDamage(_ghost) {
+  //triggers lose condition when SleepyGuy hit
+  onTakeDamage(_source) {
+    if (this.hasPajamaProtection) {
+      this.hasPajamaProtection = false;
+      return;
+    }
+
     this.dead = true;
     this.attackTimer = 0;
   }
