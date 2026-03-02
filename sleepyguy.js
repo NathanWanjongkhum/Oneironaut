@@ -24,6 +24,9 @@ class SleepyGuy {
     this.targetWaypointIndex = 0;
     this.lastSafeSpot = { x: this.x, y: this.y };
 
+    this.hasPajamaProtection = false;
+    this.invincibleTimer = 0;
+
     this.animations = [];
     this.loadAnimations();
     this.updateBB();
@@ -56,6 +59,12 @@ class SleepyGuy {
   update() {
     if (this.game.mode !== "gameplay") return;
     const TICK = this.game.clockTick;
+
+    if (this.invincibleTimer > 0) {
+      this.invincibleTimer -= TICK;
+      if (this.invincibleTimer < 0) this.invincibleTimer = 0;
+    }
+
     if (this.dead) {
       this.attackTimer += TICK;
       if (this.attackTimer > 1) {
@@ -214,8 +223,11 @@ class SleepyGuy {
   }
   //triggers lose condition when SleepyGuy hit
   onTakeDamage(_source) {
+    if (this.invincibleTimer > 0) return;
+
     if (this.hasPajamaProtection) {
       this.hasPajamaProtection = false;
+      this.invincibleTimer = 2;
       return;
     }
 

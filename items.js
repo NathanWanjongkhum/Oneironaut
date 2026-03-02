@@ -93,8 +93,6 @@ class PickupItem {
     if (this.def.pickable) {
       if (this.BB && sg.BB && this.BB.collide(sg.BB)) {
         if (this.id) {
-          console.log(this.id);
-
           if (this.id === "Pajama") {
             sg.applyPajamaEffect();
             this.removeFromWorld = true;
