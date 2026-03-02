@@ -68,4 +68,26 @@ const getNormalVector = (p1, p2) => {
     return (dist === 0) 
         ? { x: 0, y: 0 }
         : { x: dx / dist, y: dy / dist };
-}
+};
+
+
+
+// ===== Geometry helpers (used by Sword) =====
+function clamp01(t) {
+  return t < 0 ? 0 : t > 1 ? 1 : t;
+};
+
+// Squared distance from point P to segment AB
+function dist2PointToSegment(px, py, ax, ay, bx, by) {
+  const abx = bx - ax;
+  const aby = by - ay;
+  const apx = px - ax;
+  const apy = py - ay;
+  const abLen2 = abx * abx + aby * aby;
+  const t = abLen2 === 0 ? 0 : clamp01((apx * abx + apy * aby) / abLen2);
+  const cx = ax + abx * t;
+  const cy = ay + aby * t;
+  const dx = px - cx;
+  const dy = py - cy;
+  return dx * dx + dy * dy;
+};
