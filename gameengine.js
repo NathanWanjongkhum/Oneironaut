@@ -308,19 +308,6 @@ class GameEngine {
         this.blockMap[`${gx},${gy}`] = e;
       }
     });
-    this.addEntity(new MenuRoomController(this));
-
-    this.blockMap = {};
-
-    this.entities.forEach((e) => {
-      // Keep this last
-      if (e instanceof Block) {
-        const gx = Math.floor(e.x / PARAMS.BLOCKWIDTH);
-        const gy = Math.floor(e.y / PARAMS.BLOCKWIDTH);
-
-        this.blockMap[`${gx},${gy}`] = e;
-      }
-    });
 
     // // reset dream bubble state
     // this.prevB = false;
