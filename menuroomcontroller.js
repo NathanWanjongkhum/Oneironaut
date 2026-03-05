@@ -53,8 +53,8 @@ class MenuRoomController {
 		this.levels = [
 			{ id: 1, name: "Level 1", unlocked: true },
 			{ id: 2, name: "Level 2", unlocked: true },
-			{ id: 3, name: "Level 3", unlocked: true },
-			{ id: 4, name: "Level 4", unlocked: true },
+			{ id: 3, name: "Level 3", unlocked: false },
+			{ id: 4, name: "Level 4", unlocked: false },
 		];
 
 		this.selectedLevel = null;

@@ -10,7 +10,6 @@ class EndGame {
         this.y = (PARAMS.CANVAS_HEIGHT / 2) - (this.h * this.scale) / 2;
         this.playRect = null;
         this.quitRect = null;
-        this.nextRect = null; 
 
         this.animations = [];
         this.loadAnimations();
@@ -30,12 +29,6 @@ class EndGame {
         if (!click) return;
 
         this.game.click = null; // consume click
-
-         if (this.game.gameWon && this.nextRect && this.pointInRect(click, this.nextRect)) {
-            const next = this.game.currentLevel + 1;
-            this.game.startLevel(next);
-            return;
-        }   
 
         if (this.playRect && this.pointInRect(click, this.playRect)) {
             this.game.restartToGameplay();  
@@ -66,43 +59,23 @@ class EndGame {
         const ch = ctx.canvas.height;
 
         const btnW = 260;
-        const btnH = 52;
-        const gap = 18;
+        const btnH = 56;
+        const gap = 16;
 
         const x = cw / 2 - btnW / 2;
-      
-        const buttonCount = this.game.gameWon ? 3 : 2;
-        const totalHeight = buttonCount * btnH + (buttonCount - 1) * gap;
-        let y0 = ch * 0.85 - totalHeight / 2;
+        const y0 = this.y + this.h * this.scale + 20;
 
-        if (this.game.gameWon) {
-            this.nextRect = { x, y: y0, w: btnW, h: btnH };
-            this.drawButton(ctx, this.nextRect, "Play Next Level");
-            y0 += btnH + gap;
-        } else {
-            this.nextRect = null;
-        }
-
-        // Play Again
         this.playRect = { x, y: y0, w: btnW, h: btnH };
+        this.quitRect = { x, y: y0 + btnH + gap, w: btnW, h: btnH };
+
         this.drawButton(ctx, this.playRect, "Play Again");
-
-        y0 += btnH + gap;
-
-        // Quit
-        this.quitRect = { x, y: y0, w: btnW, h: btnH };
         this.drawButton(ctx, this.quitRect, "Quit to Menu");
     }
 
     drawButton(ctx, r, label) {
         ctx.save();
-        ctx.shadowColor = "rgba(0,0,0,0.22)";
-        ctx.shadowBlur = 10;
-        ctx.shadowOffsetY = 4;
         ctx.fillStyle = "white";
-        ctx.beginPath();
-        ctx.roundRect(r.x, r.y, r.w, r.h, 10);
-        ctx.fill();
+        ctx.fillRect(r.x, r.y, r.w, r.h);
 
         ctx.fillStyle = "black";
         ctx.font = "600 20px system-ui";

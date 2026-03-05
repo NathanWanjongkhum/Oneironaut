@@ -151,8 +151,35 @@ class TeddyDecoy extends Entity {
     if (this.img) {
       const w = this.baseW * this.scale;
       const h = this.baseH * this.scale;
+
+      // draw teddy
       ctx.drawImage(this.img, this.x - w / 2, this.y - h / 2, w, h);
+
+      // ===== countdown timer (5..1) drawn in front of teddy =====
+      const remaining = Math.max(0, this.lifetime - this.age);
+      const secs = Math.ceil(remaining);
+
+      if (secs > 0) {
+        const tx = this.x;
+        const ty = this.y - h / 2 - 14; // just above the teddy
+
+        ctx.save();
+        ctx.font = "20px Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        // shadow/outline
+        ctx.fillStyle = "rgba(0,0,0,0.75)";
+        ctx.fillText(String(secs), tx + 2, ty + 2);
+
+        // main text
+        ctx.fillStyle = "white";
+        ctx.fillText(String(secs), tx, ty);
+
+        ctx.restore();
+      }
     }
+
     super.draw(ctx);
   }
 }

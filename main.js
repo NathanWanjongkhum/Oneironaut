@@ -15,8 +15,6 @@ ASSET_MANAGER.queueDownload("./assets/background/selectLevel/LevelSelectCorridor
 ASSET_MANAGER.queueDownload("./assets/background/selectLevel/unlockedLevel.png");
 ASSET_MANAGER.queueDownload("./assets/background/selectLevel/lockedLevel.png");
 
-
-
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/1.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/2.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/3.png");
@@ -29,6 +27,7 @@ ASSET_MANAGER.queueDownload("./assets/entities/spider.png");
 ASSET_MANAGER.queueDownload("./assets/entities/plant1_idle.png");
 ASSET_MANAGER.queueDownload("./assets/entities/sheep_shadow.png");
 ASSET_MANAGER.queueDownload("./assets/entities/sleepyguy.png");
+ASSET_MANAGER.queueDownload("./assets/entities/ZZZ.png");
 ASSET_MANAGER.queueDownload("./assets/entities/Bush_simple2_1.png");
 ASSET_MANAGER.queueDownload("./assets/entities/Bush_simple2_2.png");
 ASSET_MANAGER.queueDownload("./assets/entities/Bush_simple2_3.png");
@@ -39,7 +38,7 @@ ASSET_MANAGER.queueDownload("./assets/items/Sword.png");
 ASSET_MANAGER.queueDownload("./assets/items/ToothBrush.png");
 ASSET_MANAGER.queueDownload("./assets/items/TeddyBear.png");
 ASSET_MANAGER.queueDownload("./assets/items/SleepDust.png");
-//ASSET_MANAGER.queueDownload("./assets/items/SandBag1.png");
+ASSET_MANAGER.queueDownload("./assets/items/SandBag1.png");
 ASSET_MANAGER.queueDownload("./assets/items/SandBag3.png");
 
 ASSET_MANAGER.queueDownload("./assets/items/DreamCatcher.png");
@@ -61,7 +60,7 @@ ASSET_MANAGER.downloadAll(() => {
 
 	PARAMS.CANVAS_WIDTH = canvas.width;
 	PARAMS.CANVAS_HEIGHT = canvas.height;
-	PARAMS.DEBUG = false;
+	PARAMS.DEBUG = true;
 
 	gameEngine.init(ctx);
 
@@ -124,6 +123,7 @@ ASSET_MANAGER.downloadAll(() => {
 
 		engine.prevT = false;
 		engine.dreamCatcherActive = false;
+		engine.dreamCatcherTimer = 0;
 
 		// keep half-sized defaults
 		engine.dreamCatcherRadius = 85;
@@ -141,6 +141,7 @@ ASSET_MANAGER.downloadAll(() => {
 		engine.sleepDustSplash = null;
 
 		engine.rocketActive = false;
+		engine.rocketTimer = 0;
 
 		engine.sleepMaskTimer = 0;
 

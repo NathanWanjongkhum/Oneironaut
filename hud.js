@@ -25,6 +25,8 @@ class HUD {
   }
 
   update(cw, ch) {
+    this.cw = cw;
+    this.ch = ch;
     const pad = this.pad;
     const gap = this.gap;
 
@@ -62,8 +64,6 @@ class HUD {
     this.exitRect.y = this.optRect.y + bh + 10;
     this.exitRect.w = this.panelRect.w - panelPad * 2;
     this.exitRect.h = bh;
-
-    this.topBarH = this.menuRect.y + this.menuRect.h + 10;
   }
 
   // Return true if HUD consumed the click
@@ -105,13 +105,258 @@ class HUD {
     }
 
     return false;
-  
-}
+  }
 
   draw(ctx) {
     this.drawHamburgerButton(ctx);
     this.drawInventorySlots(ctx);
+
+    // timers on the top-right
+    this.drawRightTimers(ctx);
+
     if (this.showMenu) this.drawHamburgerDropdown(ctx);
+  }
+
+  drawRightTimers(ctx) {
+    const g = this.game;
+
+    // Only show active timers
+    const timers = [];
+    if (g.dreamCatcherTimer > 0) timers.push({ label: "DreamCatcher", secs: Math.ceil(g.dreamCatcherTimer), icon: "./assets/items/DreamCatcher.png" });
+    if (g.rocketTimer > 0) timers.push({ label: "Rocket", secs: Math.ceil(g.rocketTimer), icon: "./assets/items/Rocket.png" });
+    if (g.sleepMaskTimer > 0) timers.push({ label: "SleepMask", secs: Math.ceil(g.sleepMaskTimer), icon: "./assets/items/SleepMask.png" });
+    if (g.strangeLampTimer > 0) timers.push({ label: "Lamp", secs: Math.ceil(g.strangeLampTimer), icon: "./assets/items/TheStrangeLamp.png" });
+
+    if (timers.length === 0) return;
+
+    const pad = this.pad;
+    const xRight = (this.cw || ctx.canvas.width) - pad;
+
+    const h = 28;
+    const padX = 12;
+    const gapY = 8;
+
+    let y = pad; // top-right stack start
+
+    // Optional: bubble swap “pop” ring near the first pill
+    if (g.bubbleSwapFX) {
+      const t = Math.min(1, g.bubbleSwapFX.t / g.bubbleSwapFX.duration);
+      const alpha = 0.7 * (1 - t);
+      const r = 10 + 26 * t;
+
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = "rgba(200,240,255,0.95)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(xRight - 18, y + h / 2, r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    for (let i = 0; i < timers.length; i++) {
+      const t = timers[i];
+      const text = `${t.label}: ${t.secs}s`;
+
+      // little icon “bounce” on swap
+      let iconBoost = 1;
+      if (i === 0 && g.bubbleSwapFX) {
+        const p = Math.min(1, g.bubbleSwapFX.t / g.bubbleSwapFX.duration);
+        iconBoost = 1 + 0.25 * (1 - p);
+      }
+
+      y += this.drawTimerPillWithIcon(ctx, xRight, y, h, padX, t.icon, text, iconBoost) + gapY;
+    }
+  }
+
+  drawTimerPillWithIcon(ctx, xRight, y, h, padX, iconPath, text, iconBoost = 1) {
+    ctx.save();
+    ctx.font = "16px Arial";
+    ctx.textBaseline = "middle";
+
+    const iconImg = ASSET_MANAGER.getAsset(iconPath);
+    const iconGap = 8;
+
+    // icon size based on pill height
+    const baseIcon = h - 8;
+    const iconSize = Math.floor(baseIcon * iconBoost);
+
+    const textW = ctx.measureText(text).width;
+
+    // total width = padding + icon + gap + text + padding
+    const w = padX * 2 + (iconImg ? iconSize + iconGap : 0) + textW;
+
+    const x = xRight - w;
+
+    // pill
+    ctx.fillStyle = "rgba(80, 160, 220, 0.22)";
+    ctx.strokeStyle = "rgba(200, 240, 255, 0.95)";
+    ctx.lineWidth = 2;
+    this.roundRectPath(ctx, x, y, w, h, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    let tx = x + padX;
+
+    // icon
+    if (iconImg) {
+      const iy = y + (h - iconSize) / 2;
+      ctx.drawImage(iconImg, tx, iy, iconSize, iconSize);
+      tx += iconSize + iconGap;
+    }
+
+    // text shadow
+    ctx.fillStyle = "rgba(0,0,0,0.65)";
+    ctx.fillText(text, tx + 1, y + h / 2 + 1);
+
+    // text
+    ctx.fillStyle = "white";
+    ctx.fillText(text, tx, y + h / 2);
+
+    ctx.restore();
+    return h;
+  }
+
+  drawRocketTimer(ctx) {
+    const g = this.game;
+    if (!g.rocketActive || g.rocketTimer <= 0) return;
+
+    const secs = Math.ceil(g.rocketTimer);
+    const text = `Rocket: ${secs}s`;
+
+    const x = this.invRect.x;
+    const y = this.invRect.y + this.invRect.h + (g.dreamCatcherActive && g.dreamCatcherTimer > 0 ? 44 : 10);
+    const h = 28;
+    const padX = 12;
+
+    ctx.save();
+    ctx.font = "16px Arial";
+    ctx.textBaseline = "middle";
+
+    const w = ctx.measureText(text).width + padX * 2;
+
+    // background
+    ctx.fillStyle = "rgba(80, 160, 220, 0.22)";
+    ctx.strokeStyle = "rgba(200, 240, 255, 0.95)";
+    ctx.lineWidth = 2;
+    this.roundRectPath(ctx, x, y, w, h, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    // text shadow
+    ctx.fillStyle = "rgba(0,0,0,0.65)";
+    ctx.fillText(text, x + padX + 1, y + h / 2 + 1);
+
+    // main text
+    ctx.fillStyle = "white";
+    ctx.fillText(text, x + padX, y + h / 2);
+
+    ctx.restore();
+  }
+
+  drawSleepMaskTimer(ctx) {
+    const g = this.game;
+    if (g.sleepMaskTimer <= 0) return;
+
+    const secs = Math.ceil(g.sleepMaskTimer);
+    const text = `SleepMask: ${secs}s`;
+
+    const x = this.invRect.x;
+    const y = this.invRect.y + this.invRect.h + 78; // 3rd row
+    const h = 28;
+    const padX = 12;
+
+    ctx.save();
+    ctx.font = "16px Arial";
+    ctx.textBaseline = "middle";
+
+    const w = ctx.measureText(text).width + padX * 2;
+
+    ctx.fillStyle = "rgba(80, 160, 220, 0.22)";
+    ctx.strokeStyle = "rgba(200, 240, 255, 0.95)";
+    ctx.lineWidth = 2;
+    this.roundRectPath(ctx, x, y, w, h, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(0,0,0,0.65)";
+    ctx.fillText(text, x + padX + 1, y + h / 2 + 1);
+
+    ctx.fillStyle = "white";
+    ctx.fillText(text, x + padX, y + h / 2);
+
+    ctx.restore();
+  }
+
+  drawStrangeLampTimer(ctx) {
+    const g = this.game;
+    if (g.strangeLampTimer <= 0) return;
+
+    const secs = Math.ceil(g.strangeLampTimer);
+    const text = `Lamp: ${secs}s`;
+
+    const x = this.invRect.x;
+    const y = this.invRect.y + this.invRect.h + 112; // 4th row
+    const h = 28;
+    const padX = 12;
+
+    ctx.save();
+    ctx.font = "16px Arial";
+    ctx.textBaseline = "middle";
+
+    const w = ctx.measureText(text).width + padX * 2;
+
+    ctx.fillStyle = "rgba(80, 160, 220, 0.22)";
+    ctx.strokeStyle = "rgba(200, 240, 255, 0.95)";
+    ctx.lineWidth = 2;
+    this.roundRectPath(ctx, x, y, w, h, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(0,0,0,0.65)";
+    ctx.fillText(text, x + padX + 1, y + h / 2 + 1);
+
+    ctx.fillStyle = "white";
+    ctx.fillText(text, x + padX, y + h / 2);
+
+    ctx.restore();
+  }
+
+  drawDreamCatcherTimer(ctx) {
+    const g = this.game;
+    if (!g.dreamCatcherActive || g.dreamCatcherTimer <= 0) return;
+
+    const secs = Math.ceil(g.dreamCatcherTimer);
+    const text = `DreamCatcher: ${secs}s`;
+
+    const x = this.invRect.x;
+    const y = this.invRect.y + this.invRect.h + 10;
+    const h = 28;
+    const padX = 12;
+
+    ctx.save();
+    ctx.font = "16px Arial";
+    ctx.textBaseline = "middle";
+
+    const w = ctx.measureText(text).width + padX * 2;
+
+    // background
+    ctx.fillStyle = "rgba(80, 160, 220, 0.22)";
+    ctx.strokeStyle = "rgba(200, 240, 255, 0.95)";
+    ctx.lineWidth = 2;
+    this.roundRectPath(ctx, x, y, w, h, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    // text shadow
+    ctx.fillStyle = "rgba(0,0,0,0.65)";
+    ctx.fillText(text, x + padX + 1, y + h / 2 + 1);
+
+    // main text
+    ctx.fillStyle = "white";
+    ctx.fillText(text, x + padX, y + h / 2);
+
+    ctx.restore();
   }
 
   // ===== Drawing =====
@@ -217,8 +462,8 @@ class HUD {
       const dh = ih * scale;
 
       ctx.drawImage(item.img, cx - dw / 2, cy - dh / 2, dw, dh);
-      // show stack count (sandbags)
-      if (typeof item.count === "number" && item.count > 1) {
+      // show remaining count / durability
+      if (typeof item.count === "number" && item.count > 0) {
         ctx.save();
         ctx.font = "14px Arial";
         ctx.fillStyle = "rgba(0,0,0,0.7)";

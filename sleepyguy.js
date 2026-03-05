@@ -22,14 +22,11 @@ class SleepyGuy {
     this.isStickyBush = false;
 
     this.targetWaypointIndex = 0;
-    this.lastSafeSpot = { x: this.x, y: this.y };
-
-    this.hasPajamaProtection = false;
-    this.invincibleTimer = 0;
 
     this.animations = [];
     this.loadAnimations();
     this.updateBB();
+    this._wasStrangeLamp = false;
   }
 
   loadAnimations() {
@@ -52,19 +49,10 @@ class SleepyGuy {
     ); // idle
   }
 
-  applyPajamaEffect() {
-    this.hasPajamaProtection = true;
-  }
-
   update() {
+
     if (this.game.mode !== "gameplay") return;
     const TICK = this.game.clockTick;
-
-    if (this.invincibleTimer > 0) {
-      this.invincibleTimer -= TICK;
-      if (this.invincibleTimer < 0) this.invincibleTimer = 0;
-    }
-
     if (this.dead) {
       this.attackTimer += TICK;
       if (this.attackTimer > 1) {
@@ -74,26 +62,13 @@ class SleepyGuy {
       return;
     }
 
+    const phasing = this.game.strangeLampTimer > 0;
+    const wasPhasing = this._wasStrangeLamp;
+    this._wasStrangeLamp = phasing;
+
     // Move along waypoints if they exist
     const waypoints = this.game.waypoints;
-    let targetPoint = null;
-
     if (waypoints && waypoints.length > 0) {
-      this.isRetreating = false;
-      targetPoint = waypoints[0];
-    } else {
-      // The path is empty (or was deleted). Check if we need to retreat.
-      const distToSafe = Math.sqrt(
-        (this.lastSafeSpot.x - this.x) ** 2 +
-          (this.lastSafeSpot.y - this.y) ** 2,
-      );
-      if (distToSafe > 1) {
-        this.isRetreating = true;
-        targetPoint = this.lastSafeSpot;
-      }
-    }
-
-    if (targetPoint) {
       let velocityLength = Math.sqrt(
         this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y,
       );
@@ -101,36 +76,52 @@ class SleepyGuy {
       let slowEffect = this.isStickyBush ? StickyBush.slowFactor : 1;
       velocityLength *= slowEffect;
 
+      // Rocket passive speed boost (after you press T on the Rocket in the dream bubble)
+      const rocketBoost = this.game.rocketActive ? (this.game.rocketSpeedMultiplier ?? 1.6) : 1;
+      velocityLength *= rocketBoost;
+
+
+      // Use remaining movement this frame
       let remaining = velocityLength * TICK;
+      let currentIndex = this.targetWaypointIndex;
 
       while (remaining > 0) {
-        let dx = targetPoint.x - this.x;
-        let dy = targetPoint.y - this.y;
+        // Recompute target and deltas for current index
+        this.target = waypoints[currentIndex];
+        let dx = this.target.x - this.x;
+        let dy = this.target.y - this.y;
         let distance = Math.sqrt(dx * dx + dy * dy);
 
+        if (distance === 0) {
+          // Exactly on the point so advance if possible, otherwise stop
+          if (currentIndex + 1 < waypoints.length) {
+            currentIndex++;
+            this.targetWaypointIndex = currentIndex;
+            continue;
+          } else {
+            this.targetWaypointIndex = currentIndex;
+            break;
+          }
+        }
+
         if (distance <= remaining) {
-          this.x = targetPoint.x;
-          this.y = targetPoint.y;
+          // Snap to this waypoint and consume movement, then try next
+          this.x = this.target.x;
+          this.y = this.target.y;
           remaining -= distance;
 
-          if (this.isRetreating) {
-            // Reached last spot. Stop moving.
-            this.isRetreating = false;
-            break;
+          if (currentIndex + 1 < waypoints.length) {
+            currentIndex++;
+            this.targetWaypointIndex = currentIndex;
+            // loop to attempt to use leftover movement on next waypoint
+            continue;
           } else {
-            this.lastSafeSpot = { x: this.x, y: this.y };
-
-            let reachedNode = waypoints.shift();
-            if (reachedNode) reachedNode.removeFromWorld = true;
-
-            if (waypoints.length > 0) {
-              targetPoint = waypoints[0];
-            } else {
-              break;
-            }
+            // Reached final waypoint
+            this.targetWaypointIndex = currentIndex;
+            break;
           }
         } else {
-          // Move part-way towards the target and finish this frame
+          // Move part-way towards the current target and finish this frame
           const angle = Math.atan2(dy, dx);
           this.x += Math.cos(angle) * remaining;
           this.y += Math.sin(angle) * remaining;
@@ -138,79 +129,167 @@ class SleepyGuy {
         }
       }
     }
+
     // Reset collision flag
     this.isStickyBush = false;
     this.updateBB();
+    // If Strange Lamp JUST ended this frame, push SleepyGuy out of any wall/sandbag/spikes
+    if (wasPhasing && !phasing) {
+      this.pushOutOfSolids();
+    }
   }
 
-  handleBlockPhysics(entity) {
+  // Put this helper RIGHT ABOVE handleBlockPhysics(entity)
+  hasBlockBetween(other) {
+    const bw = PARAMS.BLOCKWIDTH;
+    if (!this.game.gridMap) return false;
+
+    const ax = this.x;
+    const ay = this.y;
+
+    // enemy center
+    const bx = other?.BB ? (other.BB.x + other.BB.width / 2) : other.x;
+    const by = other?.BB ? (other.BB.y + other.BB.height / 2) : other.y;
+
+    const dx = bx - ax;
+    const dy = by - ay;
+    const dist = Math.hypot(dx, dy);
+    if (dist <= bw) return false;
+
+    // sample along the line (skip endpoints)
+    const steps = Math.ceil(dist / (bw / 2));
+    for (let i = 1; i < steps; i++) {
+      const t = i / steps;
+      const px = ax + dx * t;
+      const py = ay + dy * t;
+
+      const gx = Math.floor(px / bw);
+      const gy = Math.floor(py / bw);
+
+      const hit = this.game.gridMap[`${gx},${gy}`];
+      if (hit instanceof Block) return true;
+    }
+    return false;
+  }
+
+  handleBlockPhysics(entity, stopPath = true) {
     const thisBB = this.BB;
-    const blockBB = entity.BB;
+    const otherBB = entity.BB;
+    if (!thisBB || !otherBB) return false;
 
-    const overlapX = thisBB.right > blockBB.left && thisBB.left < blockBB.right;
-    const overlapY = thisBB.bottom > blockBB.top && thisBB.top < blockBB.bottom;
+    const overlapX = thisBB.right > otherBB.left && thisBB.left < otherBB.right;
+    const overlapY = thisBB.bottom > otherBB.top && thisBB.top < otherBB.bottom;
+    if (!(overlapX && overlapY)) return false;
 
-    if (overlapX && overlapY) {
-      // Calculate penetration depths from all 4 sides
-      const penLeft = thisBB.right - blockBB.left;
-      const penRight = blockBB.right - thisBB.left;
-      const penTop = thisBB.bottom - blockBB.top;
-      const penBottom = blockBB.bottom - thisBB.top;
+    const penLeft = thisBB.right - otherBB.left;
+    const penRight = otherBB.right - thisBB.left;
+    const penTop = thisBB.bottom - otherBB.top;
+    const penBottom = otherBB.bottom - thisBB.top;
 
-      // Find the smallest penetration on each axis
-      const diffX = Math.min(penLeft, penRight);
-      const diffY = Math.min(penTop, penBottom);
+    const diffX = Math.min(penLeft, penRight);
+    const diffY = Math.min(penTop, penBottom);
 
-      if (diffY < diffX) {
-        // Vertical Collision
-        if (penTop < penBottom) {
-          // Standing on top of block
-          this.y -= penTop;
-          this.velocity.y = 0;
-          this.onGround = true;
-        } else {
-          // Hitting head on ceiling
-          this.y += penBottom;
-          this.velocity.y = 0;
-        }
-      } else {
-        // Horizontal Collision
-        if (penLeft < penRight) {
-          // Hit left side of block
-          this.x -= penLeft;
-          this.velocity.x = 0;
-        } else {
-          // Hit right side of block
-          this.x += penRight;
-          this.velocity.x = 0;
-        }
-      }
+    if (diffY < diffX) {
+      if (penTop < penBottom) this.y -= penTop;
+      else this.y += penBottom;
+    } else {
+      if (penLeft < penRight) this.x -= penLeft;
+      else this.x += penRight;
     }
 
-    // Update BB after snapping position
     this.updateBB();
+
+    if (stopPath) {
+      if (this.game.waypoints) this.game.waypoints.length = 0;
+      this.targetWaypointIndex = 0;
+    }
+
+    return true;
+  }
+
+  pushOutOfSolids() {
+    const bw = PARAMS.BLOCKWIDTH;
+    if (!this.game.gridMap || !this.BB) return;
+
+    let moved = false;
+
+    // Try a few times in case we're overlapping multiple blocks/spikes
+    for (let iter = 0; iter < 8; iter++) {
+      this.updateBB();
+
+      const minGx = Math.floor(this.BB.left / bw) - 1;
+      const maxGx = Math.floor(this.BB.right / bw) + 1;
+      const minGy = Math.floor(this.BB.top / bw) - 1;
+      const maxGy = Math.floor(this.BB.bottom / bw) + 1;
+
+      let anyThisIter = false;
+
+      for (let gy = minGy; gy <= maxGy; gy++) {
+        for (let gx = minGx; gx <= maxGx; gx++) {
+          const e = this.game.gridMap[`${gx},${gy}`];
+          if (!e || e.removeFromWorld || !e.BB) continue;
+
+          // Only push out of walls/sandbags + spikes
+          if (!(e instanceof Block) && !(e instanceof Spikes)) continue;
+
+          if (this.BB.collide(e.BB)) {
+            // push out, BUT don't kill the waypoint path every tiny correction
+            const did = this.handleBlockPhysics(e, false);
+            if (did) {
+              anyThisIter = true;
+              moved = true;
+            }
+          }
+        }
+      }
+
+      if (!anyThisIter) break;
+    }
+
+    // If we had to push you out after phasing, stop the path once (prevents re-entering)
+    if (moved) {
+      if (this.game.waypoints) this.game.waypoints.length = 0;
+      this.targetWaypointIndex = 0;
+    }
   }
 
   onCollision(entity) {
     if (this.dead) return;
 
+    const phasing = this.game.strangeLampTimer > 0;
+
     switch (entity.constructor.name) {
       case "Block":
-        this.handleBlockPhysics(entity);
+        // Strange Lamp: pass through walls/sandbags
+        if (phasing) break;
+        this.handleBlockPhysics(entity, true);
         break;
+
       case "Spikes":
+        // Strange Lamp: pass through spikes (no damage)
+        if (phasing) break;
+        this.onTakeDamage(entity);
+        break;
+
       case "Ghost":
       case "Spider":
       case "Demon":
       case "VenusFlyTrap":
-        this.onTakeDamage(entity);
+        // SleepMask OR StrangeLamp: mobs can't catch you
+        if (this.game.sleepMaskTimer > 0 || phasing) break;
+
+        // Prevent "hit through walls"
+        if (!this.hasBlockBetween(entity)) this.onTakeDamage(entity);
         break;
+
       case "StickyBush":
         this.isStickyBush = true;
         break;
+
       case "Bed":
         this.onReachBed(entity);
         break;
+
       default:
         break;
     }
@@ -221,16 +300,8 @@ class SleepyGuy {
     this.game.gameWon = true;
     this.game.gameOver = true;
   }
-  //triggers lose condition when SleepyGuy hit
-  onTakeDamage(_source) {
-    if (this.invincibleTimer > 0) return;
-
-    if (this.hasPajamaProtection) {
-      this.hasPajamaProtection = false;
-      this.invincibleTimer = 2;
-      return;
-    }
-
+  onTakeDamage(_ghost) {
+    if ((this.game.strangeLampTimer ?? 0) > 0) return;
     this.dead = true;
     this.attackTimer = 0;
   }
@@ -247,9 +318,6 @@ class SleepyGuy {
   }
 
   draw(ctx) {
-    //TODO: best practices use the animator.drawframe method.
-    //Custom logic can be helpful, but work with the existing framework, not against.
-    //Causes issues in boundary handling.
     const anim = this.animations[this.state][this.currentFrame];
 
     // Advance animator time and preserve loop/finished behavior, then draw
@@ -276,10 +344,17 @@ class SleepyGuy {
     const offsetX = this.x - drawW / 2;
     const offsetY = this.y - drawH / 2;
 
+    ctx.save();
+
     if (this.game.options.debugging) {
       ctx.fillStyle = "blue";
-      ctx.fillRect(offsetX, offsetY, drawW, drawH); // debug box
-      console.log(anim.height, this.scale, drawH, offsetY);
+      ctx.fillRect(offsetX, offsetY, drawW, drawH);
+    }
+
+    // ===== Strange Lamp (semi-transparent while active) =====
+    if (this.game.strangeLampTimer > 0) {
+      const pulse = 0.45 + 0.10 * Math.sin(performance.now() * 0.02);
+      ctx.globalAlpha = pulse;
     }
 
     ctx.drawImage(
@@ -293,8 +368,26 @@ class SleepyGuy {
       drawW,
       drawH,
     );
-    // ctx.fillStyle = "Blue";
-    // ctx.fillRect(this.x, this.y, this.width, this.height);
+
+    ctx.restore();
+
+    // ===== Sleep Mask overlay (drawn in front of SleepyGuy) =====
+    if (this.game.sleepMaskTimer > 0) {
+      const maskImg = ASSET_MANAGER.getAsset("./assets/items/SleepMask.png");
+      if (maskImg) {
+        const mw = drawW * 0.55;
+        const mh = mw * (maskImg.height / maskImg.width);
+
+        const mx = this.x - mw / 2;
+        const my = this.y - drawH * 0.10 - mh / 2;
+
+        ctx.save();
+        const a = Math.min(1, this.game.sleepMaskTimer / 0.5);
+        ctx.globalAlpha = Math.max(0.4, Math.min(1, a));
+        ctx.drawImage(maskImg, mx, my, mw, mh);
+        ctx.restore();
+      }
+    }
 
     if (PARAMS.DEBUG && this.BB) {
       ctx.strokeStyle = "red";

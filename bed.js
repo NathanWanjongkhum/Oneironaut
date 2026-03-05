@@ -3,13 +3,11 @@ class Bed {
         this.game = game;
         this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/bed.png");
 
+        
         this.x = positionX;
         this.y = postionY;
-
-        this.width = 540;
-        this.height = 460;
+        this.radius = 100;
         this.scale = 0.5;
-     
         this.BB = null;
 
         this.animations = [];
@@ -30,14 +28,13 @@ class Bed {
     };
 
     updateBB() {
-    const w = this.width * this.scale;
-    const h = this.height * this.scale;
-
+    const w = 540 * this.scale; //540 = sprite pixel width
+    const h = 460 * this.scale;
     this.BB = new BoundingBox(
-        this.x + w * 0.12,
-        this.y + h * 0.35,
-        w * 0.76,
-        h * 0.45
+        this.x,
+        this.y,
+        w,
+        h
     );
 }
 
