@@ -40,6 +40,7 @@ class Levels {
         engine.addEntity(new PickupItem(engine, 260, 120, "SleepDust"));
         engine.addEntity(new PickupItem(engine, 400, 140, "SandBag3"));
         engine.addEntity(new PickupItem(engine, 250, 120, "TeddyBear"));
+        engine.addEntity(new PickupItem(engine, 360, 180, "TheStrangeLamp"));
         builder.spawnRow(15, 0, 20);
         builder.spawnBlock(5, 14);
         builder.spawnBlock(5, 13);

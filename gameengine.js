@@ -31,6 +31,9 @@ class GameEngine {
     this.gameOver = false;
     this.gameWon = false;
 
+    this.bubbleSwapFX = null;  // { t, duration }
+    this._sfxCtx = null;       // WebAudio context for tiny SFX
+
     this.clockTick = 0;
     this.timer = new Timer();
 
@@ -72,8 +75,10 @@ class GameEngine {
     // ===== Dream Bubble take (Key T) =====
     this.prevT = false;
 
-    // ===== Passive items =====
+    // ===== DreamCatcher passive =====
     this.dreamCatcherActive = false;
+    this.dreamCatcherTimer = 0;
+    this.dreamCatcherDuration = 5.0;
     this.dreamCatcherRadius = 85;
     this.dreamCatcherMinRadius = 30;
     this.dreamCatcherMaxRadius = 210;
@@ -83,19 +88,18 @@ class GameEngine {
 
     // ===== Rockets passive =====
     this.rocketActive = false;
+    this.rocketTimer = 0;
+    this.rocketDuration = 5.0;
     this.rocketSpeedMultiplier = 1.6; // 1.0 = normal, 1.6 = 60% faster
 
     // ===== Sleep Mask passive =====
     this.sleepMaskTimer = 0;       // seconds remaining
-    this.sleepMaskDuration = 4.0;  // tweak (4 sec is a good start)
-
-    // ===== Pajama Armor passive =====
-    this.pajamaArmorActive = false;
+    this.sleepMaskDuration = 5.0;  // seconds
 
     // ===== Strange Lamp passive =====
     // While > 0: SleepyGuy is invulnerable + drawn semi-transparent
     this.strangeLampTimer = 0;       // seconds remaining
-    this.strangeLampDuration = 3.0;  // tweak duration (seconds)
+    this.strangeLampDuration = 5.0;  // seconds
 
   }
 
@@ -225,7 +229,7 @@ class GameEngine {
     this.dreamCatcherActive = false;
     this.sleepMaskTimer = 0;
     this.strangeLampTimer = 0;
-    this.pajamaArmorActive = false;
+    this.dreamCatcherTimer = 0;
 
     // reset bubble state too
     this.prevB = false;
@@ -235,6 +239,7 @@ class GameEngine {
     this.gridMap = {};
 
     this.rocketActive = false;
+    this.rocketTimer = 0;
 
     // Level-specific spawns
     Levels.buildLevel(this);
@@ -269,7 +274,9 @@ class GameEngine {
     this.dreamCatcherActive = false;
     this.sleepMaskTimer = 0;
     this.strangeLampTimer = 0;
-    this.pajamaArmorActive = false;
+    this.dreamCatcherTimer = 0;
+    this.rocketActive = false;
+    this.rocketTimer = 0;
 
     this.prevB = false;
     if (this.dreamBubble) this.dreamBubble.close(true);
@@ -286,6 +293,22 @@ class GameEngine {
     if (this.sleepMaskTimer > 0) {
       this.sleepMaskTimer -= this.clockTick;
       if (this.sleepMaskTimer < 0) this.sleepMaskTimer = 0;
+    }
+
+    if (this.rocketTimer > 0) {
+      this.rocketTimer -= this.clockTick;
+      if (this.rocketTimer <= 0) {
+        this.rocketTimer = 0;
+        this.rocketActive = false;
+      }
+    }
+
+    if (this.dreamCatcherTimer > 0) {
+      this.dreamCatcherTimer -= this.clockTick;
+      if (this.dreamCatcherTimer <= 0) {
+        this.dreamCatcherTimer = 0;
+        this.dreamCatcherActive = false;
+      }
     }
 
     if (this.strangeLampTimer > 0) {
@@ -305,6 +328,14 @@ class GameEngine {
       if (this.teddyCooldown < 0) this.teddyCooldown = 0;
     }
     if (this.teddyDecoy && this.teddyDecoy.removeFromWorld) this.teddyDecoy = null;
+
+    // ===== Bubble swap “pop” FX timer tick =====
+    if (this.bubbleSwapFX) {
+      this.bubbleSwapFX.t += this.clockTick;
+      if (this.bubbleSwapFX.t >= this.bubbleSwapFX.duration) {
+        this.bubbleSwapFX = null;
+      }
+    }
 
     // HUD layout always updates
     this.hud.update(cw, ch);
@@ -487,7 +518,18 @@ class GameEngine {
           px /= plen;
           py /= plen;
 
-          e.applyKnockback?.(px * KNOCK_SPEED, py * KNOCK_SPEED, KNOCK_TIME, sw.id);
+          const hitApplied = e.applyKnockback?.(px * KNOCK_SPEED, py * KNOCK_SPEED, KNOCK_TIME, sw.id);
+
+          if (hitApplied && sel && sel.id === "Sword") {
+            if (typeof sel.count !== "number") sel.count = 5;
+
+            sel.count -= 1;
+
+            if (sel.count <= 0) {
+              this.inventory.removeItem(this.inventory.getSelectedIndex());
+              break;
+            }
+          }
         }
 
         if (sw.t >= sw.duration) this.swordSwing = null;
@@ -534,16 +576,17 @@ class GameEngine {
             baseAngle,
             t: 0,
             duration: 0.16,
-            sweep: Math.PI / 2, // 90°
+            sweep: Math.PI / 2,
             length: 130,
             thickness: 64,
+            spent: false // NEW: only allow one spike removal this use
           };
 
           this.brushCooldown = 0.20;
         }
       }
 
-      // Advance swing and remove spikes it hits
+      // Advance swing and remove ONLY ONE spike block per use
       if (this.brushSwing && !bubbleOpen && !this.gameOver) {
         const sw = this.brushSwing;
         sw.t += this.clockTick;
@@ -561,28 +604,48 @@ class GameEngine {
         const r = sw.thickness / 2;
         const r2 = r * r;
 
-        for (let i = 0; i < this.entities.length; i++) {
-          const e = this.entities[i];
-          if (!(e instanceof Spikes)) continue;
-          if (e.removeFromWorld) continue;
+        // Only try to remove a spike once during this swing
+        if (!sw.spent) {
+          for (let i = 0; i < this.entities.length; i++) {
+            const e = this.entities[i];
+            if (!(e instanceof Spikes)) continue;
+            if (e.removeFromWorld) continue;
 
-          const ex = e.x + (e.width * e.scale) / 2;
-          const ey = e.y + (e.height * e.scale) / 2;
+            const ex = e.x + (e.width * e.scale) / 2;
+            const ey = e.y + (e.height * e.scale) / 2;
 
-          const d2 = dist2PointToSegment(ex, ey, ax, ay, bx, by);
-          if (d2 > r2) continue;
+            const d2 = dist2PointToSegment(ex, ey, ax, ay, bx, by);
+            if (d2 > r2) continue;
 
-          // Delete the spikes
-          e.removeFromWorld = true;
+            // Remove only this one spike block
+            e.removeFromWorld = true;
 
-          // Also clear from gridMap if it's stored there (LevelBuilder uses gridMap)
-          const gx = Math.floor(e.x / PARAMS.BLOCKWIDTH);
-          const gy = Math.floor(e.y / PARAMS.BLOCKWIDTH);
-          const key = `${gx},${gy}`;
-          if (this.gridMap && this.gridMap[key] === e) delete this.gridMap[key];
+            // Clear it from gridMap too
+            const gx = Math.floor(e.x / PARAMS.BLOCKWIDTH);
+            const gy = Math.floor(e.y / PARAMS.BLOCKWIDTH);
+            const key = `${gx},${gy}`;
+            if (this.gridMap && this.gridMap[key] === e) delete this.gridMap[key];
+
+            // Consume 1 toothbrush use
+            const sel = this.inventory.getSelectedItem();
+            if (sel && sel.id === "ToothBrush") {
+              if (typeof sel.count !== "number") sel.count = 5;
+              sel.count -= 1;
+
+              if (sel.count <= 0) {
+                this.inventory.removeItem(this.inventory.getSelectedIndex());
+              }
+            }
+
+            sw.spent = true; // IMPORTANT: prevents deleting more than one spike
+            break;
+          }
         }
 
-        if (sw.t >= sw.duration) this.brushSwing = null;
+        // Let the animation finish naturally
+        if (sw.t >= sw.duration) {
+          this.brushSwing = null;
+        }
       }
     }
 
@@ -669,7 +732,7 @@ class GameEngine {
           }
 
           const teddy = new TeddyDecoy(this, x, y, {
-            lifetime: 20.0,
+            lifetime: 5.0,
             scale: 0.09,
             maxHits: Infinity,
           });
@@ -692,7 +755,7 @@ class GameEngine {
       const dustSelected = !!(sel && sel.id === "SleepDust");
 
       const DUST_RADIUS = 70;   // small splash radius (tweak)
-      const DUST_TIME = 3.0;    // seconds asleep (tweak)
+      const DUST_TIME = 10.0;    // seconds asleep (tweak)
 
       if (dustSelected && !bubbleOpen && !this.gameOver) {
         if (this.click && this.sleepDustCooldown <= 0) {
@@ -792,6 +855,53 @@ class GameEngine {
       if (this.entities[i].removeFromWorld) {
         this.entities.splice(i, 1);
       }
+    }
+  }
+
+  isAnyDreamEffectActive() {
+    return (
+      (this.dreamCatcherTimer > 0) ||
+      (this.rocketTimer > 0) ||
+      (this.sleepMaskTimer > 0) ||
+      (this.strangeLampTimer > 0)
+    );
+  }
+
+  triggerBubbleSwapFX() {
+    this.bubbleSwapFX = { t: 0, duration: 0.28 };
+    this.playBubblePopSound();
+  }
+
+  playBubblePopSound() {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+
+      if (!this._sfxCtx) this._sfxCtx = new AC();
+      const ctx = this._sfxCtx;
+
+      if (ctx.state === "suspended") ctx.resume().catch(() => { });
+
+      const now = ctx.currentTime;
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(520, now);
+      osc.frequency.exponentialRampToValueAtTime(240, now + 0.09);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.16, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.15);
+    } catch (e) {
+      // ignore
     }
   }
 
@@ -985,25 +1095,29 @@ class GameEngine {
     const item = this.dreamBubble?.item;
     if (!item) return;
 
+    const hadActive = this.isAnyDreamEffectActive();
+    if (hadActive) this.triggerBubbleSwapFX();
+
+    // single-effect rule
+    this.clearDreamBubbleEffects();
+
     switch (item.id) {
       case "DreamCatcher":
         this.dreamCatcherActive = true;
+        this.dreamCatcherTimer = this.dreamCatcherDuration;
         break;
 
       case "Rocket":
-        this.rocketActive = true;   // <<< add this
+        this.rocketActive = true;
+        this.rocketTimer = this.rocketDuration;
         break;
 
       case "SleepMask":
-        this.sleepMaskTimer = this.sleepMaskDuration; // start blind
+        this.sleepMaskTimer = this.sleepMaskDuration;
         break;
 
       case "TheStrangeLamp":
         this.strangeLampTimer = this.strangeLampDuration;
-        break;
-
-      case "Pajama":
-        this.pajamaArmorActive = true;
         break;
 
       default:
@@ -1013,6 +1127,17 @@ class GameEngine {
 
     this.dreamBubble.item = null;
     this.dreamBubble.close();
+  }
+
+  clearDreamBubbleEffects() {
+    this.dreamCatcherActive = false;
+    this.dreamCatcherTimer = 0;
+
+    this.rocketActive = false;
+    this.rocketTimer = 0;
+
+    this.sleepMaskTimer = 0;
+    this.strangeLampTimer = 0;
   }
 
   applyDreamCatcherAura() {

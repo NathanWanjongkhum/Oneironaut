@@ -27,6 +27,7 @@ ASSET_MANAGER.queueDownload("./assets/entities/spider.png");
 ASSET_MANAGER.queueDownload("./assets/entities/plant1_idle.png");
 ASSET_MANAGER.queueDownload("./assets/entities/sheep_shadow.png");
 ASSET_MANAGER.queueDownload("./assets/entities/sleepyguy.png");
+ASSET_MANAGER.queueDownload("./assets/entities/ZZZ.png");
 ASSET_MANAGER.queueDownload("./assets/entities/Bush_simple2_1.png");
 ASSET_MANAGER.queueDownload("./assets/entities/Bush_simple2_2.png");
 ASSET_MANAGER.queueDownload("./assets/entities/Bush_simple2_3.png");
@@ -122,6 +123,7 @@ ASSET_MANAGER.downloadAll(() => {
 
 		engine.prevT = false;
 		engine.dreamCatcherActive = false;
+		engine.dreamCatcherTimer = 0;
 
 		// keep half-sized defaults
 		engine.dreamCatcherRadius = 85;
@@ -139,6 +141,7 @@ ASSET_MANAGER.downloadAll(() => {
 		engine.sleepDustSplash = null;
 
 		engine.rocketActive = false;
+		engine.rocketTimer = 0;
 
 		engine.sleepMaskTimer = 0;
 
