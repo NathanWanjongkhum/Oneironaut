@@ -5,9 +5,16 @@ class WaypointBuilder {
     this.game.waypoints = this.waypoints;
   }
 
-  draw(ctx) {
+draw(ctx) {
     if (this.waypoints.length === 0) return;
     if (this.game.inLevel === false) return;
+
+    ctx.save();
+
+    ctx.shadowColor = "rgba(0, 0, 0, 0.7)"; 
+    ctx.shadowBlur = 2;                     
+    ctx.shadowOffsetX = 2;                 
+    ctx.shadowOffsetY = 2;                  
 
     // Draw waypoints
     ctx.fillStyle = "white";       
@@ -47,6 +54,8 @@ class WaypointBuilder {
       ctx.arc(this.game.mouse.x, this.game.mouse.y, 5, 0, Math.PI * 2);
       ctx.fill();
     }
+
+    ctx.restore();
   }
 
   update() {
