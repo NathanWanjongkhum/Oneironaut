@@ -47,14 +47,6 @@ draw(ctx) {
     }
     ctx.stroke();
 
-    // Draw current mouse position as a waypoint preview
-    if (this.game.mouse) {
-      ctx.fillStyle = "lightblue";
-      ctx.beginPath();
-      ctx.arc(this.game.mouse.x, this.game.mouse.y, 5, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
     ctx.restore();
   }
 

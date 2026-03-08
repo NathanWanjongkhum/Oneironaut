@@ -261,7 +261,7 @@ class GameEngine {
     this.dreamCatcherTimer = 0;
 
     this.pajamaArmorActive = false;
-    
+
     // reset bubble state too
     this.prevB = false;
     if (this.dreamBubble) this.dreamBubble.close(true);
@@ -828,7 +828,7 @@ class GameEngine {
     if (this.mode === "gameplay" && this.rightClickDown && this.mouse && this.waypoints) {
       const clickX = this.mouse.x;
       const clickY = this.mouse.y;
-      const clickRadius = 30; 
+      const clickRadius = 30;
 
       for (let i = this.waypoints.length - 1; i >= 0; i--) {
         const wp = this.waypoints[i];
@@ -838,10 +838,10 @@ class GameEngine {
           this.waypoints.splice(i, 1);
         }
       }
-      
-      this.rightClick = null; 
+
+      this.rightClick = null;
     }
-    
+
     // HUD requests
     if (this.hud.requestExitToMenu) {
       this.hud.requestExitToMenu = false;
@@ -998,6 +998,16 @@ class GameEngine {
     }
 
     if (this.mode === "gameplay") {
+      // Draw current mouse position as a waypoint preview if not holdig an item
+      const itemSelected = this.inventory.getSelectedItem();
+
+      if (this.mouse && !itemSelected) {
+        this.ctx.fillStyle = "rgba(255,255,255,0.5)";
+        this.ctx.beginPath();
+        this.ctx.arc(this.mouse.x, this.mouse.y, 5, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+
       if (this.dreamBubble) this.dreamBubble.draw(this.ctx);
 
       // ===== Sword cursor + swing =====
