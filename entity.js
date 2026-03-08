@@ -22,19 +22,12 @@ class Entity {
 
   draw(ctx) {
     if (PARAMS.DEBUG && this.BB) {
-      ctx.strokeStyle = "red";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(this.BB.x, this.BB.y, this.BB.width, this.BB.height);
+      this.BB.debugDraw();
     }
-  }
+}
 
   updateBB() {
-    this.BB = new BoundingBox(
-      this.x,
-      this.y,
-      this.width * this.scale,
-      this.height * this.scale,
-    );
+    this.BB?.update(this.x, this.y, this.width * this.scale, this.height * this.scale);
   }
 
   loadAnimation(xStart, yStart, frameCount, frameDuration) {
@@ -52,6 +45,45 @@ class Entity {
     );
   }
 }
+
+class Bed extends Entity {
+  constructor(game, positionX, postionY) {
+    this.game = game;
+    this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/bed.png");
+
+    this.x = positionX;
+    this.y = postionY;
+    this.radius = 100;
+    this.scale = 0.5;
+    this.BB = null;
+
+    this.animations = [];
+    this.loadAnimations();
+    this.BB = new BoundingBox(this.x, this.y,
+        540 * this.scale, 460 * this.scale);//540 = sprite pixel width
+  };
+  loadAnimations() {
+    this.animations.push([]);
+    //spritesheet, xStart, yStart, width, height, frameCount, frameDuration, framePadding, reverse, loop
+    this.animations[0] = new Animator(this.spritesheet, 0, 0, 540, 460, 1, 1, 0, 0, 1); //bed
+  }
+  collide(other) {
+    return getDistance(this, other) < this.radius + other.radius;
+  };
+  draw(ctx) {
+    this.animations[0].drawFrame(
+      this.game.clockTick,
+      ctx,
+      this.x - this.game.camera.x,
+      this.y - this.game.camera.y,
+      this.scale,
+    );
+    super.draw(ctx);
+  };
+}
+
+
+
 
 class Block extends Entity {
   constructor(game, x, y, opts = {}) {
@@ -72,12 +104,12 @@ class Block extends Entity {
       // Bottom-align sprite inside the tile
       const w = this.width * this.spriteScale;
       const h = this.height * this.spriteScale;
-      const dx = this.x + (this.width - w) / 2;
-      const dy = this.y + (this.height - h) + this.spriteYOffset;
+      const dx = (this.x - this.game.camera.x);
+      const dy = (this.y - this.game.camera.y) + this.spriteYOffset;
       ctx.drawImage(this.sprite, dx, dy, w, h);
     } else {
       ctx.fillStyle = "saddlebrown";
-      ctx.fillRect(this.x, this.y, this.width, this.height);
+      ctx.fillRect(this.x - this.game.camera.x, this.y - this.game.camera.y, this.width, this.height);
     }
     super.draw(ctx);
   }
@@ -111,7 +143,7 @@ class TeddyDecoy extends Entity {
   updateBB() {
     const w = this.baseW * this.scale;
     const h = this.baseH * this.scale;
-    this.BB = new BoundingBox(this.x - w / 2, this.y - h / 2, w, h);
+    this.BB.update(this.x - w / 2, this.y - h / 2, w, h);
   }
 
   update() {
@@ -148,12 +180,13 @@ class TeddyDecoy extends Entity {
   }
 
   draw(ctx) {
+
     if (this.img) {
       const w = this.baseW * this.scale;
       const h = this.baseH * this.scale;
 
       // draw teddy
-      ctx.drawImage(this.img, this.x - w / 2, this.y - h / 2, w, h);
+      ctx.drawImage(this.img, (this.x - this.game.camera.x) - w / 2, (this.y - this.game.camera.y) - h / 2, w, h);
 
       // ===== countdown timer (5..1) drawn in front of teddy =====
       const remaining = Math.max(0, this.lifetime - this.age);
@@ -207,15 +240,11 @@ class Spikes extends Entity {
     const xOffset = (this.width * this.scale - bbWidth) / 2;
     const yOffset = this.height * this.scale - bbHeight;
 
-    this.BB = new BoundingBox(
-      this.x + xOffset,
-      this.y + yOffset,
-      bbWidth,
-      bbHeight,
-    );
+    this.BB.update(this.x + xOffset, this.y + yOffset, bbWidth, bbHeight);
   }
 
   draw(ctx) {
+
     const frameWidth = 48;
     const frameHeight = 48;
 
@@ -225,8 +254,8 @@ class Spikes extends Entity {
       frameHeight / 2,
       frameWidth,
       frameHeight / 2,
-      this.x - 16,
-      this.y + 8,
+      (this.x - this.game.camera.x) - 16,
+      (this.y - this.game.camera.y) + 8,
       frameWidth * this.scale,
       (frameHeight / 2) * this.scale,
     );
@@ -236,8 +265,8 @@ class Spikes extends Entity {
       frameHeight / 2,
       frameWidth,
       frameHeight / 2,
-      this.x,
-      this.y + 8,
+      (this.x - this.game.camera.x),
+      (this.y - this.game.camera.y) + 8,
       frameWidth * this.scale,
       (frameHeight / 2) * this.scale,
     );
@@ -266,12 +295,8 @@ class StickyBush extends Entity {
   updateBB() {
     const padding = 10;
 
-    this.BB = new BoundingBox(
-      this.x + padding,
-      this.y + padding,
-      this.width * this.scale - padding * 2,
-      this.height * this.scale - padding * 2,
-    );
+    this.BB.update(this.x + padding, this.y + padding,
+      this.width * this.scale - padding * 2, this.height * this.scale - padding * 2);
   }
 
   update() {
@@ -285,8 +310,8 @@ class StickyBush extends Entity {
       0,
       this.width,
       this.height,
-      this.x,
-      this.y,
+      this.x - this.game.camera.x,
+      this.y - this.game.camera.y,
       this.width * this.scale,
       this.height * this.scale,
     );
