@@ -24,7 +24,9 @@ class GameEngine {
     this.entities = [];
 
     this.click = null;
+    this.rightClick = null;
     this.mouse = null;
+    this.rightClickDown = false;
     this.wheel = null;
     this.keys = {};
 
@@ -72,6 +74,9 @@ class GameEngine {
     this.teddyDecoy = null;     // active TeddyDecoy entity
     this.teddyLureRadius = 900; // px radius enemies will prefer the bear
 
+    // ===== Pajama Armor passive =====
+    this.pajamaArmorActive = false;
+
     // ===== Dream Bubble take (Key T) =====
     this.prevT = false;
 
@@ -118,6 +123,30 @@ class GameEngine {
 
   startInput() {
     const canvas = this.ctx.canvas;
+
+    canvas.addEventListener("mousedown", (e) => {
+      if (e.button === 2) {
+        this.rightClickDown = true;
+      }
+    });
+
+    canvas.addEventListener("mouseup", (e) => {
+      if (e.button === 2) {
+        this.rightClickDown = false;
+      }
+    });
+
+    canvas.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+
+      this.rightClick = {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY,
+      };
+    });
 
     canvas.addEventListener("click", (e) => {
       const rect = canvas.getBoundingClientRect();
@@ -231,6 +260,8 @@ class GameEngine {
     this.strangeLampTimer = 0;
     this.dreamCatcherTimer = 0;
 
+    this.pajamaArmorActive = false;
+    
     // reset bubble state too
     this.prevB = false;
     if (this.dreamBubble) this.dreamBubble.close(true);
@@ -277,6 +308,7 @@ class GameEngine {
     this.dreamCatcherTimer = 0;
     this.rocketActive = false;
     this.rocketTimer = 0;
+    this.pajamaArmorActive = false;
 
     this.prevB = false;
     if (this.dreamBubble) this.dreamBubble.close(true);
@@ -688,7 +720,7 @@ class GameEngine {
 
               if (!overlapsPlayer) {
                 // place the wall as a Block with a sandbag sprite
-                const sandSprite = ASSET_MANAGER.getAsset("./assets/items/SandBag1.png") || sel.img;
+                const sandSprite = ASSET_MANAGER.getAsset("./assets/items/SandBag3.png") || sel.img;
                 const wall = new Block(this, px, py, {
                   sprite: sandSprite,
                   spriteScale: 1.1,     // tweak visuals
@@ -793,6 +825,31 @@ class GameEngine {
       }
     }
 
+    // HUD consumes right clicks in gameplay to remove pathing nodes
+    if (this.mode === "gameplay" && this.rightClickDown && this.mouse && this.waypoints) {
+      const clickX = this.mouse.x;
+      const clickY = this.mouse.y;
+      const clickRadius = 30; 
+
+      let foundIndex = -1;
+
+      for (let i = 0; i < this.waypoints.length; i++) {
+        const wp = this.waypoints[i];
+        const dist = Math.sqrt((wp.x - clickX) ** 2 + (wp.y - clickY) ** 2);
+
+        if (dist <= clickRadius) {
+          foundIndex = i;
+          break;
+        }
+      }
+
+      if (foundIndex !== -1) {
+        this.waypoints.splice(foundIndex);
+      }
+      
+      this.rightClick = null; 
+    }
+    
     // HUD requests
     if (this.hud.requestExitToMenu) {
       this.hud.requestExitToMenu = false;
@@ -1102,6 +1159,14 @@ class GameEngine {
     this.clearDreamBubbleEffects();
 
     switch (item.id) {
+      case "TheStrangeLamp":
+        this.strangeLampTimer = this.strangeLampDuration;
+        break;
+
+      case "Pajama":
+        this.pajamaArmorActive = true;
+        break;
+
       case "DreamCatcher":
         this.dreamCatcherActive = true;
         this.dreamCatcherTimer = this.dreamCatcherDuration;
@@ -1130,6 +1195,8 @@ class GameEngine {
   }
 
   clearDreamBubbleEffects() {
+    this.pajamaArmorActive = false;
+
     this.dreamCatcherActive = false;
     this.dreamCatcherTimer = 0;
 

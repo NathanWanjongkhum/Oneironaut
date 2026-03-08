@@ -302,6 +302,13 @@ class SleepyGuy {
   }
   onTakeDamage(_ghost) {
     if ((this.game.strangeLampTimer ?? 0) > 0) return;
+
+    // Pajama Armor blocks one hit, then breaks
+    if (this.game.pajamaArmorActive) {
+      this.game.pajamaArmorActive = false;
+      return;
+    }
+
     this.dead = true;
     this.attackTimer = 0;
   }
@@ -385,6 +392,24 @@ class SleepyGuy {
         const a = Math.min(1, this.game.sleepMaskTimer / 0.5);
         ctx.globalAlpha = Math.max(0.4, Math.min(1, a));
         ctx.drawImage(maskImg, mx, my, mw, mh);
+        ctx.restore();
+      }
+    }
+
+    // ===== Pajama overlay (drawn when armor is active) =====
+    if (this.game.pajamaArmorActive) {
+      const pajamaImg = ASSET_MANAGER.getAsset("./assets/items/Pijama.png");
+      if (pajamaImg) {
+        const pw = drawW * 0.65; // Scale relative to SleepyGuy
+        const ph = pw * (pajamaImg.height / pajamaImg.width);
+
+        // Position on his body
+        const px = this.x - pw / 2;
+        const py = this.y - drawH * 0.15 - ph / 2;
+
+        ctx.save();
+        ctx.globalAlpha = 0.9;
+        ctx.drawImage(pajamaImg, px, py, pw, ph);
         ctx.restore();
       }
     }
