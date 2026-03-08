@@ -22,6 +22,13 @@ class WaypointBuilder {
     ctx.strokeStyle = "blue";
     ctx.lineWidth = 2;
     ctx.beginPath();
+    
+    // Draw from SleepyGuy to the first waypoint
+    if (this.game.sleepyGuy && this.waypoints.length > 0) {
+      ctx.moveTo(this.game.sleepyGuy.x, this.game.sleepyGuy.y);
+      ctx.lineTo(this.waypoints[0].x, this.waypoints[0].y);
+    }
+
     for (let i = 0; i < this.waypoints.length - 1; i++) {
       const from = this.waypoints[i];
       const to = this.waypoints[i + 1];

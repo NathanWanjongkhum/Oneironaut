@@ -76,50 +76,32 @@ class SleepyGuy {
       let slowEffect = this.isStickyBush ? StickyBush.slowFactor : 1;
       velocityLength *= slowEffect;
 
-      // Rocket passive speed boost (after you press T on the Rocket in the dream bubble)
+      // Rocket passive speed boost
       const rocketBoost = this.game.rocketActive ? (this.game.rocketSpeedMultiplier ?? 1.6) : 1;
       velocityLength *= rocketBoost;
 
-
       // Use remaining movement this frame
       let remaining = velocityLength * TICK;
-      let currentIndex = this.targetWaypointIndex;
 
-      while (remaining > 0) {
-        // Recompute target and deltas for current index
-        this.target = waypoints[currentIndex];
+      while (remaining > 0 && waypoints.length > 0) {
+        this.target = waypoints[0];
         let dx = this.target.x - this.x;
         let dy = this.target.y - this.y;
         let distance = Math.sqrt(dx * dx + dy * dy);
 
         if (distance === 0) {
-          // Exactly on the point so advance if possible, otherwise stop
-          if (currentIndex + 1 < waypoints.length) {
-            currentIndex++;
-            this.targetWaypointIndex = currentIndex;
-            continue;
-          } else {
-            this.targetWaypointIndex = currentIndex;
-            break;
-          }
+          // Exactly on the point so consume it and continue
+          waypoints.shift();
+          continue;
         }
 
         if (distance <= remaining) {
-          // Snap to this waypoint and consume movement, then try next
+          // Snap to this waypoint, consume movement, and consume the waypoint
           this.x = this.target.x;
           this.y = this.target.y;
           remaining -= distance;
-
-          if (currentIndex + 1 < waypoints.length) {
-            currentIndex++;
-            this.targetWaypointIndex = currentIndex;
-            // loop to attempt to use leftover movement on next waypoint
-            continue;
-          } else {
-            // Reached final waypoint
-            this.targetWaypointIndex = currentIndex;
-            break;
-          }
+          waypoints.shift();
+          continue;
         } else {
           // Move part-way towards the current target and finish this frame
           const angle = Math.atan2(dy, dx);
@@ -129,7 +111,6 @@ class SleepyGuy {
         }
       }
     }
-
     // Reset collision flag
     this.isStickyBush = false;
     this.updateBB();

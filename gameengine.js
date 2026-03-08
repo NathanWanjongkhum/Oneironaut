@@ -825,26 +825,18 @@ class GameEngine {
       }
     }
 
-    // HUD consumes right clicks in gameplay to remove pathing nodes
     if (this.mode === "gameplay" && this.rightClickDown && this.mouse && this.waypoints) {
       const clickX = this.mouse.x;
       const clickY = this.mouse.y;
       const clickRadius = 30; 
 
-      let foundIndex = -1;
-
-      for (let i = 0; i < this.waypoints.length; i++) {
+      for (let i = this.waypoints.length - 1; i >= 0; i--) {
         const wp = this.waypoints[i];
         const dist = Math.sqrt((wp.x - clickX) ** 2 + (wp.y - clickY) ** 2);
 
         if (dist <= clickRadius) {
-          foundIndex = i;
-          break;
+          this.waypoints.splice(i, 1);
         }
-      }
-
-      if (foundIndex !== -1) {
-        this.waypoints.splice(foundIndex);
       }
       
       this.rightClick = null; 
