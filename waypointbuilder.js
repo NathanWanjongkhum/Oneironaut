@@ -10,17 +10,20 @@ class WaypointBuilder {
     if (this.game.inLevel === false) return;
 
     // Draw waypoints
-    ctx.fillStyle = "red";
-    ctx.beginPath();
-    for (let point of this.waypoints) {
-      ctx.moveTo(point.x, point.y);
-      ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
-    }
-    ctx.fill();
+    ctx.fillStyle = "white";       
+    ctx.strokeStyle = "white";     
+    ctx.lineWidth = 2;            
 
-    // Draw lines between waypoints
-    ctx.strokeStyle = "blue";
-    ctx.lineWidth = 2;
+    for (let point of this.waypoints) {
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 8, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
     ctx.beginPath();
     
     // Draw from SleepyGuy to the first waypoint
@@ -39,7 +42,7 @@ class WaypointBuilder {
 
     // Draw current mouse position as a waypoint preview
     if (this.game.mouse) {
-      ctx.fillStyle = "green";
+      ctx.fillStyle = "lightblue";
       ctx.beginPath();
       ctx.arc(this.game.mouse.x, this.game.mouse.y, 5, 0, Math.PI * 2);
       ctx.fill();
