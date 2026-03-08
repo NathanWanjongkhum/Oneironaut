@@ -25,4 +25,17 @@ class BoundingBox {
 
         return {x: ox, y: oy};
     };
+
+    update(x, y, w, h) {
+        this.left = x;
+        this.top = y;
+        this.right = this.left + (w | this.width);
+        this.bottom = this.top + (h | this.height);
+    }
+
+    debugDraw() {
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(this.left - this.game.camera.x, this.top - this.game.camera.y, this.width, this.height);
+    }
 };
