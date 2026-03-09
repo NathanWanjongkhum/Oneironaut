@@ -111,7 +111,7 @@ ASSET_MANAGER.downloadAll(() => {
 
 	PARAMS.CANVAS_WIDTH = canvas.width;
 	PARAMS.CANVAS_HEIGHT = canvas.height;
-	PARAMS.DEBUG = true;
+	PARAMS.DEBUG = false;
 
 	gameEngine.init(ctx);
 
