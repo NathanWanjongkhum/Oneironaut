@@ -120,6 +120,6 @@ class PickupItem {
 
         const w = this.getDrawW();
         const h = this.getDrawH();
-        ctx.drawImage(this.sprite, this.x - w / 2, this.y - h / 2, w, h);
+        ctx.drawImage(this.sprite, this.x - w / 2 - this.game.camera.x, this.y - h / 2 - this.game.camera.y, w, h);
     }
 }

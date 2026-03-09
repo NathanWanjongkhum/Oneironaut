@@ -1,6 +1,6 @@
 const NUM_ANIMATIONS = 2;
 
-class SleepyGuy {
+class SleepyGuy { //extends Entity??
   constructor(game, x, y) {
     Object.assign(this, { game, x, y });
 
@@ -25,8 +25,15 @@ class SleepyGuy {
 
     this.animations = [];
     this.loadAnimations();
-    this.updateBB();
+    this.BB = new BoundingBox(
+      this.x - (this.width * this.scale / 2),
+      this.y - (this.height * this.scale / 2),
+      this.width * this.scale,
+      this.height * this.scale,
+    );
     this._wasStrangeLamp = false;
+
+    this.game.camera.setPlayer(this);
   }
 
   loadAnimations() {
@@ -54,10 +61,6 @@ class SleepyGuy {
     if (this.game.mode !== "gameplay") return;
     const TICK = this.game.clockTick;
     if (this.dead) {
-      this.attackTimer += TICK;
-      if (this.attackTimer > 1) {
-        this.game.gameOver = true;
-      }
       this.updateBB();
       return;
     }
@@ -69,6 +72,10 @@ class SleepyGuy {
     // Move along waypoints if they exist
     const waypoints = this.game.waypoints;
     if (waypoints && waypoints.length > 0) {
+      if (this.targetWaypointIndex >= waypoints.length) {
+        this.targetWaypointIndex = waypoints.length - 1;
+      }
+
       let velocityLength = Math.sqrt(
         this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y,
       );
@@ -88,6 +95,10 @@ class SleepyGuy {
       while (remaining > 0) {
         // Recompute target and deltas for current index
         this.target = waypoints[currentIndex];
+        if (!this.target) {
+          this.targetWaypointIndex = Math.max(0, waypoints.length - 1);
+          break;
+        }
         let dx = this.target.x - this.x;
         let dy = this.target.y - this.y;
         let distance = Math.sqrt(dx * dx + dy * dy);
@@ -133,10 +144,42 @@ class SleepyGuy {
     // Reset collision flag
     this.isStickyBush = false;
     this.updateBB();
+
+    // Safety net: if enemy overlap is detected here, force damage.
+    // This catches edge cases where dynamic collision order misses a frame.
+    this.checkEnemyContact();
+
     // If Strange Lamp JUST ended this frame, push SleepyGuy out of any wall/sandbag/spikes
     if (wasPhasing && !phasing) {
       this.pushOutOfSolids();
     }
+  }
+
+  checkEnemyContact() {
+    if (this.dead || this.game.gameOver) return false;
+    if ((this.game.strangeLampTimer ?? 0) > 0) return false;
+    if ((this.game.sleepMaskTimer ?? 0) > 0) return false;
+    if (!this.BB) return false;
+
+    const pad = 6;
+    const probe = new BoundingBox(
+      this.BB.left - pad,
+      this.BB.top - pad,
+      this.BB.width + pad * 2,
+      this.BB.height + pad * 2,
+    );
+
+    for (const e of this.game.entities) {
+      if (!(e instanceof Monster)) continue;
+      if (e instanceof Sheep) continue;
+      if (e.dead || e.removeFromWorld || !e.BB) continue;
+      if (probe.collide(e.BB)) {
+        this.onTakeDamage(e);
+        return true;
+      }
+    }
+
+    return false;
   }
 
   // Put this helper RIGHT ABOVE handleBlockPhysics(entity)
@@ -277,9 +320,9 @@ class SleepyGuy {
       case "VenusFlyTrap":
         // SleepMask OR StrangeLamp: mobs can't catch you
         if (this.game.sleepMaskTimer > 0 || phasing) break;
-
         // Prevent "hit through walls"
         if (!this.hasBlockBetween(entity)) this.onTakeDamage(entity);
+        //this.onTakeDamage(entity);
         break;
 
       case "StickyBush":
@@ -299,9 +342,13 @@ class SleepyGuy {
   onReachBed(_bed) {
     this.game.gameWon = true;
     this.game.gameOver = true;
+    this.game.updateHighest();
+    this.game.mode = "pause";
   }
-  onTakeDamage(_ghost) {
+  onTakeDamage(entity) {
+    if(entity.sleepTimer > 0) return;
     if ((this.game.strangeLampTimer ?? 0) > 0) return;
+    if (this.game.gameOver) return;
 
     // Pajama Armor blocks one hit, then breaks
     if (this.game.pajamaArmorActive) {
@@ -311,20 +358,26 @@ class SleepyGuy {
 
     this.dead = true;
     this.attackTimer = 0;
+    this.game.gameWon = false;
+    this.game.gameOver = true;
+    this.game.mode = "pause";
+    if (this.game.waypoints) this.game.waypoints.length = 0;
+    this.targetWaypointIndex = 0;
   }
 
   updateBB() {
     const w = this.width * this.scale;
     const h = this.height * this.scale;
-    this.BB = new BoundingBox(
-      this.x - w, // / 2,
-      this.y - h, // / 2,
-      w * 2,
-      h * 2,
+    this.BB.update(
+      this.x - (w / 2),
+      this.y - (h / 2),
+      w,
+      h,
     );
   }
 
   draw(ctx) {
+
     const anim = this.animations[this.state][this.currentFrame];
 
     // Advance animator time and preserve loop/finished behavior, then draw
@@ -353,9 +406,9 @@ class SleepyGuy {
 
     ctx.save();
 
-    if (this.game.options.debugging) {
+    if (PARAMS.DEBUG) {
       ctx.fillStyle = "blue";
-      ctx.fillRect(offsetX, offsetY, drawW, drawH);
+      ctx.fillRect(offsetX - this.game.camera.x, offsetY - this.game.camera.y, drawW, drawH);
     }
 
     // ===== Strange Lamp (semi-transparent while active) =====
@@ -370,11 +423,23 @@ class SleepyGuy {
       anim.yStart,
       frameW,
       frameH,
-      offsetX,
-      offsetY,
+      offsetX - this.game.camera.x,
+      offsetY - this.game.camera.y,
       drawW,
       drawH,
     );
+    // //spritesheet, xStart, yStart, width, height, frameCount, frameDuration, framePadding, reverse, loop
+    // this.animations[0][0] = new Animator(this.spritesheet, 0, 0, 442, 247, 5, 0.5, 0, true, true); // idle
+
+
+    //TODO: Example of what the draw call should look like -> drawFrame as opposed to drawImage
+    // this.animations[this.state].drawFrame(
+    //   this.game.clockTick,
+    //   ctx,
+    //   screenX,
+    //   screenY,
+    //   this.scale,
+    // );
 
     ctx.restore();
 
@@ -385,8 +450,8 @@ class SleepyGuy {
         const mw = drawW * 0.55;
         const mh = mw * (maskImg.height / maskImg.width);
 
-        const mx = this.x - mw / 2;
-        const my = this.y - drawH * 0.10 - mh / 2;
+        const mx = this.x - mw / 2 - this.game.camera.x;
+        const my = this.y - drawH * 0.10 - mh / 2 - this.game.camera.y;
 
         ctx.save();
         const a = Math.min(1, this.game.sleepMaskTimer / 0.5);
@@ -404,8 +469,8 @@ class SleepyGuy {
         const ph = pw * (pajamaImg.height / pajamaImg.width);
 
         // Position on his body
-        const px = this.x - pw / 2;
-        const py = this.y - drawH * 0.15 - ph / 2;
+        const px = this.x - pw / 2 - this.game.camera.x;
+        const py = this.y - drawH * 0.15 - ph / 2 - this.game.camera.y;
 
         ctx.save();
         ctx.globalAlpha = 0.9;
@@ -415,8 +480,8 @@ class SleepyGuy {
     }
 
     if (PARAMS.DEBUG && this.BB) {
-      ctx.strokeStyle = "red";
-      ctx.strokeRect(this.BB.x, this.BB.y, this.BB.width, this.BB.height);
+      this.BB.debugDraw(ctx, this.game.camera);
     }
+
   }
 }

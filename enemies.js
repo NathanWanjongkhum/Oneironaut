@@ -107,20 +107,14 @@ class Monster extends Entity {
 
   draw(ctx) {
     if (PARAMS.DEBUG) {
-      if (this.leashRadius > 0) {
+      if (this.spawn !== undefined && this.leashRadius > 0) {
         ctx.beginPath();
         ctx.strokeStyle = "yellow";
+        //ctx.fillStyle = "cyan";
         ctx.lineWidth = 1;
-        ctx.arc(this.spawn.x, this.spawn.y, this.leashRadius, 0, 2 * Math.PI);
+        ctx.arc(this.spawn.x - this.game.camera.x, this.spawn.y - this.game.camera.y, this.leashRadius || 2, 0, 2 * Math.PI);
         ctx.stroke();
-        ctx.closePath();
-      }
-
-      if (this.spawn !== undefined) {
-        ctx.beginPath();
-        ctx.fillStyle = "cyan";
-        ctx.arc(this.spawn.x, this.spawn.y, 2, 0, 2 * Math.PI);
-        ctx.fill();
+        //ctx.fill();
         ctx.closePath();
       }
     }
@@ -147,10 +141,11 @@ class Monster extends Entity {
 
         ctx.save();
         ctx.globalAlpha = 0.95;
-        ctx.drawImage(this.zzzImg, zX, baseY + bob, zW, zH);
+        ctx.drawImage(this.zzzImg, zX - this.game.camera.x, baseY + bob - this.game.camera.y, zW, zH);
         ctx.restore();
       }
     }
+    super.draw(ctx);
   }
 
     /**
@@ -256,7 +251,12 @@ class Ghost extends Monster {
     this.animations = [];
     this.loadAnimations();
 
-    this.updateBB();
+    this.BB = new BoundingBox(
+      this.x + (this.width * this.scale) / 6,
+      this.y + (this.height * this.scale) / 6,
+      this.width * this.scale * (2 / 3),
+      this.height * this.scale * (2 / 3)
+    );
   }
 
   onCollision(entity) {
@@ -354,11 +354,11 @@ class Ghost extends Monster {
     const xOffset = (this.width * this.scale - bbWidth) / 2;
     const yOffset = (this.height * this.scale - bbHeight) / 2;
 
-    this.BB = new BoundingBox(
+    this.BB.update(
       this.x + xOffset,
       this.y + yOffset,
       bbWidth,
-      bbHeight,
+      bbHeight
     );
   }
 
@@ -366,11 +366,10 @@ class Ghost extends Monster {
     this.animations[this.state][this.type].drawFrame(
       this.game.clockTick,
       ctx,
-      this.x,
-      this.y,
+      this.x - this.game.camera.x,
+      this.y - this.game.camera.y,
       this.scale,
     );
-
     super.draw(ctx);
   }
 
@@ -386,366 +385,96 @@ class Ghost extends Monster {
 
     // spritesheet, xStart, yStart, width, height, frameCount, frameDuration, framePadding, reverse, loop
     this.animations[0][0] = new Animator(
-      this.spritesheet1,
-      0,
-      30,
-      128,
-      128,
-      5,
-      0.3,
-      0,
-      0,
-      1,
+      this.spritesheet1, 0, 30, 128, 128, 5, 0.3, 0, 0, 1
     ); // idle
     this.animations[1][0] = new Animator(
-      this.spritesheet1,
-      0,
-      158,
-      128,
-      128,
-      5,
-      0.2,
-      0,
-      0,
-      1,
+      this.spritesheet1, 0, 158, 128, 128, 5, 0.2, 0, 0, 1
     ); // walk
     this.animations[2][0] = new Animator(
-      this.spritesheet1,
-      0,
-      286,
-      128,
-      128,
-      5,
-      0.2,
-      0,
-      0,
-      1,
+      this.spritesheet1, 0, 286, 128, 128, 5, 0.2, 0, 0, 1
     ); // run
     this.animations[3][0] = new Animator(
-      this.spritesheet1,
-      0,
-      414,
-      128,
-      128,
-      4,
-      0.2,
-      0,
-      0,
-      1,
+      this.spritesheet1, 0, 414, 128, 128, 4, 0.2, 0, 0, 1
     ); // attack1
     this.animations[4][0] = new Animator(
-      this.spritesheet1,
-      0,
-      542,
-      128,
-      128,
-      4,
-      0.2,
-      0,
-      0,
-      1,
+      this.spritesheet1, 0, 542, 128, 128, 4, 0.2, 0, 0, 1
     ); // attack2
     this.animations[5][0] = new Animator(
-      this.spritesheet1,
-      0,
-      670,
-      128,
-      128,
-      7,
-      0.2,
-      0,
-      0,
-      1,
+      this.spritesheet1, 0, 670, 128, 128, 7, 0.2, 0, 0, 1
     ); // attack3
     this.animations[6][0] = new Animator(
-      this.spritesheet1,
-      0,
-      798,
-      128,
-      128,
-      7,
-      0.2,
-      0,
-      0,
-      1,
+      this.spritesheet1, 0, 798, 128, 128, 7, 0.2, 0, 0, 1
     ); // attack4
     this.animations[7][0] = new Animator(
-      this.spritesheet1,
-      0,
-      926,
-      128,
-      128,
-      4,
-      0.2,
-      0,
-      0,
-      1,
+      this.spritesheet1, 0, 926, 128, 128, 4, 0.2, 0, 0, 1
     ); // scream
     this.animations[8][0] = new Animator(
-      this.spritesheet1,
-      0,
-      1054,
-      128,
-      128,
-      3,
-      0.3,
-      0,
-      0,
-      1,
+      this.spritesheet1, 0, 1054, 128, 128, 3, 0.3, 0, 0, 1
     ); // hurt
     this.animations[9][0] = new Animator(
-      this.spritesheet1,
-      0,
-      1182,
-      128,
-      128,
-      4,
-      0.3,
-      0,
-      0,
-      0,
+      this.spritesheet1, 0, 1182, 128, 128, 4, 0.3, 0, 0, 0
     ); // dead
 
     this.animations[0][1] = new Animator(
-      this.spritesheet2,
-      0,
-      30,
-      128,
-      128,
-      6,
-      0.3,
-      0,
-      0,
-      1,
+      this.spritesheet2, 0, 30, 128, 128, 6, 0.3, 0, 0, 1
     ); // idle
     this.animations[1][1] = new Animator(
-      this.spritesheet2,
-      0,
-      158,
-      128,
-      128,
-      7,
-      0.2,
-      0,
-      0,
-      1,
+      this.spritesheet2, 0, 158, 128, 128, 7, 0.2, 0, 0, 1,
     ); // walk
     this.animations[2][1] = new Animator(
-      this.spritesheet2,
-      0,
-      286,
-      128,
-      128,
-      7,
-      0.2,
-      0,
-      0,
-      1,
+      this.spritesheet2, 0, 286, 128, 128, 7, 0.2, 0, 0, 1,
     ); // run
     this.animations[3][1] = new Animator(
-      this.spritesheet2,
-      0,
-      414,
-      128,
-      128,
-      5,
-      0.2,
-      0,
-      0,
-      1,
+      this.spritesheet2, 0, 414, 128, 128, 5, 0.2, 0, 0, 1,
     ); // attack1
     this.animations[4][1] = new Animator(
-      this.spritesheet2,
-      0,
-      542,
-      128,
-      128,
-      4,
-      0.2,
-      0,
-      0,
-      1,
+      this.spritesheet2, 0, 542, 128, 128, 4, 0.2, 0, 0, 1
     ); // attack2
     this.animations[5][1] = new Animator(
-      this.spritesheet2,
-      0,
-      670,
-      128,
-      128,
-      4,
-      0.2,
-      0,
-      0,
-      1,
+      this.spritesheet2, 0, 670, 128, 128, 4, 0.2, 0, 0, 1
     ); // idle
     this.animations[6][1] = new Animator(
-      this.spritesheet2,
-      0,
-      798,
-      128,
-      128,
-      7,
-      0.2,
-      0,
-      0,
-      1,
+      this.spritesheet2, 0, 798, 128, 128, 7, 0.2, 0, 0, 1
     ); // walk
     this.animations[7][1] = new Animator(
-      this.spritesheet2,
-      0,
-      926,
-      128,
-      128,
-      6,
-      0.2,
-      0,
-      0,
-      1,
+      this.spritesheet2, 0, 926, 128, 128, 6, 0.2, 0, 0, 1
     ); // run
     this.animations[8][1] = new Animator(
-      this.spritesheet2,
-      0,
-      1054,
-      128,
-      128,
-      3,
-      0.3,
-      0,
-      0,
-      1,
+      this.spritesheet2, 0, 1054, 128, 128, 3, 0.3, 0, 0, 1
     ); // attack1
     this.animations[9][1] = new Animator(
-      this.spritesheet2,
-      0,
-      1182,
-      128,
-      128,
-      6,
-      0.3,
-      0,
-      0,
-      0,
+      this.spritesheet2, 0, 1182, 128, 128, 6, 0.3, 0, 0, 0
     ); // attack2
 
     this.animations[0][2] = new Animator(
-      this.spritesheet3,
-      0,
-      30,
-      128,
-      128,
-      5,
-      0.3,
-      0,
-      0,
-      1,
+      this.spritesheet3, 0, 30, 128, 128, 5, 0.3, 0, 0, 1
     ); // idle
     this.animations[1][2] = new Animator(
-      this.spritesheet3,
-      0,
-      158,
-      128,
-      128,
-      6,
-      0.2,
-      0,
-      0,
-      1,
+      this.spritesheet3, 0, 158, 128, 128, 6, 0.2, 0, 0, 1
     ); // walk
     this.animations[2][2] = new Animator(
-      this.spritesheet3,
-      0,
-      286,
-      128,
-      128,
-      7,
-      0.2,
-      0,
-      0,
-      1,
+      this.spritesheet3, 0, 286, 128, 128, 7, 0.2, 0, 0, 1
     ); // run
     this.animations[3][2] = new Animator(
-      this.spritesheet3,
-      0,
-      414,
-      128,
-      128,
-      4,
-      0.2,
-      0,
-      0,
-      1,
+      this.spritesheet3, 0, 414, 128, 128, 4, 0.2, 0, 0, 1
     ); // attack1
     this.animations[4][2] = new Animator(
-      this.spritesheet3,
-      0,
-      542,
-      128,
-      128,
-      4,
-      0.2,
-      0,
-      0,
-      1,
+      this.spritesheet3, 0, 542, 128, 128, 4, 0.2, 0, 0, 1
     ); // attack2
     this.animations[5][2] = new Animator(
-      this.spritesheet3,
-      0,
-      670,
-      128,
-      128,
-      4,
-      0.2,
-      0,
-      0,
-      1,
+      this.spritesheet3, 0, 670, 128, 128, 4, 0.2, 0, 0, 1
     ); // attack3
     this.animations[6][2] = new Animator(
-      this.spritesheet3,
-      0,
-      798,
-      128,
-      128,
-      4,
-      0.2,
-      0,
-      0,
-      1,
+      this.spritesheet3, 0, 798, 128, 128, 4, 0.2, 0, 0, 1
     ); // scream
     this.animations[7][2] = new Animator(
-      this.spritesheet3,
-      0,
-      926,
-      128,
-      128,
-      9,
-      0.2,
-      0,
-      0,
-      1,
+      this.spritesheet3, 0, 926, 128, 128, 9, 0.2, 0, 0, 1
     ); // jump
     this.animations[8][2] = new Animator(
-      this.spritesheet3,
-      0,
-      1054,
-      128,
-      128,
-      3,
-      0.3,
-      0,
-      0,
-      1,
+      this.spritesheet3, 0, 1054, 128, 128, 3, 0.3, 0, 0, 1
     ); // hurt
     this.animations[9][2] = new Animator(
-      this.spritesheet3,
-      0,
-      1182,
-      128,
-      128,
-      5,
-      0.3,
-      0,
-      0,
-      0,
+      this.spritesheet3, 0, 1182, 128, 128, 5, 0.3, 0, 0, 0
     ); // dead
   }
 }
@@ -964,8 +693,8 @@ class Sheep extends Monster {
     this.animations[this.state].drawFrame(
       this.game.clockTick,
       ctx,
-      this.x,
-      this.y,
+      this.x - this.game.camera.x,
+      this.y - this.game.camera.y,
       this.scale,
     );
 
@@ -979,7 +708,7 @@ class Spider extends Monster {
 
     this.width = 32;
     this.height = 32;
-    this.scale = 2;
+    this.scale = 1.5;
 
     this.spawn = {
       x: this.x + (this.width * this.scale) / 2,
@@ -991,12 +720,15 @@ class Spider extends Monster {
     this.path = path;
     this.targetIndex = 1;
 
-    this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/spider.png");
+    this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/spiders/1.png");
 
     this.animations = [];
     this.loadAnimations();
 
-    this.updateBB();
+    this.facing = 0; //0=up, 1=left, 2=down, 3=right
+    this.state = 0; //0=idle, 1=walk, 2=attack
+
+    this.BB = new BoundingBox();
   }
 
   onCollision(entity) {
@@ -1004,31 +736,84 @@ class Spider extends Monster {
       this.handleBlockPhysics(entity);
     }
   }
+  updateBB() {
+    const xScaler = 1.2;
+    const yScaler = 1.2;
 
-  //spritesheet, xStart, yStart, width, height, frameCount, frameDuration, framePadding, reverse, loop
-  loadAnimations() {
-    this.animations.push(
-      new Animator(
-        this.spritesheet,
-        0,
-        0,
-        this.width,
-        this.height,
-        1,
-        1,
-        0,
-        false,
-        true,
-      ),
+    const bbWidth = this.width * this.scale * xScaler;
+    const bbHeight = this.height * this.scale * yScaler;
+
+    const xOffset = (this.width * this.scale - bbWidth) / 2;
+    const yOffset = (this.height * this.scale - bbHeight) / 2;
+
+    this.BB?.update(
+      this.x + xOffset,
+      this.y + yOffset,
+      bbWidth,
+      bbHeight,
     );
   }
 
+  loadAnimations() {
+
+    //up left bottom right
+    //1 standing
+    //1-4 attack
+    //5-10 walking
+    for (let i = 0; i < 3; i++) {
+      // states
+      this.animations.push([]);
+      for (let j = 0; j < 4; j++) {
+        // direction
+        this.animations.push([]);
+      }
+    }
+
+    // spritesheet, xStart, yStart, width, height, frameCount, frameDuration, framePadding, reverse, loop
+    this.animations[0][0] = new Animator(
+      this.spritesheet, 0, 0, 64, 64, 1, 0.3, 0, 0, 1
+    ); // idle
+    this.animations[1][0] = new Animator(
+      this.spritesheet, 256, 0, 64, 64, 5, 0.3, 0, 0, 1
+    ); // walk
+    this.animations[2][0] = new Animator(
+      this.spritesheet, 0, 0, 64, 64, 4, 0.2, 0, 0, 1
+    ); // attack
+    this.animations[0][1] = new Animator(
+      this.spritesheet, 0, 64, 64, 64, 1, 0.3, 0, 0, 1
+    ); // idle
+    this.animations[1][1] = new Animator(
+      this.spritesheet, 256, 64, 64, 64, 5, 0.3, 0, 0, 1
+    ); // walk
+    this.animations[2][1] = new Animator(
+      this.spritesheet, 0, 64, 64, 64, 4, 0.2, 0, 0, 1
+    ); // attack
+    this.animations[0][2] = new Animator(
+      this.spritesheet, 0, 128, 64, 64, 1, 0.3, 0, 0, 1
+    ); // idle
+    this.animations[1][2] = new Animator(
+      this.spritesheet, 256, 128, 64, 64, 5, 0.3, 0, 0, 1
+    ); // walk
+    this.animations[2][2] = new Animator(
+      this.spritesheet, 0, 128, 64, 64, 4, 0.2, 0, 0, 1
+    ); // attack
+    this.animations[0][3] = new Animator(
+      this.spritesheet, 0, 192, 64, 64, 1, 0.3, 0, 0, 1
+    ); // idle
+    this.animations[1][3] = new Animator(
+      this.spritesheet, 256, 192, 64, 64, 5, 0.3, 0, 0, 1
+    ); // walk
+    this.animations[2][3] = new Animator(
+      this.spritesheet, 0, 192, 64, 64, 4, 0.2, 0, 0, 1
+    ); // attack
+  }
+
   update() {
+    if (this.game.mode !== "gameplay") return;
     if (this.game.sleepMaskTimer > 0) {
       super.update();
       return;
     }
-    if (this.game.mode !== "gameplay") return;
     if (this.dead) return;
     // Sword knockback stun
     if (this.doKnockbackMotion()) return;
@@ -1064,6 +849,14 @@ class Spider extends Monster {
         this.x += (dx / dist) * move;
         this.y += (dy / dist) * move;
       }
+      //if still set idle
+      this.state = (dx == 0 && dy == 0) ? 0 : 1;
+      //set direction
+      if(Math.abs(dx) > Math.abs(dy)) {
+        this.facing = (dx > 0) ? 3 : 1;
+      } else {
+        this.facing = (dy > 0) ? 2 : 0;
+      }
     }
 
     // Sleep Mask (blind): mobs can't chase while active
@@ -1084,27 +877,31 @@ class Spider extends Monster {
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(
-        this.path[0].x + (this.width * this.scale) / 2,
-        this.path[0].y + (this.height * this.scale) / 2,
+        this.path[0].x + (this.width * this.scale) / 2 - this.game.camera.x,
+        this.path[0].y + (this.height * this.scale) / 2 - this.game.camera.y,
       );
       for (let i = 1; i < this.path.length; i++) {
         ctx.lineTo(
-          this.path[i].x + (this.width * this.scale) / 2,
-          this.path[i].y + (this.height * this.scale) / 2,
+          this.path[i].x + (this.width * this.scale) / 2 - this.game.camera.x,
+          this.path[i].y + (this.height * this.scale) / 2 - this.game.camera.y,
         );
       }
       ctx.lineTo(
-        this.path[0].x + (this.width * this.scale) / 2,
-        this.path[0].y + (this.height * this.scale) / 2,
+        this.path[0].x + (this.width * this.scale) / 2 - this.game.camera.x,
+        this.path[0].y + (this.height * this.scale) / 2 - this.game.camera.y,
       );
       ctx.stroke();
     }
 
-    this.animations[0].drawFrame(
+
+    const offsetX = this.width * this.scale / 2;
+    const offsetY = this.height * this.scale / 2;
+
+    this.animations[this.state][this.facing].drawFrame(
       this.game.clockTick,
       ctx,
-      this.x,
-      this.y,
+      this.x - offsetX - this.game.camera.x,
+      this.y - offsetY - this.game.camera.y,
       this.scale,
     );
 
@@ -1137,7 +934,12 @@ class Demon extends Monster {
     this.animations = [];
     this.loadAnimations();
 
-    this.updateBB();
+    this.BB = new BoundingBox(
+      this.x + (this.width * this.scale) / 6,
+      this.y + (this.height * this.scale) / 6,
+      this.width * this.scale * 2 / 3,
+      this.height * this.scale * 2 / 3,
+    );
   }
 
   onCollision(entity) {
@@ -1239,7 +1041,7 @@ class Demon extends Monster {
     const xOffset = (this.width * this.scale - bbWidth) / 2;
     const yOffset = (this.height * this.scale - bbHeight) / 2;
 
-    this.BB = new BoundingBox(
+    this.BB.update(
       this.x + xOffset,
       this.y + yOffset,
       bbWidth,
@@ -1251,8 +1053,8 @@ class Demon extends Monster {
     this.animations[this.state][this.type].drawFrame(
       this.game.clockTick,
       ctx,
-      this.x,
-      this.y,
+      this.x - this.game.camera.x,
+      this.y - this.game.camera.y,
       this.scale,
     );
     super.draw(ctx);
@@ -1509,7 +1311,7 @@ class VenusFlyTrap extends Monster {
     const xOffset = (this.width * this.scale - bbWidth) / 2;
     const yOffset = (this.height * this.scale - bbHeight) / 2;
 
-    this.BB = new BoundingBox(
+    this.BB?.update(
       this.x + xOffset,
       this.y + yOffset,
       bbWidth,
@@ -1521,8 +1323,8 @@ class VenusFlyTrap extends Monster {
     this.animations[this.state][this.type].drawFrame(
       this.game.clockTick,
       ctx,
-      this.x,
-      this.y,
+      this.x - this.game.camera.x,
+      this.y - this.game.camera.y,
       this.scale,
     );
 

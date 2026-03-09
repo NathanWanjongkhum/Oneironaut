@@ -7,10 +7,6 @@ class Entity {
     this.height = 0;
     this.scale = 1;
 
-    // Assets
-    this.spritesheet = null;
-    this.animations = [];
-
     // Physics
     this.velocity = { x: 0, y: 0 };
     this.BB = null;
@@ -22,7 +18,7 @@ class Entity {
 
   draw(ctx) {
     if (PARAMS.DEBUG && this.BB) {
-      this.BB.debugDraw();
+      this.BB.debugDraw(ctx, this.game.camera);
     }
 }
 
@@ -47,12 +43,10 @@ class Entity {
 }
 
 class Bed extends Entity {
-  constructor(game, positionX, postionY) {
-    this.game = game;
+  constructor(game, x, y) {
+    super(game, x, y)
     this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/bed.png");
 
-    this.x = positionX;
-    this.y = postionY;
     this.radius = 100;
     this.scale = 0.5;
     this.BB = null;
@@ -143,7 +137,7 @@ class TeddyDecoy extends Entity {
   updateBB() {
     const w = this.baseW * this.scale;
     const h = this.baseH * this.scale;
-    this.BB.update(this.x - w / 2, this.y - h / 2, w, h);
+    this.BB = new BoundingBox(this.x - w / 2, this.y - h / 2, w, h);
   }
 
   update() {
@@ -240,7 +234,7 @@ class Spikes extends Entity {
     const xOffset = (this.width * this.scale - bbWidth) / 2;
     const yOffset = this.height * this.scale - bbHeight;
 
-    this.BB.update(this.x + xOffset, this.y + yOffset, bbWidth, bbHeight);
+    this.BB = new BoundingBox(this.x + xOffset, this.y + yOffset, bbWidth, bbHeight);
   }
 
   draw(ctx) {
@@ -295,7 +289,7 @@ class StickyBush extends Entity {
   updateBB() {
     const padding = 10;
 
-    this.BB.update(this.x + padding, this.y + padding,
+    this.BB = new BoundingBox(this.x + padding, this.y + padding,
       this.width * this.scale - padding * 2, this.height * this.scale - padding * 2);
   }
 
