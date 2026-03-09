@@ -1008,6 +1008,23 @@ class GameEngine {
         this.ctx.fill();
       }
 
+      if (this.mouse && itemSelected && itemSelected.img) {
+        const bubbleOpen = !!(this.dreamBubble && this.dreamBubble.isOpen);
+        const isSword = itemSelected.id === "Sword";
+        const isBrush = itemSelected.id === "ToothBrush";
+        
+        if (!bubbleOpen && !isSword && !isBrush) {
+          const scale = 0.1;
+          const w = itemSelected.img.width * scale;
+          const h = itemSelected.img.height * scale;
+          
+          this.ctx.save();
+          this.ctx.globalAlpha = 0.6;
+          this.ctx.drawImage(itemSelected.img, this.mouse.x - w / 2, this.mouse.y - h / 2, w, h);
+          this.ctx.restore();
+        }
+      }
+
       if (this.dreamBubble) this.dreamBubble.draw(this.ctx);
 
       // ===== Sword cursor + swing =====
