@@ -99,7 +99,7 @@ class GameEngine {
 
     // ===== Sleep Mask passive =====
     this.sleepMaskTimer = 0;       // seconds remaining
-    this.sleepMaskDuration = 5.0;  // seconds
+    this.sleepMaskDuration = 1.5;  // seconds
 
     // ===== Strange Lamp passive =====
     // While > 0: SleepyGuy is invulnerable + drawn semi-transparent
