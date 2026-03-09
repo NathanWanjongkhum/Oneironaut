@@ -2,7 +2,7 @@ class Background {
     constructor(game) {
         this.game = game;
 
-        this.level = this.game.currentLevel % 4;
+        this.level = (this.game.currentLevel + 3) % 4;
         this.theme = (this.game.menuRoomController?.theme === "day")? 0 : 1;
         
         this.layers = []; //[version][day/night]
@@ -11,7 +11,7 @@ class Background {
     }
 
     update() {
-        this.level = this.game.currentLevel % 4;
+        this.level = (this.game.currentLevel + 3) % 4;
         this.theme = (this.game.menuRoomController.theme === "day")? 0 : 1;
     }
 
