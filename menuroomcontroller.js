@@ -55,6 +55,10 @@ class MenuRoomController {
 			{ id: 2, name: "Level 2", unlocked: false },
 			{ id: 3, name: "Level 3", unlocked: false },
 			{ id: 4, name: "Level 4", unlocked: false },
+			{ id: 5, name: "Level 5", unlocked: false },
+			{ id: 6, name: "Level 6", unlocked: false },
+			{ id: 7, name: "Level 7", unlocked: false },
+			{ id: 8, name: "Level 8", unlocked: false },
 		];
 
 		this.selectedLevel = null;
@@ -78,9 +82,9 @@ class MenuRoomController {
 				portalCard: ASSET_MANAGER.getAsset("./assets/background/selectLevel/DayDreamPortal.png"),
 				levels: [
 					{ id: 1, name: "Level 1", unlocked: true },
-					{ id: 2, name: "Level 2", unlocked: true },
-					{ id: 3, name: "Level 3", unlocked: true },
-					{ id: 4, name: "Level 4", unlocked: true },
+					{ id: 2, name: "Level 2", unlocked: false },
+					{ id: 3, name: "Level 3", unlocked: false },
+					{ id: 4, name: "Level 4", unlocked: false },
 				]
 			},
 		lucidsunset: {
@@ -305,6 +309,12 @@ class MenuRoomController {
 			for (let i = 0; i < this.levels.length; i++) {
 				if(i <= this.game.highestLevel) {
 					this.levels[i].unlocked = true;
+
+					if(i < this.worldThemes?.daydream.levels?.length) { //Temp fix to fix merge bug - need to update locked level image on select level menu
+						this.worldThemes.daydream.levels[i].unlocked = true;
+					} //TODO - get rid of this extra layer of abstraction.
+					// Very, very bad practice. Use level numbers directly and map ranges to themes
+
 				} else {
 					break;
 				}
@@ -319,7 +329,8 @@ class MenuRoomController {
 
 			const gap = Math.max(22, cw * 0.018);
 
-			const rows = Math.ceil(this.levels.length / cols);
+			const rows = Math.ceil(Math.min(this.levels.length, 4) / cols); //fix for merge conflict bug
+			//const rows = Math.ceil(this.levels.length / cols);
 			//const rows = Math.ceil(activeLevels.length / cols);
 
 			const availW = cw * 0.78; 
@@ -346,7 +357,13 @@ class MenuRoomController {
 			const startY = topSafe + (availH - gridH) / 2;
 
 			this.levelRects = [];
-			for (let i = 0; i < this.levels.length; i++) {
+
+			//Temp fix to fix merge bug - need to update locked level image on select level menu
+			const levelMaxCount = Math.min(this.levels.length, this.worldThemes.daydream.levels.length);
+			//TODO: REALLY bad practice. Delete worldthemes layer of abstraction, handle mapping to themes directly with level count
+
+			for (let i = 0; i < levelMaxCount; i++) {
+			// for (let i = 0; i < this.levels.length; i++) {//
 				const row = Math.floor(i / cols);
 				const col = i % cols;
 
