@@ -13,24 +13,45 @@ class WaypointBuilder {
     // this.gradient.addColorStop("1.0", "#f591cf");
   }
 
-  draw(ctx) {
+draw(ctx) {
+    if (this.waypoints.length === 0) return;
     if (this.game.inLevel === false) return;
 
     const camX = this.game.camera?.x ?? 0;
     const camY = this.game.camera?.y ?? 0;
+    ctx.save();
+
+    ctx.shadowColor = "rgba(0, 0, 0, 0.7)"; 
+    ctx.shadowBlur = 2;                     
+    ctx.shadowOffsetX = 2;                 
+    ctx.shadowOffsetY = 2;                  
 
     ctx.save();
     // Render nodes in the same world space as entities, then offset by camera.
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.translate(-camX, -camY);
+    // Draw waypoints
+    ctx.fillStyle = "white";
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 2;
+    for (let point of this.waypoints) {
+      ctx.beginPath();
+      ctx.moveTo(point.x, point.y);
+      ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 8, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    
 
+    
+    
     // Draw lines between waypoints (world coordinates).
     if (this.waypoints.length > 1) {
       ctx.strokeStyle = this.lineColor;
-      //ctx.strokeStyle = "blue";
       ctx.lineWidth = 2;
-      ctx.beginPath();
-      for (let i = 0; i < this.waypoints.length - 1; i++) {
+    for (let i = 0; i < this.waypoints.length - 1; i++) {
         const from = this.waypoints[i];
         const to = this.waypoints[i + 1];
         ctx.moveTo(from.x, from.y);
@@ -48,8 +69,8 @@ class WaypointBuilder {
         ctx.fill();
       }
     }
-
-    ctx.restore();
+    
+    ctx.stroke();
 
     // Draw current mouse position as a waypoint preview (screen coordinates).
     if (this.game.mouse) {

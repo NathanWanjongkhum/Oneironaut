@@ -71,10 +71,10 @@ class GameEngine {
     // ===== DreamCatcher passive =====
     this.dreamCatcherActive = false;
     this.dreamCatcherTimer = 0;
-    this.dreamCatcherDuration = 5.0;
+    this.dreamCatcherDuration = 0.75;
     this.dreamCatcherRadius = 85;
     this.dreamCatcherMinRadius = 30;
-    this.dreamCatcherMaxRadius = 210;
+    this.dreamCatcherMaxRadius = 180;
     this.dreamCatcherRadiusStep = 10;
     this.prevLBracket = false;
     this.prevRBracket = false;
@@ -87,7 +87,7 @@ class GameEngine {
 
     // ===== Sleep Mask passive =====
     this.sleepMaskTimer = 0;       // seconds remaining
-    this.sleepMaskDuration = 5.0;  // seconds
+    this.sleepMaskDuration = 1.5;  // seconds
 
     // ===== Strange Lamp passive =====
     // While > 0: SleepyGuy is invulnerable + drawn semi-transparent
@@ -265,7 +265,7 @@ class GameEngine {
     this.dreamCatcherTimer = 0;
 
     this.pajamaArmorActive = false;
-    
+
     // reset bubble state too
     this.prevB = false;
     if (this.dreamBubble) this.dreamBubble.close(true);
@@ -1352,5 +1352,4 @@ class GameEngine {
       }
     }
   }
-
 }

@@ -64,7 +64,54 @@ class MenuRoomController {
 		this.levelPanelRect = { x: 0, y: 0, w: 0, h: 0 };
 		this.levelBackRect = { x: 0, y: 0, w: 150, h: 46 };
 		this.levelSelectRect = { x: 0, y: 0, w: 0, h: 0 };
+
+		this.currentWorld = "daydream";
+		this.worldOrder = ["daydream", "lucidsunset", "nightfall"];
+
+		//TODO: level numbers should be interacted with directly rather than adding an additional layer of mapping!
+		// section themes do not need to specify level contents beyond a number range which is faster, more readable, and all around better suited.
+		// We do not need more code, we need clean code.
+		this.worldThemes = {
+			daydream: {
+				title: "DayDream Levels",
+				roomBg: ASSET_MANAGER.getAsset("./assets/background/selectLevel/DayDream_Hall.png"),
+				portalCard: ASSET_MANAGER.getAsset("./assets/background/selectLevel/DayDreamPortal.png"),
+				levels: [
+					{ id: 1, name: "Level 1", unlocked: true },
+					{ id: 2, name: "Level 2", unlocked: true },
+					{ id: 3, name: "Level 3", unlocked: true },
+					{ id: 4, name: "Level 4", unlocked: true },
+				]
+			},
+		lucidsunset: {
+    		title: "LucidSunset Levels",
+			roomBg: ASSET_MANAGER.getAsset("./assets/background/selectLevel/SunsetHall.png"),
+			portalCard: ASSET_MANAGER.getAsset("./assets/background/selectLevel/SunsetPortal.png"),
+			levels: [
+				{ id: 5, name: "Level 1", unlocked: true },
+				{ id: 6, name: "Level 2", unlocked: false },
+				{ id: 7, name: "Level 3", unlocked: false },
+				{ id: 8, name: "Level 4", unlocked: false },
+			]
+	},
+		nightfall: {
+			title: "NightFall Levels",
+			roomBg: ASSET_MANAGER.getAsset("./assets/background/selectLevel/NightFallHall.png"),
+			portalCard: ASSET_MANAGER.getAsset("./assets/background/selectLevel/NightFall_Portal.png"),
+			levels: [
+				{ id: 9, name: "Level 1", unlocked: false },
+				{ id: 10, name: "Level 2", unlocked: false },
+				{ id: 11, name: "Level 3", unlocked: false },
+				{ id: 12, name: "Level 4", unlocked: false },
+			]	
+	}
+	};
+
+		this.worldNextRect = { x: 0, y: 0, w: 140, h: 52 };//
+		this.worldPrevRect = { x: 0, y: 0, w: 140, h: 52 };//
 		
+
+
 		this.portalUnlocked =
 			ASSET_MANAGER.getAsset("./assets/background/selectLevel/unlockedLevel.png");
 
@@ -78,6 +125,11 @@ class MenuRoomController {
 
 		const cw = this.game.ctx.canvas.width;
 		const ch = this.game.ctx.canvas.height;
+
+		// const activeTheme = this.getActiveWorldTheme(); //TODO change this to send back a range.
+			// There is no reason to add an extra layer of string mappings when levels already exist as a clear num map
+			// Handle the numbers directly instead of adding in heavier and unnecessary mappings.
+		// const activeLevels = activeTheme.levels;
 
 		const pad = 18;
 
@@ -268,6 +320,7 @@ class MenuRoomController {
 			const gap = Math.max(22, cw * 0.018);
 
 			const rows = Math.ceil(this.levels.length / cols);
+			//const rows = Math.ceil(activeLevels.length / cols);
 
 			const availW = cw * 0.78; 
 			const availH = ch - topSafe - bottomSafe;
@@ -305,6 +358,21 @@ class MenuRoomController {
 					h: cardH,
 				});
 			}
+
+			this.worldPrevRect = {
+				x: cw * 0.20 - 70,
+				y: ch - 85,
+				w: 140,
+				h: 52
+			};
+
+			this.worldNextRect = {
+				x: cw * 0.80 - 70,
+				y: ch - 85,
+				w: 140,
+				h: 52
+			};
+
 		}
 	}
 
@@ -339,6 +407,8 @@ class MenuRoomController {
 			this.drawMenuButton(ctx, this.levelSelectRect, "Select Level");
 
 		} else if (this.scene === "levelSelect") {
+			const activeTheme = this.getActiveWorldTheme();
+    		const activeLevels = activeTheme.levels;
 			this.drawMenuButton(ctx, this.levelBackRect, "← Room");
 
 			const titleY = ch * 0.17;
@@ -349,11 +419,11 @@ class MenuRoomController {
 			ctx.textBaseline = "top";
 			ctx.shadowColor = "rgba(0,0,0,0.65)";
 			ctx.shadowBlur = 14;
-			ctx.fillText("Select Level", cw / 2, titleY);
+			ctx.fillText(activeTheme.title, cw / 2, titleY);
 			ctx.restore();
 
 			for (const r of this.levelRects) {
-				const L = this.levels[r.levelIndex];
+				const L = activeLevels[r.levelIndex];
 
 				const hover =
 					this.game.mouse && pointInRect(this.game.mouse.x, this.game.mouse.y, r);
@@ -362,7 +432,7 @@ class MenuRoomController {
 				this.drawGlassCard(ctx, r, { hover, locked: !L.unlocked });
 
 				// 2) portal image clipped inside rounded card
-				const portalImg = L.unlocked ? this.portalUnlocked : this.portalLocked;
+				const portalImg = L.unlocked ? activeTheme.portalCard : this.portalLocked;
 				this.drawImageClipped(ctx, portalImg, r, 16);
 
 				// 3) number badge / lock badge
@@ -383,7 +453,7 @@ class MenuRoomController {
 				ctx.font = `700 ${Math.floor(badgeR * 1.05)}px serif`;
 				ctx.textAlign = "center";
 				ctx.textBaseline = "middle";
-				ctx.fillText(L.unlocked ? String(L.id) : "🔒", bx, by + 1);
+				ctx.fillText(L.unlocked ? String(r.levelIndex + 1) : "🔒", bx, by + 1);
 				ctx.restore();
 
 				// 4) locked overlay
@@ -396,6 +466,10 @@ class MenuRoomController {
 					ctx.restore();
 				}
 			}
+				this.drawMenuButton(ctx, this.worldPrevRect, "← Prev World");
+    			this.drawMenuButton(ctx, this.worldNextRect, "Next World →");
+
+			
 		} else if (this.scene === "dream") {
 			this.drawMenuButton(ctx, this.backRect, "← Room");
 		}
@@ -423,6 +497,26 @@ class MenuRoomController {
 			if (this.showOptions) this.inOptionsMenu(x, y);
 			return;
 		}
+
+
+		// // Click a level
+		// 	for (const r of this.levelRects) {
+		// 		if (this.pointInRect(x, y, r)) {
+		// 			const L = activeLevels[r.levelIndex];
+
+		// 			if (!L.unlocked) {
+		// 				alert("Coming soon");
+		// 				return;
+		// 			}
+
+		// 			this.selectedLevel = L.id;
+		// 			this.game.currentWorld = this.currentWorld;
+
+		// 			if (this.game.startLevel) {
+		// 				this.game.startLevel(this.selectedLevel, this.currentWorld);
+		// 			} else {
+		// 				this.game.mode = "gameplay";
+		// 			}
 
 		// Priority menus
 		if (this.showOptions || this.showCredits || this.showHelp) {
@@ -578,7 +672,7 @@ class MenuRoomController {
 		}
 	}
 
-	transitionTo(sceneKey) {
+    transitionTo(sceneKey) {
 		if (this.transitioning) return;
 
 		this.showHelp = false;
@@ -668,7 +762,7 @@ class MenuRoomController {
 		}
 
 		if (this.scene === "levelSelect") {
-			return ASSET_MANAGER.getAsset("./assets/background/selectLevel/LevelSelectCorridor.png");
+    		return this.getActiveWorldTheme().roomBg;
 		}
 
 		return ASSET_MANAGER.getAsset("./assets/background/menu/newDream.png");
@@ -944,6 +1038,10 @@ class MenuRoomController {
 		ctx.stroke();
 		ctx.restore();
 	}
+
+	getActiveWorldTheme() {
+    return this.worldThemes[this.currentWorld];
+}
 
 	drawWrappedTextCentered(ctx, text, x, y, w, h, fontSize = 20) {
 		ctx.save();
