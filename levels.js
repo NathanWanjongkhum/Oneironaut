@@ -37,7 +37,6 @@ class Levels {
     }
 
     static level1(engine) {
-        engine.addEntity(new SleepyGuy(engine, 70, 150));
         engine.addEntity(new Bed(engine, 980, 250));
         engine.addEntity(new PickupItem(engine, 92, 60, "Pajama"));
         engine.addEntity(new PickupItem(engine, 170, 350, "Sword")); 
@@ -62,11 +61,10 @@ class Levels {
             { x: 400, y: 10 },
         ];
         engine.addEntity(new Spider(engine, spiderPath));
+        engine.addEntity(new SleepyGuy(engine, 70, 150));
     }
 
     static level2(engine) {
-
-        engine.addEntity(new SleepyGuy(engine, 160, 460));
         engine.addEntity(new Bed(engine, 1030, 420));
         engine.addEntity(new PickupItem(engine, 50, 140, "SandBag3"));
         engine.addEntity(new PickupItem(engine, 723, 680, "TeddyBear"));
@@ -103,11 +101,11 @@ class Levels {
         const postCol = 24;
         builder.spawnColumn(postCol, 18, 22);
 
-        engine.addEntity(new Ghost(engine, 1080, 180)); 
+        engine.addEntity(new Ghost(engine, 1080, 180));
+        engine.addEntity(new SleepyGuy(engine, 160, 460));
     }
 
     static level3(engine) {
-        engine.addEntity(new SleepyGuy(engine, 130, 80));
         engine.addEntity(new Bed(engine, 1030, 200));
         engine.addEntity(new PickupItem(engine, 170, 500, "Sword")); 
         engine.addEntity(new PickupItem(engine, 600, 350, "SandBag3"));
@@ -159,11 +157,10 @@ class Levels {
         ];
 
         engine.addEntity(new Spider(engine, spiderPath));
+        engine.addEntity(new SleepyGuy(engine, 130, 80));
     };
 
     static level4(engine) {
-
-        engine.addEntity(new SleepyGuy(engine, 130, 80));
         engine.addEntity(new Bed(engine, 1030, 30));
         engine.addEntity(new PickupItem(engine, 130, 15, "Pajama"));
         engine.addEntity(new PickupItem(engine, 130, 320, "Sword"));
@@ -225,14 +222,13 @@ class Levels {
         engine.addEntity(new Ghost(engine, gx(18), gy(4)));
         engine.addEntity(new VenusFlyTrap(engine, gx(24), gy(12)));
         engine.addEntity(new Demon(engine, gx(27), gy(7)));
+        engine.addEntity(new SleepyGuy(engine, 130, 80));
     }
 
     static level5(engine) {
         const BW = PARAMS.BLOCKWIDTH;
         const gx = (c) => c * BW;
         const gy = (r) => r * BW;
-
-        engine.addEntity(new SleepyGuy(engine, gx(4), gy(15)));
         engine.addEntity(new Bed(engine, gx(30), gy(3)));
 
         engine.addEntity(new PickupItem(engine, gx(6), gy(5), "Sword"));
@@ -264,12 +260,17 @@ class Levels {
             { x: gx(35), y: gy(12) }
         ];
         engine.addEntity(new Spider(engine, spiderPath));
+        engine.addEntity(new SleepyGuy(engine, gx(4), gy(15)));
     }
   
     static level6(engine) {
         //TODO - build this level
+         engine.addEntity(new Bed(engine, 1030, 30));
+        engine.addEntity(new SleepyGuy(engine, 130, 80));
     }
     static level7(engine) {
         //TODO - build this level
+         engine.addEntity(new Bed(engine, 1030, 30));
+        engine.addEntity(new SleepyGuy(engine, 130, 80));
     }
 }
