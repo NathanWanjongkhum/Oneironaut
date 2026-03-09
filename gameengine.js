@@ -474,6 +474,7 @@ class GameEngine {
   loadNextLevel() {
     //this.highestLevel = Math.max(this.highestLevel, this.currentLevel);
     this.currentLevel++;
+    this.bg.update();
     this.resetWorld("gameplay");
   }
 
