@@ -35,7 +35,7 @@ class EndGame {
             this.game.restartToGameplay();  
             return;
         }
-        if (this.playNext && pointInRect(click.x, click.y, this.playNext)) {
+        if (this.game.gameWon && this.playNext && pointInRect(click.x, click.y, this.playNext)) {
             this.game.loadNextLevel();
             return;
         }
@@ -48,6 +48,11 @@ class EndGame {
 
     draw(ctx) {
         if (!this.game.gameOver) return;
+
+        // Reset button hitboxes each frame to avoid stale state across win/lose screens.
+        this.playAgain = null;
+        this.playNext = null;
+        this.quitMenu = null;
 
         // Draw win/lose image
         if (this.game.gameWon) {
@@ -94,4 +99,3 @@ class EndGame {
         ctx.restore();
     }
 }
-
