@@ -83,10 +83,10 @@ class GameEngine {
     // ===== DreamCatcher passive =====
     this.dreamCatcherActive = false;
     this.dreamCatcherTimer = 0;
-    this.dreamCatcherDuration = 5.0;
+    this.dreamCatcherDuration = 0.75;
     this.dreamCatcherRadius = 85;
     this.dreamCatcherMinRadius = 30;
-    this.dreamCatcherMaxRadius = 210;
+    this.dreamCatcherMaxRadius = 180;
     this.dreamCatcherRadiusStep = 10;
     this.prevLBracket = false;
     this.prevRBracket = false;
