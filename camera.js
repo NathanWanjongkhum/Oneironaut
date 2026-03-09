@@ -41,10 +41,9 @@ class Camera {
         let screenW = this.game.ctx.canvas.width;
         let screenH = this.game.ctx.canvas.height;
 
-        // Keep a wide horizontal dead-zone and a larger vertical dead-zone
-        // so vertical camera movement stays minimal.
-        this.marginX = Math.max(150, Math.min(320, screenW * 0.22));
-        this.marginY = Math.max(60, Math.min(120, screenH * 0.14));
+        // Larger margins => smaller inner movement window before camera scroll.
+        this.marginX = Math.min(Math.max(220, screenW * 0.35), screenW * 0.45);
+        this.marginY = Math.min(Math.max(100, screenH * 0.30), screenH * 0.45);
 
         let playerScreenX = this.player.x - this.x;
         let playerScreenY = this.player.y - this.y;
