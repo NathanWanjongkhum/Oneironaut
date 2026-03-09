@@ -76,6 +76,16 @@ class PickupItem {
 
                 const item = { id: this.id, img: this.sprite };
 
+                // Sword gets 5 hits total
+                if (this.id === "Sword") {
+                    item.count = 5;
+                }
+
+                // ToothBrsuh gets spike removals
+                if (this.id === "ToothBrush") {
+                    item.count = 5;
+                }
+
                 // Sandbags carry charges (SandBag3 -> 3 uses)
                 if (this.id && this.id.startsWith("SandBag")) {
                     const n = parseInt(this.id.replace("SandBag", ""), 10);

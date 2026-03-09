@@ -2,6 +2,8 @@ class Monster extends Entity {
   constructor(game, _x, _y) {
     super(game, _x, _y);
 
+    this.zzzPhase = Math.random() * Math.PI * 2;
+
     // The radius within which the monster will actively chase the player
     this.leashRadius = 0;
     // Extends range monsters will chase player even if not directly in range
@@ -22,6 +24,7 @@ class Monster extends Entity {
 
     // ===== Sleep Dust effect =====
     this.sleepTimer = 0; // seconds remaining
+    this.zzzImg = ASSET_MANAGER.getAsset("./assets/entities/ZZZ.png");
 
   }
 
@@ -65,7 +68,7 @@ class Monster extends Entity {
   /**
  * Puts this monster to sleep for duration seconds (extends if already sleeping).
  */
-  applySleep(duration = 3.0) {
+  applySleep(duration = 10.0) {
     if (this.dead) return false;
     this.sleepTimer = Math.max(this.sleepTimer, duration);
     return true;
@@ -122,83 +125,108 @@ class Monster extends Entity {
       }
     }
 
-    super.draw(ctx);
-  }
-  
-  /**
-   * Get a normalized vector {x, y} pointing toward the target (SleepyGuy or Teddy).
-   * SleepMask: mobs are blinded -> return {0,0} and clear aggro.
-   */
-  getVectorToPlayer() {
-    // ===== SleepMask: blinded mobs don't chase =====
-    if (this.game?.sleepMaskTimer > 0) {
-      this.aggroTimer = 0;
-      return { x: 0, y: 0 };
-    }
+    // ===== Draw ZZZ on sleeping enemies (floating) =====
+    if (this.sleepTimer > 0) {
+      // Lazy-load just in case the asset wasn't ready at construction time
+      if (!this.zzzImg) this.zzzImg = ASSET_MANAGER.getAsset("./assets/entities/ZZZ.png");
 
-    // Prefer Teddy target if your GameEngine supports it (safe fallback to SleepyGuy)
-    const target =
-      this.game?.getLureTargetFor ? this.game.getLureTargetFor(this) : this.game.sleepyGuy;
+      if (this.zzzImg) {
+        const enemyW = this.width * this.scale;
+        const enemyH = this.height * this.scale;
 
-    if (!target || target.dead || target.removeFromWorld) return { x: 0, y: 0 };
+        const zH = Math.max(18, enemyH * 0.28);
+        const zW = zH * (this.zzzImg.width / this.zzzImg.height);
 
-    const center = {
-      x: this.x + (this.width * this.scale) / 2,
-      y: this.y + (this.height * this.scale) / 2,
-    };
+        const zX = this.x + enemyW - zW * 1.20;
 
-    const targetPos = { x: target.x, y: target.y };
-    return getNormalVector(targetPos, center);
-  }
+        const baseY = this.y - zH * 0.15;
 
-  handleBlockPhysics(entity) {
-    const thisBB = this.BB;
-    const blockBB = entity.BB;
+        // gentle bob
+        const now = (typeof performance !== "undefined" ? performance.now() : Date.now());
+        const bob = Math.sin(now * 0.006 + this.zzzPhase) * 4;
 
-    const overlapX = thisBB.right > blockBB.left && thisBB.left < blockBB.right;
-    const overlapY = thisBB.bottom > blockBB.top && thisBB.top < blockBB.bottom;
-
-    if (overlapX && overlapY) {
-      // Calculate penetration depths from all 4 sides
-      const penLeft = thisBB.right - blockBB.left;
-      const penRight = blockBB.right - thisBB.left;
-      const penTop = thisBB.bottom - blockBB.top;
-      const penBottom = blockBB.bottom - thisBB.top;
-
-      // Find the smallest penetration on each axis
-      const diffX = Math.min(penLeft, penRight);
-      const diffY = Math.min(penTop, penBottom);
-
-      if (diffY < diffX) {
-        // Vertical Collision
-        if (penTop < penBottom) {
-          // Standing on top of block
-          this.y -= penTop;
-          this.velocity.y = 0;
-          this.onGround = true;
-        } else {
-          // Hitting head on ceiling
-          this.y += penBottom;
-          this.velocity.y = 0;
-        }
-      } else {
-        // Horizontal Collision
-        if (penLeft < penRight) {
-          // Hit left side of block
-          this.x -= penLeft;
-          this.velocity.x = 0;
-        } else {
-          // Hit right side of block
-          this.x += penRight;
-          this.velocity.x = 0;
-        }
+        ctx.save();
+        ctx.globalAlpha = 0.95;
+        ctx.drawImage(this.zzzImg, zX, baseY + bob, zW, zH);
+        ctx.restore();
       }
     }
-
-    // Update BB after snapping position
-    this.updateBB();
   }
-}
+
+    /**
+     * Get a normalized vector {x, y} pointing toward the target (SleepyGuy or Teddy).
+     * SleepMask: mobs are blinded -> return {0,0} and clear aggro.
+     */
+    getVectorToPlayer() {
+      // ===== SleepMask: blinded mobs don't chase =====
+      if (this.game?.sleepMaskTimer > 0) {
+        this.aggroTimer = 0;
+        return { x: 0, y: 0 };
+      }
+
+      // Prefer Teddy target if your GameEngine supports it (safe fallback to SleepyGuy)
+      const target =
+        this.game?.getLureTargetFor ? this.game.getLureTargetFor(this) : this.game.sleepyGuy;
+
+      if (!target || target.dead || target.removeFromWorld) return { x: 0, y: 0 };
+
+      const center = {
+        x: this.x + (this.width * this.scale) / 2,
+        y: this.y + (this.height * this.scale) / 2,
+      };
+
+      const targetPos = { x: target.x, y: target.y };
+      return getNormalVector(targetPos, center);
+    }
+
+    handleBlockPhysics(entity) {
+      const thisBB = this.BB;
+      const blockBB = entity.BB;
+
+      const overlapX = thisBB.right > blockBB.left && thisBB.left < blockBB.right;
+      const overlapY = thisBB.bottom > blockBB.top && thisBB.top < blockBB.bottom;
+
+      if (overlapX && overlapY) {
+        // Calculate penetration depths from all 4 sides
+        const penLeft = thisBB.right - blockBB.left;
+        const penRight = blockBB.right - thisBB.left;
+        const penTop = thisBB.bottom - blockBB.top;
+        const penBottom = blockBB.bottom - thisBB.top;
+
+        // Find the smallest penetration on each axis
+        const diffX = Math.min(penLeft, penRight);
+        const diffY = Math.min(penTop, penBottom);
+
+        if (diffY < diffX) {
+          // Vertical Collision
+          if (penTop < penBottom) {
+            // Standing on top of block
+            this.y -= penTop;
+            this.velocity.y = 0;
+            this.onGround = true;
+          } else {
+            // Hitting head on ceiling
+            this.y += penBottom;
+            this.velocity.y = 0;
+          }
+        } else {
+          // Horizontal Collision
+          if (penLeft < penRight) {
+            // Hit left side of block
+            this.x -= penLeft;
+            this.velocity.x = 0;
+          } else {
+            // Hit right side of block
+            this.x += penRight;
+            this.velocity.x = 0;
+          }
+        }
+      }
+
+      // Update BB after snapping position
+      this.updateBB();
+    }
+  }
 
 class Ghost extends Monster {
   constructor(game, x, y) {
