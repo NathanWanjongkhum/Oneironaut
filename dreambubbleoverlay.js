@@ -101,8 +101,8 @@ class DreamBubbleOverlay {
         // Use SleepyGuy center if BB exists
         const sgW = sg.BB ? sg.BB.width : 60;
         const sgH = sg.BB ? sg.BB.height : 60;
-        const sgCx = sg.BB ? sg.BB.x + sgW / 2 : sg.x;
-        const sgCy = sg.BB ? sg.BB.y + sgH / 2 : sg.y;
+        const sgCx = (sg.BB ? sg.BB.x + sgW / 2 : sg.x)  - this.game.camera.x;
+        const sgCy = (sg.BB ? sg.BB.y + sgH / 2 : sg.y)  - this.game.camera.y;
 
         // UP-LEFT offsets (tweak if you want)
         const offsetX = 30; // left
@@ -124,7 +124,7 @@ class DreamBubbleOverlay {
         // Consume clicks inside the bubble so it doesn't place waypoints, etc.
         if (this.game.click) {
             const { x: cx, y: cy } = this.game.click;
-            if (this.pointInRect(cx, cy, this.bubbleRect)) {
+            if (pointInRect(cx, cy, this.bubbleRect)) {
                 this.game.click = null;
             }
         }
@@ -133,14 +133,13 @@ class DreamBubbleOverlay {
     draw(ctx) {
         if (!this.isOpen || this.game.gameOver) return;
 
-        const r = this.bubbleRect;
-
         // Draw bubble sprite
         if (this.bubbleImg) {
             ctx.save();
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = "high";
-            ctx.drawImage(this.bubbleImg, r.x, r.y, r.w, r.h);
+            ctx.drawImage(this.bubbleImg, this.bubbleRect.x,
+                this.bubbleRect.y, this.bubbleRect.w, this.bubbleRect.h);
             ctx.restore();
         } else {
             // fallback if image missing
@@ -149,7 +148,9 @@ class DreamBubbleOverlay {
             ctx.strokeStyle = "rgba(255,255,255,0.6)";
             ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.arc(r.x + r.w / 2, r.y + r.h / 2, r.w / 2, 0, Math.PI * 2);
+            ctx.arc(this.bubbleRect.x + this.bubbleRect.w / 2,
+                this.bubbleRect.y + this.bubbleRect.h / 2,
+                this.bubbleRect.w / 2, 0, Math.PI * 2);
             ctx.fill();
             ctx.stroke();
             ctx.restore();
@@ -162,12 +163,12 @@ class DreamBubbleOverlay {
             const iw = img.width;
             const ih = img.height;
 
-            const cx = r.x + r.w / 2;
-            const cy = r.y + r.h / 2;
+            const cx = this.bubbleRect.x + this.bubbleRect.w / 2;
+            const cy = this.bubbleRect.y + this.bubbleRect.h / 2;
 
             // Max icon size relative to bubble (keeps consistent)
-            const maxW = r.w * 0.42;
-            const maxH = r.h * 0.42;
+            const maxW = this.bubbleRect.w * 0.42;
+            const maxH = this.bubbleRect.h * 0.42;
 
             const scale = this.iconScale * Math.min(maxW / iw, maxH / ih);
             const dw = iw * scale;
@@ -185,9 +186,5 @@ class DreamBubbleOverlay {
             );
             ctx.restore();
         }
-    }
-
-    pointInRect(px, py, r) {
-        return px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h;
     }
 }
