@@ -45,21 +45,24 @@ class Entity {
 class Bed extends Entity {
   constructor(game, x, y) {
     super(game, x, y)
-    this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/bed.png");
+    this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/bed2.png");
 
     this.radius = 100;
-    this.scale = 0.5;
+    this.scale = 0.3;
     this.BB = null;
 
     this.animations = [];
     this.loadAnimations();
-    this.BB = new BoundingBox(this.x, this.y,
-        540 * this.scale, 460 * this.scale);//540 = sprite pixel width
+    this.BB = new BoundingBox(this.x + (900 * this.scale)/2 - 250*this.scale, this.y + (400 * this.scale)/2,
+        500 * this.scale, 400 * this.scale);
   };
+  updateBB() {
+    this.BB.update(this.x + (900 * this.scale)/2 - 250*this.scale, this.y + (400 * this.scale)/2, 500 * this.scale, 400 * this.scale);
+  }
   loadAnimations() {
     this.animations.push([]);
     //spritesheet, xStart, yStart, width, height, frameCount, frameDuration, framePadding, reverse, loop
-    this.animations[0] = new Animator(this.spritesheet, 0, 0, 540, 460, 1, 1, 0, 0, 1); //bed
+    this.animations[0] = new Animator(this.spritesheet, 0, 0, 900, 700, 1, 1, 0, 0, 1); //bed
   }
   collide(other) {
     return getDistance(this, other) < this.radius + other.radius;
