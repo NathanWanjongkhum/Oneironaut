@@ -8,15 +8,15 @@ class EndGame {
         this.scale = 0.7;
         this.x = (PARAMS.CANVAS_WIDTH / 2) - (this.w * this.scale) / 2;
         this.y = (PARAMS.CANVAS_HEIGHT / 2) - (this.h * this.scale) / 2;
-        this.playRect = null;
-        this.quitRect = null;
+        this.playAgain = null;
+        this.playNext = null;
+        this.quitMenu = null;
 
         this.animations = [];
         this.loadAnimations();
     };
 
     loadAnimations() {
-
         //spritesheet, xStart, yStart, width, height, frameCount, frameDuration, framePadding, reverse, loop
         this.animations[0] = new Animator(this.spritesheet, 0, 0, 900, 520, 1, 1, 0, 0, 1); //win
         this.animations[1] = new Animator(this.spritesheet, 0, 560, 900, 520, 1, 1, 0, 0, 1); //lose
@@ -27,22 +27,24 @@ class EndGame {
 
         const click = this.game.click;
         if (!click) return;
+        if (this.game.gameWon) this.game.updateHighest();
 
         this.game.click = null; // consume click
 
-        if (this.playRect && this.pointInRect(click, this.playRect)) {
+        if (this.playAgain && pointInRect(click.x, click.y, this.playAgain)) {
             this.game.restartToGameplay();  
             return;
         }
-
-        if (this.quitRect && this.pointInRect(click, this.quitRect)) {
+        if (this.playNext && pointInRect(click.x, click.y, this.playNext)) {
+            this.game.loadNextLevel();
+            return;
+        }
+        if (this.quitMenu && pointInRect(click.x, click.y, this.quitMenu)) {
             this.game.restartToMenu();   
             return;
         }
 
     }
-
-
 
     draw(ctx) {
         if (!this.game.gameOver) return;
@@ -59,17 +61,24 @@ class EndGame {
         const ch = ctx.canvas.height;
 
         const btnW = 260;
-        const btnH = 56;
-        const gap = 16;
+        const btnH = 50;
+        const gap = 12;
 
         const x = cw / 2 - btnW / 2;
-        const y0 = this.y + this.h * this.scale + 20;
+        const y0 = this.y + this.h * this.scale - 30;
+        const y1 = y0 + btnH + gap;
+        const y2 = y0 + 2 * (btnH + gap);
 
-        this.playRect = { x, y: y0, w: btnW, h: btnH };
-        this.quitRect = { x, y: y0 + btnH + gap, w: btnW, h: btnH };
-
-        this.drawButton(ctx, this.playRect, "Play Again");
-        this.drawButton(ctx, this.quitRect, "Quit to Menu");
+        this.playAgain = { x, y: y0, w: btnW, h: btnH };
+        this.drawButton(ctx, this.playAgain, "Play Again");
+        if(this.game.gameWon) {
+            this.playNext = { x, y: y1, w: btnW, h: btnH };
+            this.quitMenu = { x, y: y2, w: btnW, h: btnH };
+            this.drawButton(ctx, this.playNext, "Next Level");
+        } else {
+            this.quitMenu = { x, y: y1, w: btnW, h: btnH };
+        }
+        this.drawButton(ctx, this.quitMenu, "Quit to Menu");
     }
 
     drawButton(ctx, r, label) {
@@ -83,10 +92,6 @@ class EndGame {
         ctx.textBaseline = "middle";
         ctx.fillText(label, r.x + r.w / 2, r.y + r.h / 2);
         ctx.restore();
-    }
-
-    pointInRect(p, r) {
-        return p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
     }
 }
 
