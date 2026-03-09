@@ -14,11 +14,21 @@ ASSET_MANAGER.queueDownload("./assets/background/menu/Unselected.png");
 ASSET_MANAGER.queueDownload("./assets/background/selectLevel/LevelSelectCorridor.png");
 ASSET_MANAGER.queueDownload("./assets/background/selectLevel/unlockedLevel.png");
 ASSET_MANAGER.queueDownload("./assets/background/selectLevel/lockedLevel.png");
+ASSET_MANAGER.queueDownload("./assets/background/selectLevel/DayDream_Hall.png");
+ASSET_MANAGER.queueDownload("./assets/background/selectLevel/DayDreamPortal.png");
+
+ASSET_MANAGER.queueDownload("./assets/background/selectLevel/SunsetHall.png");
+ASSET_MANAGER.queueDownload("./assets/background/selectLevel/SunsetPortal.png");
+
+ASSET_MANAGER.queueDownload("./assets/background/selectLevel/NightFallHall.png");
+ASSET_MANAGER.queueDownload("./assets/background/selectLevel/NightFall_Portal.png");
 
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/1.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/2.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/3.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/4.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds3/Clouds3.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds8/Clouds8.png");
 
 ASSET_MANAGER.queueDownload("./assets/entities/bed.png");
 ASSET_MANAGER.queueDownload("./assets/entities/ghost1.png");
@@ -94,11 +104,12 @@ ASSET_MANAGER.downloadAll(() => {
 
 
 	// Clears current world state and rebuilds it
-	function resetWorld(engine, mode, levelId = engine.currentLevel) {
+	function resetWorld(engine, mode, levelId = engine.currentLevel, worldId = engine.currentWorld || "daydream") {
 		engine.gameOver = false;
 		engine.gameWon = false;
 		engine.mode = mode;
 		engine.currentLevel = levelId;
+		engine.currentWorld = worldId;
 
 		engine.entities = [];
 		engine.sleepyGuy = null;
@@ -163,7 +174,10 @@ ASSET_MANAGER.downloadAll(() => {
 
 	gameEngine.restartToGameplay = () => resetWorld(gameEngine, "gameplay", gameEngine.currentLevel);
 	gameEngine.restartToMenu = () => resetWorld(gameEngine, "menu", gameEngine.currentLevel);
-	gameEngine.startLevel = (levelId) => resetWorld(gameEngine, "gameplay", levelId);
+	gameEngine.startLevel = (levelId, worldKey) => { 
+		gameEngine.currentWorld = worldKey;
+    	resetWorld(gameEngine, "gameplay", levelId);
+};
 
 	// Initial world starts in menu mode
 	gameEngine.mode = "menu";

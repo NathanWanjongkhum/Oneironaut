@@ -82,6 +82,7 @@ class SleepyGuy {
 
       // Use remaining movement this frame
       let remaining = velocityLength * TICK;
+      let currentIndex = this.targetWaypointIndex;
 
       while (remaining > 0 && waypoints.length > 0) {
         this.target = waypoints[0];
@@ -111,6 +112,7 @@ class SleepyGuy {
         }
       }
     }
+
     // Reset collision flag
     this.isStickyBush = false;
     this.updateBB();
@@ -354,7 +356,7 @@ class SleepyGuy {
       offsetX,
       offsetY,
       drawW,
-      drawH,
+      drawH
     );
 
     ctx.restore();
