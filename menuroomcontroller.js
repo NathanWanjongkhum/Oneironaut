@@ -52,7 +52,7 @@ class MenuRoomController {
 		
 		this.levels = [
 			{ id: 1, name: "Level 1", unlocked: true },
-			{ id: 2, name: "Level 2", unlocked: true },
+			{ id: 2, name: "Level 2", unlocked: false },
 			{ id: 3, name: "Level 3", unlocked: false },
 			{ id: 4, name: "Level 4", unlocked: false },
 		];
@@ -74,8 +74,7 @@ class MenuRoomController {
 	}
 
 	update() {
-
-		if (this.game.mode !== "menu") return;
+		if (this.game.mode == "gameplay") return;
 
 		const cw = this.game.ctx.canvas.width;
 		const ch = this.game.ctx.canvas.height;
@@ -178,26 +177,20 @@ class MenuRoomController {
 			12;
 		this.creditsCloseRect.y = this.creditsPanelRect.y + 12;
 
-		// Options modal sizing
-		//TODO: something weird occurd with this part in merge from main
-		// this.showOptions = false;
-		// this.optionsPanelRect = { x: 0, y: 0, w: 0, h: 0 };
-		// this.optionsCloseRect = { x: 0, y: 0, w: 44, h: 44 };
+		this.optionsPanelRect.w = Math.min(720, cw * 0.70);
+		this.optionsPanelRect.h = Math.min(360, ch * 0.50);
+		this.optionsPanelRect.x = (cw - this.optionsPanelRect.w) / 2;
+		this.optionsPanelRect.y = (ch - this.optionsPanelRect.h) / 2;
+	
 
-			this.optionsPanelRect.w = Math.min(720, cw * 0.70);
-			this.optionsPanelRect.h = Math.min(360, ch * 0.50);
-			this.optionsPanelRect.x = (cw - this.optionsPanelRect.w) / 2;
-			this.optionsPanelRect.y = (ch - this.optionsPanelRect.h) / 2;
-		
-
-			this.optionsCloseRect.w = 44;
-			this.optionsCloseRect.h = 44;
-			this.optionsCloseRect.x =
-				this.optionsPanelRect.x +
-				this.optionsPanelRect.w -
-				this.optionsCloseRect.w -
-				12;
-			this.optionsCloseRect.y = this.optionsPanelRect.y + 12;
+		this.optionsCloseRect.w = 44;
+		this.optionsCloseRect.h = 44;
+		this.optionsCloseRect.x =
+			this.optionsPanelRect.x +
+			this.optionsPanelRect.w -
+			this.optionsCloseRect.w -
+			12;
+		this.optionsCloseRect.y = this.optionsPanelRect.y + 12;
 
 		// Buttons inside options modal
 		const p = this.optionsPanelRect;
@@ -228,8 +221,9 @@ class MenuRoomController {
 		this.levelSelectRect.y = this.newDreamRect.y + this.newDreamRect.h + 18; // sits under New Dream
 
 
-		// Handle click
-		if (this.game.click) {
+		// Handle click in menu mode only.
+		// Pause-mode clicks are routed by GameEngine.
+		if (this.game.mode === "menu" && this.game.click) {
 			const { x, y } = this.game.click;
 			this.game.click = null;
 			this.handleClick(x, y);
@@ -254,88 +248,95 @@ class MenuRoomController {
 			}
 		}
 
-if (this.scene === "levelSelect") {
-	const cols = 2;
-	const titleTop = ch * 0.17;
-	const titleHeight = 70;
-	const topSafe = titleTop + titleHeight + 25;
+		if (this.scene === "levelSelect") {
+			// Update unlocked levels
+			for (let i = 0; i < this.levels.length; i++) {
+				if(i <= this.game.highestLevel) {
+					this.levels[i].unlocked = true;
+				} else {
+					break;
+				}
+			}
 
-	const bottomSafe = 40;
+			const cols = 2;
+			const titleTop = ch * 0.17;
+			const titleHeight = 70;
+			const topSafe = titleTop + titleHeight + 25;
 
-	const gap = Math.max(22, cw * 0.018);
+			const bottomSafe = 40;
 
-	const rows = Math.ceil(this.levels.length / cols);
+			const gap = Math.max(22, cw * 0.018);
 
-	const availW = cw * 0.78; 
-	const availH = ch - topSafe - bottomSafe;
+			const rows = Math.ceil(this.levels.length / cols);
 
-	// Compute max card sizes that guarantee everything fits
-	const maxCardW = (availW - gap * (cols - 1)) / cols;
-	const maxCardH = (availH - gap * (rows - 1)) / rows;
+			const availW = cw * 0.78; 
+			const availH = ch - topSafe - bottomSafe;
 
-	const aspect = 1.05;
+			// Compute max card sizes that guarantee everything fits
+			const maxCardW = (availW - gap * (cols - 1)) / cols;
+			const maxCardH = (availH - gap * (rows - 1)) / rows;
 
-	let cardW = Math.min(maxCardW, maxCardH / aspect);
+			const aspect = 1.05;
 
-	cardW *= 0.92;
+			let cardW = Math.min(maxCardW, maxCardH / aspect);
 
-	cardW = Math.max(190, Math.min(290, cardW));
+			cardW *= 0.92;
 
-	const cardH = cardW * aspect;
+			cardW = Math.max(190, Math.min(290, cardW));
 
-	const gridW = cols * cardW + (cols - 1) * gap;
-	const gridH = rows * cardH + (rows - 1) * gap;
+			const cardH = cardW * aspect;
 
-	const startX = (cw - gridW) / 2;
-	const startY = topSafe + (availH - gridH) / 2;
+			const gridW = cols * cardW + (cols - 1) * gap;
+			const gridH = rows * cardH + (rows - 1) * gap;
 
-	this.levelRects = [];
-	for (let i = 0; i < this.levels.length; i++) {
-		const row = Math.floor(i / cols);
-		const col = i % cols;
+			const startX = (cw - gridW) / 2;
+			const startY = topSafe + (availH - gridH) / 2;
 
-		this.levelRects.push({
-			levelIndex: i,
-			x: startX + col * (cardW + gap),
-			y: startY + row * (cardH + gap),
-			w: cardW,
-			h: cardH,
-		});
-	}
-}
+			this.levelRects = [];
+			for (let i = 0; i < this.levels.length; i++) {
+				const row = Math.floor(i / cols);
+				const col = i % cols;
 
+				this.levelRects.push({
+					levelIndex: i,
+					x: startX + col * (cardW + gap),
+					y: startY + row * (cardH + gap),
+					w: cardW,
+					h: cardH,
+				});
+			}
+		}
 	}
 
 	draw(ctx) {
-	if (this.game.mode !== "menu") return;
+		if (this.game.mode !== "menu") return;
 
-	const cw = this.game.ctx.canvas.width;
-	const ch = this.game.ctx.canvas.height;
+		const cw = this.game.ctx.canvas.width;
+		const ch = this.game.ctx.canvas.height;
 
-	const bg = this.getBackground();
+		const bg = this.getBackground();
 
-	// Background
-	ctx.fillStyle = "black";
-	ctx.fillRect(0, 0, cw, ch);
-	this.drawContain(ctx, bg, 0, 0, cw, ch);
+		// Background
+		ctx.fillStyle = "black";
+		ctx.fillRect(0, 0, cw, ch);
+		this.drawContain(ctx, bg, 0, 0, cw, ch);
 
-	// Always show theme toggle
-	this.drawToggle(ctx);
+		// Always show theme toggle
+		this.drawToggle(ctx);
 
-	if (this.scene === "menu") {
-		// Sky screen
-		this.drawMenuButton(ctx, this.startRect, "Start Game");
+		if (this.scene === "menu") {
+			// Sky screen
+			this.drawMenuButton(ctx, this.startRect, "Start Game");
 
-	} else if (this.scene === "room") {
-		// Bedroom screen: back + 4 buttons
-		this.drawMenuButton(ctx, this.backRect, "← Menu");
-		this.drawMenuButton(ctx, this.newDreamRect, "New Dream");
-		this.drawMenuButton(ctx, this.loadDreamRect, "Load Dream (Coming Soon)");
-		this.drawMenuButton(ctx, this.helpRect, "Help");
-		this.drawMenuButton(ctx, this.optionsRect, "Options");
-		this.drawMenuButton(ctx, this.creditsRect, "Credits");
-		this.drawMenuButton(ctx, this.levelSelectRect, "Select Level");
-
+		} else if (this.scene === "room") {
+			// Bedroom screen: back + 4 buttons
+			this.drawMenuButton(ctx, this.backRect, "← Menu");
+			this.drawMenuButton(ctx, this.newDreamRect, "New Dream");
+			this.drawMenuButton(ctx, this.loadDreamRect, "Load Dream (Coming Soon)");
+			this.drawMenuButton(ctx, this.helpRect, "Help");
+			this.drawMenuButton(ctx, this.optionsRect, "Options");
+			this.drawMenuButton(ctx, this.creditsRect, "Credits");
+			this.drawMenuButton(ctx, this.levelSelectRect, "Select Level");
 
 		} else if (this.scene === "levelSelect") {
 			this.drawMenuButton(ctx, this.levelBackRect, "← Room");
@@ -355,7 +356,7 @@ if (this.scene === "levelSelect") {
 				const L = this.levels[r.levelIndex];
 
 				const hover =
-					this.game.mouse && this.pointInRect(this.game.mouse.x, this.game.mouse.y, r);
+					this.game.mouse && pointInRect(this.game.mouse.x, this.game.mouse.y, r);
 
 				// 1) frosted glass card background
 				this.drawGlassCard(ctx, r, { hover, locked: !L.unlocked });
@@ -390,7 +391,7 @@ if (this.scene === "levelSelect") {
 					ctx.save();
 					ctx.globalAlpha = 0.22;
 					ctx.fillStyle = "black";
-					this.roundRect(ctx, r.x, r.y, r.w, r.h, 18);
+					roundRect(ctx, r.x, r.y, r.w, r.h, 18);
 					ctx.fill();
 					ctx.restore();
 				}
@@ -415,178 +416,167 @@ if (this.scene === "levelSelect") {
 
 
 	handleClick(x, y) {
-		// Credits modal priority
-		if (this.showCredits) {
-			if (this.pointInRect(x, y, this.creditsCloseRect)) this.showCredits = false;
-			else {
-				const p = this.creditsPanelRect;
-				const inside =
-					x >= p.x && x <= p.x + p.w && y >= p.y && y <= p.y + p.h;
-				if (!inside) this.showCredits = false;
+		if (this.transitioning) return;
+
+		// Pause only supports the in-game options panel.
+		if (this.game.mode === "pause") {
+			if (this.showOptions) this.inOptionsMenu(x, y);
+			return;
+		}
+
+		// Priority menus
+		if (this.showOptions || this.showCredits || this.showHelp) {
+			if (this.showOptions) {
+				this.inOptionsMenu(x, y);
+			} else {
+				//Same behavior = treat them identically + only one can be true at a time
+				const currMenuRect = this.showCredits ? this.creditsPanelRect : this.helpPanelRect;
+				const currCloseRect = this.showCredits ? this.creditsCloseRect : this.helpCloseRect;
+				if (pointInRect(x, y, currCloseRect)) {
+					this.showCredits = false;
+					this.showHelp = false;
+				}
+				if (!pointInRect(x, y, currMenuRect)) {
+					this.showCredits = false;
+					this.showHelp = false;
+				}
 			}
 			return;
 		}
 
-				// Level Select scene clicks
-		if (this.scene === "levelSelect") {
-			// Back to room
-			if (this.pointInRect(x, y, this.levelBackRect)) {
-				this.transitionTo("room");
-				return;
-			}
-
-			// Click a level
-			for (const r of this.levelRects) {
-				if (this.pointInRect(x, y, r)) {
-					const L = this.levels[r.levelIndex];
-					if (!L.unlocked) return;
-
-					this.selectedLevel = L.id;
-
-					// Start gameplay immediately (and let main.js rebuild world for that level)
-					if (this.game.startLevel) {
-						this.game.startLevel(this.selectedLevel);
-					} else {
-						this.game.mode = "gameplay";
-					}
-
-					return;
-				}
-			}
-
-	return; 
-}
-
-
-		// 4. Theme toggle (works in menu/room)
-		// Options modal priority
-		if (this.showOptions) {
-			if (this.pointInRect(x, y, this.optionsCloseRect)) {
-				this.showOptions = false;
-				return;
-			}
-
-			if (this.pointInRect(x, y, this.optMuteRect)) {
-				if (window.Music) {
-					Music.setMuted(!Music.muted);
-					const muteEl = document.getElementById("mute");
-					if (muteEl) muteEl.checked = Music.muted;
-				}
-				return;
-			}
-
-			if (this.pointInRect(x, y, this.optVolDownRect)) {
-				if (window.Music) {
-					Music.setVolume(Math.max(0, Music.userVolume - 0.05));
-					const volEl = document.getElementById("volume");
-					if (volEl) volEl.value = String(Music.userVolume);
-				}
-				return;
-			}
-
-			if (this.pointInRect(x, y, this.optVolUpRect)) {
-				if (window.Music) {
-					Music.setVolume(Math.min(1, Music.userVolume + 0.05));
-					const volEl = document.getElementById("volume");
-					if (volEl) volEl.value = String(Music.userVolume);
-				}
-				return;
-			}
-
-			const p = this.optionsPanelRect;
-			const inside =
-				x >= p.x && x <= p.x + p.w && y >= p.y && y <= p.y + p.h;
-			if (!inside) this.showOptions = false;
-			return;
-		}
-
-		// Help modal priority
-		if (this.showHelp) {
-			if (this.pointInRect(x, y, this.helpCloseRect)) this.showHelp = false;
-			else {
-				const p = this.helpPanelRect;
-				const inside =
-					x >= p.x && x <= p.x + p.w && y >= p.y && y <= p.y + p.h;
-				if (!inside) this.showHelp = false;
-			}
-			return;
-		}
-
-		// Theme toggle
-		if (this.pointInRect(x, y, this.toggleRect)) {
+		// Theme toggle (2nd priority)
+		if (pointInRect(x, y, this.toggleRect)) {
 			this.theme = this.theme === "night" ? "day" : "night";
 			return;
 		}
+		
+		// Standard menus (3rd priority)
+		if (this.scene === "menu") {
+			this.inStartMenu(x, y);
+		}
+		if (this.scene === "levelSelect") {
+			this.inSelectLevelMenu(x, y);
+			return; 
+		}
+		if (this.scene === "room") {
+			this.inRoomMenu(x, y);
+		}
 
-		if (this.transitioning) return;
-
-		// Menu -> Room
-		if (this.scene === "menu" && this.pointInRect(x, y, this.startRect)) {
+	}
+	
+	inStartMenu(x, y) {
+		if(pointInRect(x, y, this.startRect)) {
 			this.transitionTo("room");
 			return;
-			
 		}
-
-		// Room buttons
-		if (this.scene === "room") {
-			if (this.pointInRect(x, y, this.backRect)) {
-				this.transitionTo("menu");
-				return;
+	}
+	inRoomMenu(x, y) {
+		
+		if (pointInRect(x, y, this.backRect)) {
+			this.transitionTo("menu");
+			return;
+		}
+		if (pointInRect(x, y, this.levelSelectRect)) {
+			this.transitionTo("levelSelect");
+			return;
+		}
+		if (pointInRect(x, y, this.newDreamRect)) {
+			if (window.setMusicMode) window.setMusicMode("dream"); // Lucid Journey
+			this.showHelp = false;
+			this.showCredits = false;
+			if (this.game.startGameplay) {
+				this.game.startGameplay();
+			} else {// fallback (shouldn't happen)
+				this.game.mode = "gameplay";
+				if (window.setMusicMode) window.setMusicMode("dream");
 			}
+			return;
 		}
-			if (this.pointInRect(x, y, this.levelSelectRect)) {
-					this.transitionTo("levelSelect");
-					return;
-				}
-
-
-			// ✅ FIX: call game.startGameplay() so entities spawn
-			if (this.pointInRect(x, y, this.newDreamRect)) {
-				this.transitionTo("dream");
-				if (window.setMusicMode) window.setMusicMode("dream"); // Lucid Journey
-				this.showHelp = false;
-				this.showCredits = false;
-
-			
-				if (this.game.startGameplay) {
-					this.game.startGameplay();
+		if (pointInRect(x, y, this.creditsRect)) {
+			this.showCredits = true;
+			this.showHelp = false;
+			this.showOptions = false;
+			return;
+		}
+		if (pointInRect(x, y, this.loadDreamRect)) {
+			console.log("TODO: Load Dream");
+			return;
+		}
+		if (pointInRect(x, y, this.helpRect)) {
+			this.showHelp = true;
+			this.showOptions = false;
+			this.showCredits = false;
+			return;
+		}
+		if (pointInRect(x, y, this.optionsRect)) {
+			this.showOptions = true;
+			this.showHelp = false;
+			this.showCredits = false;
+			return;
+		}
+	}
+	inSelectLevelMenu(x, y) {
+		// Back to room
+		if (pointInRect(x, y, this.levelBackRect)) {
+			this.transitionTo("room");
+			return;
+		}
+		// Click a level
+		for (const rect of this.levelRects) {
+			if (pointInRect(x, y, rect)) {
+				const L = this.levels[rect.levelIndex];
+				if (!L.unlocked) return;
+				this.selectedLevel = L.id;
+				// Start gameplay immediately (and let main.js rebuild world for that level)
+				if (this.game.startLevel) {
+					this.game.startLevel(this.selectedLevel);
 				} else {
-					// fallback (shouldn't happen)
 					this.game.mode = "gameplay";
-					if (window.setMusicMode) window.setMusicMode("dream");
 				}
-
-				this.removeFromWorld = true;
-				return;
-			}
-
-			if (this.pointInRect(x, y, this.loadDreamRect)) {
-				console.log("TODO: Load Dream");
-				return;
-			}
-
-			if (this.pointInRect(x, y, this.helpRect)) {
-				this.showHelp = true;
-				this.showOptions = false;
-				this.showCredits = false;
-				return;
-			}
-
-			if (this.pointInRect(x, y, this.optionsRect)) {
-				this.showOptions = true;
-				this.showHelp = false;
-				this.showCredits = false;
-				return;
-			}
-
-			if (this.pointInRect(x, y, this.creditsRect)) {
-				this.showCredits = true;
-				this.showHelp = false;
-				this.showOptions = false;
 				return;
 			}
 		}
-	
+	}
+	inOptionsMenu(x, y) {
+		if (!pointInRect(x, y, this.optionsPanelRect)) {
+			this.showOptions = false;
+			if(this.game.mode == "pause" && !this.game.gameOver) {
+				this.game.mode = "gameplay";
+			}
+			return;
+		}
+		if (pointInRect(x, y, this.optionsCloseRect)) {
+			this.showOptions = false;
+			if(this.game.mode == "pause" && !this.game.gameOver) {
+				this.game.mode = "gameplay";
+			}
+			return;
+		}
+		if (pointInRect(x, y, this.optMuteRect)) {
+			if (window.Music) {
+				Music.setMuted(!Music.muted);
+				const muteEl = document.getElementById("mute");
+				if (muteEl) muteEl.checked = Music.muted;
+			}
+			return;
+		}
+		if (pointInRect(x, y, this.optVolDownRect)) {
+			if (window.Music) {
+				Music.setVolume(Math.max(0, Music.userVolume - 0.05));
+				const volEl = document.getElementById("volume");
+				if (volEl) volEl.value = String(Music.userVolume);
+			}
+			return;
+		}
+		if (pointInRect(x, y, this.optVolUpRect)) {
+			if (window.Music) {
+				Music.setVolume(Math.min(1, Music.userVolume + 0.05));
+				const volEl = document.getElementById("volume");
+				if (volEl) volEl.value = String(Music.userVolume);
+			}
+			return;
+		}
+	}
 
 	transitionTo(sceneKey) {
 		if (this.transitioning) return;
@@ -605,15 +595,15 @@ if (this.scene === "levelSelect") {
  drawMenuButton(ctx, r, label) {
 	ctx.save();
 
-	//ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
+	// ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
 	// ctx.strokeStyle = "rgba(255, 255, 255, 0.55)";
 	// ctx.lineWidth = 2;
-	// this.roundRectPath(ctx, r.x, r.y, r.w, r.h, 18);
+	// roundRectPath(ctx, r.x, r.y, r.w, r.h, 18);
 	// ctx.fill();
 	// ctx.stroke();
 
 	const hover =
-		this.game.mouse && this.pointInRect(this.game.mouse.x, this.game.mouse.y, r);
+		this.game.mouse && pointInRect(this.game.mouse.x, this.game.mouse.y, r);
 
 	const bubble = hover ? this.btnBubbleHover : this.btnBubbleNormal;
 
@@ -643,7 +633,7 @@ if (this.scene === "levelSelect") {
 			: "rgba(255,255,255,0.35)";
 		ctx.strokeStyle = "rgba(255,255,255,0.6)";
 		ctx.lineWidth = 2;
-		this.roundRectPath(ctx, r.x, r.y, r.w, r.h, r.h / 2);
+		roundRectPath(ctx, r.x, r.y, r.w, r.h, r.h / 2);
 		ctx.fill();
 		ctx.stroke();
 
@@ -682,22 +672,7 @@ if (this.scene === "levelSelect") {
 		}
 
 		return ASSET_MANAGER.getAsset("./assets/background/menu/newDream.png");
-	}
-
-	pointInRect(px, py, r) {
-		return px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h;
-	}
-
-	roundRectPath(ctx, x, y, w, h, radius) {
-		const rr = Math.min(radius, w / 2, h / 2);
-		ctx.beginPath();
-		ctx.moveTo(x + rr, y);
-		ctx.arcTo(x + w, y, x + w, y + h, rr);
-		ctx.arcTo(x + w, y + h, x, y + h, rr);
-		ctx.arcTo(x, y + h, x, y, rr);
-		ctx.arcTo(x, y, x + w, y, rr);
-		ctx.closePath();
-	}
+	}	
 
 	drawContain(ctx, img, x, y, w, h) {
 		const iw = img.width;
@@ -713,17 +688,6 @@ if (this.scene === "levelSelect") {
 		ctx.drawImage(img, dx, dy, dw, dh);
 	}
 
-	roundRect(ctx, x, y, w, h, r) {
-		const rr = Math.min(r, w / 2, h / 2);
-		ctx.beginPath();
-		ctx.moveTo(x + rr, y);
-		ctx.arcTo(x + w, y, x + w, y + h, rr);
-		ctx.arcTo(x + w, y + h, x, y + h, rr);
-		ctx.arcTo(x, y + h, x, y, rr);
-		ctx.arcTo(x, y, x + w, y, rr);
-		ctx.closePath();
-	}
-
 	drawGlassCard(ctx, r, { hover = false, locked = false } = {}) {
 		ctx.save();
 
@@ -734,7 +698,7 @@ if (this.scene === "levelSelect") {
 
 		// frosted fill
 		ctx.fillStyle = locked ? "rgba(20, 20, 35, 0.55)" : "rgba(255,255,255,0.12)";
-		this.roundRect(ctx, r.x, r.y, r.w, r.h, 18);
+		roundRect(ctx, r.x, r.y, r.w, r.h, 18);
 		ctx.fill();
 
 		// border
@@ -747,12 +711,12 @@ if (this.scene === "levelSelect") {
 		if (hover && !locked) {
 			ctx.strokeStyle = "rgba(210, 200, 255, 0.55)";
 			ctx.lineWidth = 3;
-			this.roundRect(ctx, r.x + 1, r.y + 1, r.w - 2, r.h - 2, 18);
+			roundRect(ctx, r.x + 1, r.y + 1, r.w - 2, r.h - 2, 18);
 			ctx.stroke();
 
 			ctx.globalAlpha = 0.10;
 			ctx.fillStyle = "white";
-			this.roundRect(ctx, r.x + 1, r.y + 1, r.w - 2, r.h - 2, 18);
+			roundRect(ctx, r.x + 1, r.y + 1, r.w - 2, r.h - 2, 18);
 			ctx.fill();
 		}
 
@@ -768,7 +732,7 @@ if (this.scene === "levelSelect") {
 		const ih = r.h - pad * 2;
 
 		ctx.save();
-		this.roundRect(ctx, ix, iy, iw, ih, 14);
+		roundRect(ctx, ix, iy, iw, ih, 14);
 		ctx.clip();
 
 		// contain
@@ -810,7 +774,7 @@ if (this.scene === "levelSelect") {
 		ctx.fillStyle = "rgba(20, 24, 40, 0.85)";
 		ctx.strokeStyle = "rgba(255,255,255,0.45)";
 		ctx.lineWidth = 2;
-		this.roundRectPath(ctx, p.x, p.y, p.w, p.h, 22);
+		roundRectPath(ctx, p.x, p.y, p.w, p.h, 22);
 		ctx.fill();
 		ctx.stroke();
 		ctx.restore();
@@ -883,7 +847,7 @@ if (this.scene === "levelSelect") {
 		ctx.fillStyle = "rgba(20, 24, 40, 0.85)";
 		ctx.strokeStyle = "rgba(255,255,255,0.45)";
 		ctx.lineWidth = 2;
-		this.roundRectPath(ctx, p.x, p.y, p.w, p.h, 22);
+		roundRectPath(ctx, p.x, p.y, p.w, p.h, 22);
 		ctx.fill();
 		ctx.stroke();
 		ctx.restore();
@@ -926,7 +890,7 @@ if (this.scene === "levelSelect") {
 		ctx.fillStyle = "rgba(20, 24, 40, 0.85)";
 		ctx.strokeStyle = "rgba(255,255,255,0.45)";
 		ctx.lineWidth = 2;
-		this.roundRectPath(ctx, p.x, p.y, p.w, p.h, 22);
+		roundRectPath(ctx, p.x, p.y, p.w, p.h, 22);
 		ctx.fill();
 		ctx.stroke();
 		ctx.restore();
@@ -966,7 +930,7 @@ if (this.scene === "levelSelect") {
 		ctx.fillStyle = "rgba(255,255,255,0.12)";
 		ctx.strokeStyle = "rgba(255,255,255,0.45)";
 		ctx.lineWidth = 2;
-		this.roundRectPath(ctx, r.x, r.y, r.w, r.h, 12);
+		roundRectPath(ctx, r.x, r.y, r.w, r.h, 12);
 		ctx.fill();
 		ctx.stroke();
 

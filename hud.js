@@ -69,27 +69,28 @@ class HUD {
   // Return true if HUD consumed the click
   handleClick(x, y) {
     // Hamburger toggle
-    if (this.pointInRect(x, y, this.menuRect)) {
+    if (pointInRect(x, y, this.menuRect)) {
       this.showMenu = !this.showMenu;
+      //this.game.mode = "pause";
       return true;
     }
 
     // If dropdown is open, it consumes clicks
     if (this.showMenu) {
-      if (this.pointInRect(x, y, this.optRect)) {
+      if (pointInRect(x, y, this.optRect)) {
         this.requestOpenOptions = true;
         this.showMenu = false;
         return true;
       }
 
-      if (this.pointInRect(x, y, this.exitRect)) {
+      if (pointInRect(x, y, this.exitRect)) {
         this.requestExitToMenu = true;
         this.showMenu = false;
         return true;
       }
 
       // Click outside closes it
-      if (!this.pointInRect(x, y, this.panelRect) && !this.pointInRect(x, y, this.menuRect)) {
+      if (!pointInRect(x, y, this.panelRect) && !pointInRect(x, y, this.menuRect)) {
         this.showMenu = false;
         return true;
       }
@@ -98,7 +99,7 @@ class HUD {
     }
 
     // Inventory click -> pick slot
-    if (this.pointInRect(x, y, this.invRect)) {
+    if (pointInRect(x, y, this.invRect)) {
       const slot = this.getSlotIndexAt(x, y);
       if (slot !== null) this.inv.select(slot);
       return true;
@@ -192,7 +193,7 @@ class HUD {
     ctx.fillStyle = "rgba(80, 160, 220, 0.22)";
     ctx.strokeStyle = "rgba(200, 240, 255, 0.95)";
     ctx.lineWidth = 2;
-    this.roundRectPath(ctx, x, y, w, h, 10);
+    roundRectPath(ctx, x, y, w, h, 10);
     ctx.fill();
     ctx.stroke();
 
@@ -239,7 +240,7 @@ class HUD {
     ctx.fillStyle = "rgba(80, 160, 220, 0.22)";
     ctx.strokeStyle = "rgba(200, 240, 255, 0.95)";
     ctx.lineWidth = 2;
-    this.roundRectPath(ctx, x, y, w, h, 10);
+    roundRectPath(ctx, x, y, w, h, 10);
     ctx.fill();
     ctx.stroke();
 
@@ -275,7 +276,7 @@ class HUD {
     ctx.fillStyle = "rgba(80, 160, 220, 0.22)";
     ctx.strokeStyle = "rgba(200, 240, 255, 0.95)";
     ctx.lineWidth = 2;
-    this.roundRectPath(ctx, x, y, w, h, 10);
+    roundRectPath(ctx, x, y, w, h, 10);
     ctx.fill();
     ctx.stroke();
 
@@ -309,7 +310,7 @@ class HUD {
     ctx.fillStyle = "rgba(80, 160, 220, 0.22)";
     ctx.strokeStyle = "rgba(200, 240, 255, 0.95)";
     ctx.lineWidth = 2;
-    this.roundRectPath(ctx, x, y, w, h, 10);
+    roundRectPath(ctx, x, y, w, h, 10);
     ctx.fill();
     ctx.stroke();
 
@@ -344,7 +345,7 @@ class HUD {
     ctx.fillStyle = "rgba(80, 160, 220, 0.22)";
     ctx.strokeStyle = "rgba(200, 240, 255, 0.95)";
     ctx.lineWidth = 2;
-    this.roundRectPath(ctx, x, y, w, h, 10);
+    roundRectPath(ctx, x, y, w, h, 10);
     ctx.fill();
     ctx.stroke();
 
@@ -365,7 +366,7 @@ class HUD {
     ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
     ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
     ctx.lineWidth = 2;
-    this.roundRectPath(ctx, r.x, r.y, r.w, r.h, 10);
+    roundRectPath(ctx, r.x, r.y, r.w, r.h, 10);
     ctx.fill();
     ctx.stroke();
     ctx.restore();
@@ -406,7 +407,7 @@ class HUD {
     ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
     ctx.strokeStyle = "rgba(255, 255, 255, 0.60)";
     ctx.lineWidth = 2;
-    this.roundRectPath(ctx, r.x, r.y, r.w, r.h, 10);
+    roundRectPath(ctx, r.x, r.y, r.w, r.h, 10);
     ctx.fill();
     ctx.stroke();
     ctx.restore();
@@ -419,7 +420,7 @@ class HUD {
       const sy = r.y + 4;
       const sw = slotW - 8;
       const sh = r.h - 8;
-      this.roundRectPath(ctx, sx, sy, sw, sh, 8);
+      roundRectPath(ctx, sx, sy, sw, sh, 8);
       ctx.fill();
     }
     ctx.restore();
@@ -483,14 +484,14 @@ class HUD {
 
     ctx.save();
     ctx.fillStyle = "rgba(255,255,255,0.08)";
-    this.roundRectPath(ctx, hx + 3, r.y + 3, slotW - 6, r.h - 6, 8);
+    roundRectPath(ctx, hx + 3, r.y + 3, slotW - 6, r.h - 6, 8);
     ctx.fill();
     ctx.restore();
 
     ctx.save();
     ctx.strokeStyle = "rgba(255,255,255,0.95)";
     ctx.lineWidth = 3;
-    this.roundRectPath(ctx, hx + 3, r.y + 3, slotW - 6, r.h - 6, 8);
+    roundRectPath(ctx, hx + 3, r.y + 3, slotW - 6, r.h - 6, 8);
     ctx.stroke();
     ctx.restore();
   }
@@ -502,7 +503,7 @@ class HUD {
     ctx.fillStyle = "rgba(0,0,0,0.55)";
     ctx.strokeStyle = "rgba(255,255,255,0.70)";
     ctx.lineWidth = 2;
-    this.roundRectPath(ctx, p.x, p.y, p.w, p.h, 12);
+    roundRectPath(ctx, p.x, p.y, p.w, p.h, 12);
     ctx.fill();
     ctx.stroke();
     ctx.restore();
@@ -516,7 +517,7 @@ class HUD {
     ctx.fillStyle = "rgba(255,255,255,0.10)";
     ctx.strokeStyle = "rgba(255,255,255,0.45)";
     ctx.lineWidth = 2;
-    this.roundRectPath(ctx, r.x, r.y, r.w, r.h, 10);
+    roundRectPath(ctx, r.x, r.y, r.w, r.h, 10);
     ctx.fill();
     ctx.stroke();
 
@@ -536,21 +537,5 @@ class HUD {
     if (idx < 0) idx = 0;
     if (idx >= this.inv.slotCount) idx = this.inv.slotCount - 1;
     return idx;
-  }
-
-  // ===== Generic helpers =====
-  pointInRect(px, py, r) {
-    return px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h;
-  }
-
-  roundRectPath(ctx, x, y, w, h, radius) {
-    const rr = Math.min(radius, w / 2, h / 2);
-    ctx.beginPath();
-    ctx.moveTo(x + rr, y);
-    ctx.arcTo(x + w, y, x + w, y + h, rr);
-    ctx.arcTo(x + w, y + h, x, y + h, rr);
-    ctx.arcTo(x, y + h, x, y, rr);
-    ctx.arcTo(x, y, x + w, y, rr);
-    ctx.closePath();
   }
 }
