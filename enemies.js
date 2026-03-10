@@ -29,12 +29,12 @@ class Monster extends Entity {
   }
 
   /**
- * Applies a timed knockback impulse.
- * @param {number} vx pixels/sec
- * @param {number} vy pixels/sec
- * @param {number} duration seconds
- * @param {number} swingId used to prevent multi-hits per swing
- */
+   * Applies a timed knockback impulse.
+   * @param {number} vx pixels/sec
+   * @param {number} vy pixels/sec
+   * @param {number} duration seconds
+   * @param {number} swingId used to prevent multi-hits per swing
+   */
   applyKnockback(vx, vy, duration = 0.18, swingId = 0) {
     if (swingId && this.lastSwordSwingId === swingId) return false;
     if (swingId) this.lastSwordSwingId = swingId;
@@ -66,8 +66,8 @@ class Monster extends Entity {
   }
 
   /**
- * Puts this monster to sleep for duration seconds (extends if already sleeping).
- */
+   * Puts this monster to sleep for duration seconds (extends if already sleeping).
+   */
   applySleep(duration = 10.0) {
     if (this.dead) return false;
     this.sleepTimer = Math.max(this.sleepTimer, duration);
@@ -122,7 +122,8 @@ class Monster extends Entity {
     // ===== Draw ZZZ on sleeping enemies (floating) =====
     if (this.sleepTimer > 0) {
       // Lazy-load just in case the asset wasn't ready at construction time
-      if (!this.zzzImg) this.zzzImg = ASSET_MANAGER.getAsset("./assets/entities/ZZZ.png");
+      //if (!this.zzzImg) this.zzzImg = ASSET_MANAGER.getAsset("./assets/entities/ZZZ.png");
+      this.zzzImg ??= ASSET_MANAGER.getAsset("./assets/entities/ZZZ.png");
 
       if (this.zzzImg) {
         const enemyW = this.width * this.scale;
@@ -143,9 +144,16 @@ class Monster extends Entity {
         ctx.globalAlpha = 0.95;
         ctx.drawImage(this.zzzImg, zX - this.game.camera.x, baseY + bob - this.game.camera.y, zW, zH);
         ctx.restore();
+
+      // if (this.spawn !== undefined) { //remnant from merge main into dev. I believe it comes from params debug on above line??
+      //   ctx.beginPath();
+      //   ctx.fillStyle = "cyan";
+      //   ctx.arc(this.spawn.x, this.spawn.y, 2, 0, 2 * Math.PI);
+      //   ctx.fill();
+      //   ctx.closePath();
+      // }
       }
     }
-    super.draw(ctx);
   }
 
     /**
@@ -169,6 +177,7 @@ class Monster extends Entity {
         x: this.x + (this.width * this.scale) / 2,
         y: this.y + (this.height * this.scale) / 2,
       };
+
 
       const targetPos = { x: target.x, y: target.y };
       return getNormalVector(targetPos, center);

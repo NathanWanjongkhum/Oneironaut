@@ -410,7 +410,7 @@ class SleepyGuy { //extends Entity??
       offsetX - this.game.camera.x,
       offsetY - this.game.camera.y,
       drawW,
-      drawH
+      drawH,
     );
 
     ctx.restore();

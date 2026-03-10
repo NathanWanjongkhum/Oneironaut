@@ -70,6 +70,7 @@ class Levels {
         engine.addEntity(new PickupItem(engine, 723, 680, "TeddyBear"));
         engine.addEntity(new PickupItem(engine, 150, 600, "DreamCatcher"));
         engine.addEntity(new PickupItem(engine, 470, 510, "SleepMask"));
+        engine.addEntity(new PickupItem(engine, 360, 180, "TheStrangeLamp"));
 
         const builder = new LevelBuilder(engine);
         builder.spawnRow(15, 0, 6);

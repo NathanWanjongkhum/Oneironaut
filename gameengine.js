@@ -72,6 +72,8 @@ class GameEngine {
     this.dreamCatcherActive = false;
     this.dreamCatcherTimer = 0;
     this.dreamCatcherDuration = 0.75;
+    // this.dreamCatcherTimer = 0; //remnants from main merge to dev
+    // this.dreamCatcherDuration = 5.0;
     this.dreamCatcherRadius = 85;
     this.dreamCatcherMinRadius = 30;
     this.dreamCatcherMaxRadius = 180;
@@ -87,6 +89,7 @@ class GameEngine {
 
     // ===== Sleep Mask passive =====
     this.sleepMaskTimer = 0;       // seconds remaining
+    // this.sleepMaskDuration = 5.0;  // seconds//remnants from main merge to dev
     this.sleepMaskDuration = 1.5;  // seconds
 
     // ===== Strange Lamp passive =====
@@ -273,6 +276,7 @@ class GameEngine {
     this.gridMap = {};
 
     this.rocketActive = false;
+    this.rocketTimer = 0;
     this.rocketTimer = 0;
 
     // Level-specific spawns
@@ -1129,11 +1133,11 @@ class GameEngine {
           if (!(e instanceof Spikes)) continue;
           if (e.removeFromWorld) continue;
 
-          const ex = e.x + (e.width * e.scale) / 2;
-          const ey = e.y + (e.height * e.scale) / 2;
+            const ex = e.x + (e.width * e.scale) / 2;
+            const ey = e.y + (e.height * e.scale) / 2;
 
-          const d2 = dist2PointToSegment(ex, ey, ax, ay, bx, by);
-          if (d2 > r2) continue;
+            const d2 = dist2PointToSegment(ex, ey, ax, ay, bx, by);
+            if (d2 > r2) continue;
 
           // Remove only this one spike block
           e.removeFromWorld = true;
@@ -1334,6 +1338,7 @@ class GameEngine {
       // Skip checking the same pair twice
       for (let j = i + 1; j < this.entities.length; j++) {
         const entB = this.entities[j];
+
 
         if (!entB.BB || entB.removeFromWorld) continue;
 
