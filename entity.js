@@ -53,11 +53,11 @@ class Bed extends Entity {
 
     this.animations = [];
     this.loadAnimations();
-    this.BB = new BoundingBox(this.x + (900 * this.scale)/2 - 250*this.scale, this.y + (400 * this.scale)/2,
-        500 * this.scale, 400 * this.scale);
+    this.BB = new BoundingBox(this.x + (900 * this.scale) / 2 - 250 * this.scale, this.y + (400 * this.scale) / 2,
+      500 * this.scale, 400 * this.scale);
   };
   updateBB() {
-    this.BB.update(this.x + (900 * this.scale)/2 - 250*this.scale, this.y + (400 * this.scale)/2, 500 * this.scale, 400 * this.scale);
+    this.BB.update(this.x + (900 * this.scale) / 2 - 250 * this.scale, this.y + (400 * this.scale) / 2, 500 * this.scale, 400 * this.scale);
   }
   loadAnimations() {
     this.animations.push([]);
@@ -85,29 +85,45 @@ class Bed extends Entity {
 class Block extends Entity {
   constructor(game, x, y, opts = {}) {
     super(game, x, y);
+
     this.width = PARAMS.BLOCKWIDTH;
     this.height = PARAMS.BLOCKWIDTH;
+    this.scale = 1;
 
     // Optional sprite rendering (used by sandbags)
-    this.sprite = opts.sprite || null;          // Image object
-    this.spriteScale = opts.spriteScale ?? 1;   // draw scale (visual only)
-    this.spriteYOffset = opts.spriteYOffset ?? 0; // pixel offset (visual only)
+    this.sprite = opts.sprite || null;
+    this.spriteScale = opts.spriteScale ?? 1;
+    this.spriteYOffset = opts.spriteYOffset ?? 0;
 
-    this.updateBB();
+    // IMPORTANT: create a real bounding box
+    this.BB = new BoundingBox(this.x, this.y, this.width, this.height);
+  }
+
+  updateBB() {
+    if (!this.BB) {
+      this.BB = new BoundingBox(this.x, this.y, this.width, this.height);
+    } else {
+      this.BB.update(this.x, this.y, this.width, this.height);
+    }
   }
 
   draw(ctx) {
     if (this.sprite) {
-      // Bottom-align sprite inside the tile
       const w = this.width * this.spriteScale;
       const h = this.height * this.spriteScale;
-      const dx = (this.x - this.game.camera.x);
-      const dy = (this.y - this.game.camera.y) + this.spriteYOffset;
+      const dx = this.x - this.game.camera.x;
+      const dy = this.y - this.game.camera.y + this.spriteYOffset;
       ctx.drawImage(this.sprite, dx, dy, w, h);
     } else {
       ctx.fillStyle = "saddlebrown";
-      ctx.fillRect(this.x - this.game.camera.x, this.y - this.game.camera.y, this.width, this.height);
+      ctx.fillRect(
+        this.x - this.game.camera.x,
+        this.y - this.game.camera.y,
+        this.width,
+        this.height
+      );
     }
+
     super.draw(ctx);
   }
 }

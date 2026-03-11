@@ -10,6 +10,9 @@ class SleepyGuy { //extends Entity??
       "./assets/entities/sleepyguy.png",
     );
 
+    this.damageCooldown = 0;
+    this.damageCooldownDuration = 0.25; // quarter second between hits
+
     this.width = 200;
     this.height = 100;
     this.velocity = { x: 100, y: 100 };
@@ -60,6 +63,10 @@ class SleepyGuy { //extends Entity??
 
     if (this.game.mode !== "gameplay") return;
     const TICK = this.game.clockTick;
+    if (this.damageCooldown > 0) {
+      this.damageCooldown -= TICK;
+      if (this.damageCooldown < 0) this.damageCooldown = 0;
+    }
     if (this.dead) {
       this.updateBB();
       return;
@@ -143,6 +150,7 @@ class SleepyGuy { //extends Entity??
     if (this.dead || this.game.gameOver) return false;
     if ((this.game.strangeLampTimer ?? 0) > 0) return false;
     if ((this.game.sleepMaskTimer ?? 0) > 0) return false;
+    if (this.game.dreamCatcherActive) return false;
     if (!this.BB) return false;
 
     const pad = 6;
@@ -284,16 +292,20 @@ class SleepyGuy { //extends Entity??
     if (this.dead) return;
 
     const phasing = this.game.strangeLampTimer > 0;
+    const protectedFromMobs =
+      this.game.sleepMaskTimer > 0 ||
+      phasing ||
+      this.game.dreamCatcherActive;
 
     switch (entity.constructor.name) {
       case "Block":
-        // Strange Lamp: pass through walls/sandbags
+        // Strange Lamp lets Sleepy Guy phase through walls/sandbags
         if (phasing) break;
         this.handleBlockPhysics(entity, true);
         break;
 
       case "Spikes":
-        // Strange Lamp: pass through spikes (no damage)
+        // Ignore spikes while phasing
         if (phasing) break;
         this.onTakeDamage(entity);
         break;
@@ -302,14 +314,13 @@ class SleepyGuy { //extends Entity??
       case "Spider":
       case "Demon":
       case "VenusFlyTrap":
-        // SleepMask OR StrangeLamp: mobs can't catch you
-        if (this.game.sleepMaskTimer > 0 || phasing) break;
-        // Prevent "hit through walls"
+        if (protectedFromMobs) break;
         if (!this.hasBlockBetween(entity)) this.onTakeDamage(entity);
         //this.onTakeDamage(entity);
         break;
 
       case "StickyBush":
+        // Optional: ignore sticky slow while phasing
         this.isStickyBush = true;
         break;
 
@@ -329,14 +340,24 @@ class SleepyGuy { //extends Entity??
     this.game.updateHighest();
     this.game.mode = "pause";
   }
-  onTakeDamage(entity) {
-    if(entity.sleepTimer > 0) return;
-    if ((this.game.strangeLampTimer ?? 0) > 0) return;
-    if (this.game.gameOver) return;
 
-    // Pajama Armor blocks one hit, then breaks
-    if (this.game.pajamaArmorActive) {
-      this.game.pajamaArmorActive = false;
+  onTakeDamage(entity) {
+    if (entity?.sleepTimer > 0) return;
+    if ((this.game.strangeLampTimer ?? 0) > 0) return;
+    if (this.game.dreamCatcherActive) return;
+    if (this.game.gameOver) return;
+    if (this.damageCooldown > 0) return;
+
+    // Pajama Armor blocks 3 hits, then breaks
+    if (this.game.pajamaArmorActive && this.game.pajamaArmorHits > 0) {
+      this.game.pajamaArmorHits--;
+      this.damageCooldown = this.damageCooldownDuration;
+
+      if (this.game.pajamaArmorHits <= 0) {
+        this.game.pajamaArmorHits = 0;
+        this.game.pajamaArmorActive = false;
+      }
+
       return;
     }
 

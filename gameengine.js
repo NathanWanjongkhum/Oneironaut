@@ -45,7 +45,7 @@ class GameEngine {
 
     //Menu items
     this.menuRoomController = null;
-	  this.endGame = null;
+    this.endGame = null;
 
     // Side-scroll / parallax functionallity
     this.camera = null;
@@ -64,6 +64,8 @@ class GameEngine {
 
     // ===== Pajama Armor passive =====
     this.pajamaArmorActive = false;
+    this.pajamaArmorHits = 0;
+    this.pajamaArmorMaxHits = 3;
 
     // ===== Dream Bubble take (Key T) =====
     this.prevT = false;
@@ -71,10 +73,8 @@ class GameEngine {
     // ===== DreamCatcher passive =====
     this.dreamCatcherActive = false;
     this.dreamCatcherTimer = 0;
-    this.dreamCatcherDuration = 0.75;
-    // this.dreamCatcherTimer = 0; //remnants from main merge to dev
-    // this.dreamCatcherDuration = 5.0;
-    this.dreamCatcherRadius = 85;
+    this.dreamCatcherDuration = 5.0;   // lasts 5 seconds
+    this.dreamCatcherRadius = 60;      // small radius around Sleepy Guy
     this.dreamCatcherMinRadius = 30;
     this.dreamCatcherMaxRadius = 180;
     this.dreamCatcherRadiusStep = 10;
@@ -181,12 +181,28 @@ class GameEngine {
 
     window.addEventListener("keydown", (e) => {
       this.keys[e.code] = true;
+
+      if (!e.repeat) {
+        if (e.code === "Digit1") {
+          this.inventory.select(0);
+          e.preventDefault();
+        } else if (e.code === "Digit2") {
+          this.inventory.select(1);
+          e.preventDefault();
+        } else if (e.code === "Digit3") {
+          this.inventory.select(2);
+          e.preventDefault();
+        }
+      }
+
       if (e.code === "KeyM" && !e.repeat && window.Music) {
         Music.setMuted(!Music.muted);
         const muteEl = document.getElementById("mute");
         if (muteEl) muteEl.checked = Music.muted;
       }
     });
+
+
     window.addEventListener("keyup", (e) => {
       this.keys[e.code] = false;
     });
@@ -211,7 +227,7 @@ class GameEngine {
   }
 
   checkGridCollision(entity) {
-    if(this.mode != "gameplay") return;
+    if (this.mode != "gameplay") return;
     if (!entity.BB) return;
 
     const left = Math.floor(entity.BB.left / PARAMS.BLOCKWIDTH);
@@ -268,6 +284,7 @@ class GameEngine {
     this.dreamCatcherTimer = 0;
 
     this.pajamaArmorActive = false;
+    this.pajamaArmorHits = 0;
 
     // reset bubble state too
     this.prevB = false;
@@ -330,6 +347,7 @@ class GameEngine {
     this.rocketActive = false;
     this.rocketTimer = 0;
     this.pajamaArmorActive = false;
+    this.pajamaArmorHits = 0;
 
     this.prevB = false;
     if (this.dreamBubble) this.dreamBubble.close(true);
@@ -343,7 +361,7 @@ class GameEngine {
     this.hud.update(cw, ch);
 
 
-    if(this.mode === "gameplay") {
+    if (this.mode === "gameplay") {
       this.updateGameplay();
       if (this.hud.requestExitToMenu) {
         this.hud.requestExitToMenu = false;
@@ -357,7 +375,7 @@ class GameEngine {
         return;
       }
 
-    } else if(this.mode === "pause") {
+    } else if (this.mode === "pause") {
       this.endGame.update();
       // HUD requests
       if (this.hud.requestExitToMenu) {
@@ -373,16 +391,16 @@ class GameEngine {
       if (this.click) {
         const { x, y } = this.click;
         this.click = null;
-        if(this.menuRoomController.showOptions) {
+        if (this.menuRoomController.showOptions) {
           this.menuRoomController.handleClick(x, y);
         } else {
           this.hud.handleClick(x, y);
         }
       }
-    } else if(this.mode === "menu") {
+    } else if (this.mode === "menu") {
       this.menuRoomController.update();
       this.bg.update();
-    } 
+    }
   }
 
   isAnyDreamEffectActive() {
@@ -435,7 +453,7 @@ class GameEngine {
   draw() {
     this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 
-    if(this.mode == "gameplay") {
+    if (this.mode == "gameplay") {
       this.bg.draw(this.ctx);
       this.drawGameplay();
       this.hud.draw(this.ctx);
@@ -458,22 +476,22 @@ class GameEngine {
   }
 
   // Builds a fresh set of game entities (used for initial load and replay)
-	buildWorld() {
+  buildWorld() {
 
-		// Level-specific spawns
-		Levels.buildLevel(this)
+    // Level-specific spawns
+    Levels.buildLevel(this)
 
-		this.blockMap = {};
+    this.blockMap = {};
 
-		this.entities.forEach(e => { // Keep this last
-			if (e instanceof Block) {
-				const gx = Math.floor(e.x / PARAMS.BLOCKWIDTH);
-				const gy = Math.floor(e.y / PARAMS.BLOCKWIDTH);
+    this.entities.forEach(e => { // Keep this last
+      if (e instanceof Block) {
+        const gx = Math.floor(e.x / PARAMS.BLOCKWIDTH);
+        const gy = Math.floor(e.y / PARAMS.BLOCKWIDTH);
 
-				this.blockMap[`${gx},${gy}`] = e;
-			}
-		});
-	}
+        this.blockMap[`${gx},${gy}`] = e;
+      }
+    });
+  }
 
   loadNextLevel() {
     //this.highestLevel = Math.max(this.highestLevel, this.currentLevel);
@@ -483,74 +501,77 @@ class GameEngine {
   }
 
   // Clears current world state and rebuilds it
-	resetWorld(mode, levelNum) {
-		this.gameOver = false;
-		this.gameWon = false;
+  resetWorld(mode, levelNum) {
+    this.gameOver = false;
+    this.gameWon = false;
     const targetMode = mode ?? this.mode;
-		this.mode = targetMode;
+    this.mode = targetMode;
     this.currentLevel = levelNum ?? this.currentLevel;
 
-		this.entities = [];
-		this.sleepyGuy = null;
-		this.waypoints = [];
-		this.click = null;
+    this.entities = [];
+    this.sleepyGuy = null;
+    this.waypoints = [];
+    this.click = null;
 
-		this.inventory?.clear?.();
-		this.swordSwing = null;
-		this.swordCooldown = 0;
-		this.swordSwingId = 0;
+    this.inventory?.clear?.();
+    this.swordSwing = null;
+    this.swordCooldown = 0;
+    this.swordSwingId = 0;
 
-		this.brushSwing = null;
-		this.brushCooldown = 0;
-		this.brushSwingId = 0;
+    this.brushSwing = null;
+    this.brushCooldown = 0;
+    this.brushSwingId = 0;
 
-		this.gridMap = {};        // IMPORTANT: clears old blocks/spikes/sandbags
-		this.blockMap = {};       // optional (you rebuild this anyway)
+    this.gridMap = {};        // IMPORTANT: clears old blocks/spikes/sandbags
+    this.blockMap = {};       // optional (you rebuild this anyway)
 
-		this.brushSwing = null;   // if ToothBrush exists in your build
-		this.brushCooldown = 0;
-		this.brushSwingId = 0;
+    this.brushSwing = null;   // if ToothBrush exists in your build
+    this.brushCooldown = 0;
+    this.brushSwingId = 0;
 
-		this.prevT = false;
-		this.dreamCatcherActive = false;
-		this.dreamCatcherTimer = 0;
+    this.prevT = false;
+    this.dreamCatcherActive = false;
+    this.dreamCatcherTimer = 0;
 
-		// keep half-sized defaults
-		this.dreamCatcherRadius = 85;
-		this.dreamCatcherMinRadius = 30;
-		this.dreamCatcherMaxRadius = 210;
-		this.dreamCatcherRadiusStep = 10;
+    this.pajamaArmorActive = false;
+    this.pajamaArmorHits = 0;
 
-		this.prevLBracket = false;
-		this.prevRBracket = false;
+    // keep half-sized defaults
+    this.dreamCatcherRadius = 60;
+    this.dreamCatcherMinRadius = 30;
+    this.dreamCatcherMaxRadius = 210;
+    this.dreamCatcherRadiusStep = 10;
 
-		this.sandbagCooldown = 0; // so sandbags feel fresh on restart
+    this.prevLBracket = false;
+    this.prevRBracket = false;
 
-		// reset SleepDust + TeddyBear state too
-		this.sleepDustCooldown = 0;
-		this.sleepDustSplash = null;
+    this.sandbagCooldown = 0; // so sandbags feel fresh on restart
 
-		this.rocketActive = false;
-		this.rocketTimer = 0;
+    // reset SleepDust + TeddyBear state too
+    this.sleepDustCooldown = 0;
+    this.sleepDustSplash = null;
 
-		this.sleepMaskTimer = 0;
+    this.rocketActive = false;
+    this.rocketTimer = 0;
 
-		this.teddyCooldown = 0;
-		if (this.teddyDecoy) this.teddyDecoy.removeFromWorld = true;
-		this.teddyDecoy = null;
+    this.sleepMaskTimer = 0;
 
-		this.strangeLampTimer = 0;
+    this.teddyCooldown = 0;
+    if (this.teddyDecoy) this.teddyDecoy.removeFromWorld = true;
+    this.teddyDecoy = null;
 
-		this.prevB = false;
-		if (this.dreamBubble) this.dreamBubble.close(true);
+    this.strangeLampTimer = 0;
+
+    this.prevB = false;
+    if (this.dreamBubble) this.dreamBubble.close(true);
     this.clearMenuState(targetMode === "menu" ? "menu" : null);
 
     if (targetMode !== "menu") this.buildWorld();
 
-		if (window.setMusicMode) {
-			window.setMusicMode(targetMode === "menu" ? "menu" : "dream");
-		}
-	}
+    if (window.setMusicMode) {
+      window.setMusicMode(targetMode === "menu" ? "menu" : "dream");
+    }
+  }
 
   getActiveTeddy() {
     if (this.teddyDecoy && !this.teddyDecoy.removeFromWorld) return this.teddyDecoy;
@@ -591,6 +612,7 @@ class GameEngine {
 
       case "Pajama":
         this.pajamaArmorActive = true;
+        this.pajamaArmorHits = this.pajamaArmorMaxHits; // 3 hits
         break;
 
       case "DreamCatcher":
@@ -622,6 +644,7 @@ class GameEngine {
 
   clearDreamBubbleEffects() {
     this.pajamaArmorActive = false;
+    this.pajamaArmorHits = 0;
 
     this.dreamCatcherActive = false;
     this.dreamCatcherTimer = 0;
@@ -805,6 +828,55 @@ class GameEngine {
       }
     }
 
+    // ===== Placeable item cursors =====
+    const sandSelected = !!(sel && sel.id && sel.id.startsWith("SandBag"));
+    const teddySelected = !!(sel && sel.id === "TeddyBear");
+    const placeableSelected = teddySelected || dustSelected || sandSelected;
+
+    // Hide normal mouse cursor only for these placeable items
+    this.ctx.canvas.style.cursor =
+      (!bubbleOpen && mouseScreen && placeableSelected) ? "none" : "default";
+
+    if (!bubbleOpen && mouseScreen && sel?.img && placeableSelected) {
+      this.ctx.save();
+      this.ctx.globalAlpha = 0.78;
+
+      if (sandSelected && mouseWorld) {
+        // snap sandbag preview to tile
+        const bw = PARAMS.BLOCKWIDTH;
+        const gx = Math.floor(mouseWorld.x / bw);
+        const gy = Math.floor(mouseWorld.y / bw);
+        const px = gx * bw;
+        const py = gy * bw;
+        const p = this.worldToScreen(px, py);
+
+        const w = bw * 1.1;
+        const h = bw * 1.1;
+
+        this.ctx.drawImage(sel.img, p.x, p.y + 4, w, h);
+
+        const blocked = !!this.gridMap[`${gx},${gy}`];
+        this.ctx.strokeStyle = blocked ? "rgba(255,80,80,0.95)" : "rgba(255,255,255,0.95)";
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeRect(p.x, p.y, bw, bw);
+      } else {
+        // teddy + sleep dust icon preview at cursor
+        const scale = teddySelected ? 0.09 : 0.10;
+        const w = sel.img.width * scale;
+        const h = sel.img.height * scale;
+
+        this.ctx.drawImage(
+          sel.img,
+          mouseScreen.x - w / 2,
+          mouseScreen.y - h / 2,
+          w,
+          h
+        );
+      }
+
+      this.ctx.restore();
+    }
+
     // ===== DreamCatcher aura visual (matches kill radius exactly) =====
     if (this.mode === "gameplay" && this.dreamCatcherActive && this.sleepyGuy && !this.gameOver) {
       const sg = this.sleepyGuy;
@@ -840,7 +912,7 @@ class GameEngine {
         : { x: this.rightClick.wx, y: this.rightClick.wy };
       const clickX = rc.x;
       const clickY = rc.y;
-      const clickRadius = 30; 
+      const clickRadius = 30;
       let foundIndex = -1;
       for (let i = 0; i < this.waypoints.length; i++) {
         const wp = this.waypoints[i];
@@ -864,7 +936,7 @@ class GameEngine {
           }
         }
       }
-      this.rightClick = null; 
+      this.rightClick = null;
     }
 
     if (this.sleepDustCooldown > 0) this.sleepDustCooldown -= this.clockTick;
@@ -1133,11 +1205,11 @@ class GameEngine {
           if (!(e instanceof Spikes)) continue;
           if (e.removeFromWorld) continue;
 
-            const ex = e.x + (e.width * e.scale) / 2;
-            const ey = e.y + (e.height * e.scale) / 2;
+          const ex = e.x + (e.width * e.scale) / 2;
+          const ey = e.y + (e.height * e.scale) / 2;
 
-            const d2 = dist2PointToSegment(ex, ey, ax, ay, bx, by);
-            if (d2 > r2) continue;
+          const d2 = dist2PointToSegment(ex, ey, ax, ay, bx, by);
+          if (d2 > r2) continue;
 
           // Remove only this one spike block
           e.removeFromWorld = true;
@@ -1162,11 +1234,11 @@ class GameEngine {
         }
       }
 
-        // Let the animation finish naturally
-        if (sw.t >= sw.duration) {
-          this.brushSwing = null;
-        }
+      // Let the animation finish naturally
+      if (sw.t >= sw.duration) {
+        this.brushSwing = null;
       }
+    }
 
     // ===== Sandbags (x3) placeable wall =====
     if (this.sandbagCooldown > 0) {
@@ -1175,7 +1247,7 @@ class GameEngine {
     }
 
     const sandSelected = !!(sel && sel.id && sel.id.startsWith("SandBag"));
-    
+
 
     if (sandSelected && this.click) {
       const { x: mx, y: my } = this.click;
@@ -1205,7 +1277,7 @@ class GameEngine {
 
             if (!overlapsPlayer) {
               // place the wall as a Block with a sandbag sprite
-              const sandSprite = ASSET_MANAGER.getAsset("./assets/items/SandBag3.png") || sel.img;
+              const sandSprite = ASSET_MANAGER.getAsset("./assets/items/SandBag1.png") || sel.img;
               const wall = new Block(this, px, py, {
                 sprite: sandSprite,
                 spriteScale: 1.1,     // tweak visuals

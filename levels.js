@@ -1,8 +1,8 @@
 class Levels {
-  static buildLevel(engine) {
-    // const world = engine.currentWorld || "daydream";
+    static buildLevel(engine) {
+        // const world = engine.currentWorld || "daydream";
 
-    const levelMap = {
+        const levelMap = {
             0: this.tutorial,
             1: this.level1,
             2: this.level2,
@@ -39,7 +39,7 @@ class Levels {
     static level1(engine) {
         engine.addEntity(new Bed(engine, 980, 250));
         engine.addEntity(new PickupItem(engine, 92, 60, "Pajama"));
-        engine.addEntity(new PickupItem(engine, 170, 350, "Sword")); 
+        engine.addEntity(new PickupItem(engine, 170, 350, "Sword"));
         engine.addEntity(new PickupItem(engine, 400, 350, "SleepDust"));
         engine.addEntity(new PickupItem(engine, 430, 100, "TeddyBear"));
 
@@ -52,8 +52,8 @@ class Levels {
         engine.addEntity(new Ghost(engine, 750, 65));
         engine.addEntity(new Sheep(engine, 542, 80))
         engine.addEntity(new Sheep(engine, 542, 520))
-    
-     
+
+
         const spiderPath = [
             { x: 400, y: 0 },
             { x: 600, y: 0 },
@@ -75,14 +75,14 @@ class Levels {
         const builder = new LevelBuilder(engine);
         builder.spawnRow(15, 0, 6);
         builder.spawnColumn(12, 4, 11);
-        builder.spawnRow(12, 32, 13);          
-        builder.spawnRow(18, 12, 18);          
-        builder.spawnRow(4, 13, 14); 
-        
+        builder.spawnRow(12, 32, 13);
+        builder.spawnRow(18, 12, 18);
+        builder.spawnRow(4, 13, 14);
+
         engine.addEntity(new Demon(engine, 520, 170));
         engine.addEntity(new Sheep(engine, 385, 70));
-        engine.addEntity(new Spikes(engine, 485,540));
-        engine.addEntity(new Spikes(engine, 450,540));
+        engine.addEntity(new Spikes(engine, 485, 540));
+        engine.addEntity(new Spikes(engine, 450, 540));
 
         const BW = PARAMS.BLOCKWIDTH;
         const gx = (c) => c * BW;
@@ -93,8 +93,8 @@ class Levels {
         const spiderRightCol = 26;
 
         const spiderPath = [
-        { x: gx(spiderLeftCol),  y: gy(spiderRow) },
-        { x: gx(spiderRightCol), y: gy(spiderRow) },
+            { x: gx(spiderLeftCol), y: gy(spiderRow) },
+            { x: gx(spiderRightCol), y: gy(spiderRow) },
         ];
 
         engine.addEntity(new Spider(engine, spiderPath));
@@ -108,10 +108,12 @@ class Levels {
 
     static level3(engine) {
         engine.addEntity(new Bed(engine, 1030, 200));
-        engine.addEntity(new PickupItem(engine, 170, 500, "Sword")); 
+
+        engine.addEntity(new PickupItem(engine, 170, 500, "Sword"));
         engine.addEntity(new PickupItem(engine, 600, 350, "SandBag3"));
         engine.addEntity(new PickupItem(engine, 260, 810, "SleepDust"));
-        engine.addEntity(new PickupItem(engine, 35, 180, "TheStrangeLamp"));
+        engine.addEntity(new PickupItem(engine, 130, 500, "ToothBrush"));
+        engine.addEntity(new PickupItem(engine, 35, 180, "Rocket"));
 
         const builder = new LevelBuilder(engine);
 
@@ -121,23 +123,23 @@ class Levels {
         const gy = (r) => r * BW;
 
 
-        builder.spawnColumn(6, 5, 14);   
+        builder.spawnColumn(6, 5, 14);
 
-        builder.spawnRow(10, 6, 15); 
-        builder.spawnColumn(15, 8, 9); 
-        builder.spawnRow(8, 15, 20); 
+        builder.spawnRow(10, 6, 15);
+        builder.spawnColumn(15, 8, 9);
+        builder.spawnRow(8, 15, 20);
         builder.spawnColumn(20, 8, 13);
-        builder.spawnRow(13, 20, 25); 
-        builder.spawnColumn(22, 6, 13); 
-        builder.spawnColumn(23, 6, 13); 
+        builder.spawnRow(13, 20, 25);
+        builder.spawnColumn(22, 6, 13);
+        builder.spawnColumn(23, 6, 13);
         builder.spawnRow(12, 25, 30);
-        
-        
+
+
         engine.addEntity(new StickyBush(engine, gx(17), gy(6)));
         engine.addEntity(new Ghost(engine, gx(8), gy(5)));
         engine.addEntity(new Sheep(engine, gx(22), gy(3)));
         engine.addEntity(new Ghost(engine, gx(24), gy(7)));
-        
+
         for (let c = 8; c <= 12; c++) {
             engine.addEntity(new Spikes(engine, gx(c), gy(13)));
         }
@@ -149,11 +151,11 @@ class Levels {
 
         // Spider timing gate: move patrol RIGHT so bottom lane has less “free runway”
         const spiderRow = 18;
-        const spiderLeftCol  = 16;
+        const spiderLeftCol = 16;
         const spiderRightCol = 31;
 
         const spiderPath = [
-            { x: gx(spiderLeftCol),  y: gy(spiderRow) },
+            { x: gx(spiderLeftCol), y: gy(spiderRow) },
             { x: gx(spiderRightCol), y: gy(spiderRow) },
         ];
 
@@ -174,16 +176,16 @@ class Levels {
         const gx = (c) => c * BW;
         const gy = (r) => r * BW;
 
-        builder.spawnColumn(7, 0, 8);        
-        builder.spawnColumn(7, 14, 24);      
+        builder.spawnColumn(7, 0, 8);
+        builder.spawnColumn(7, 14, 24);
 
         // Spider patrol across the GAP 
         const gapRow = 11;
-        const spiderLeftCol  = 3;
+        const spiderLeftCol = 3;
         const spiderRightCol = 12;
 
         const spiderPath = [
-            { x: gx(spiderLeftCol),  y: gy(gapRow) },
+            { x: gx(spiderLeftCol), y: gy(gapRow) },
             { x: gx(spiderRightCol), y: gy(gapRow) },
         ];
         engine.addEntity(new Spider(engine, spiderPath));
@@ -201,13 +203,13 @@ class Levels {
         // Close the gauntlet: right wall
         const rightCol = armStartCol + armLen - 1; // 28
         builder.spawnColumn(rightCol, topArmRow, bottomArmRow);
-    
-        builder.spawnColumn(16, topArmRow + 1, topArmRow + 3); 
-        builder.spawnColumn(20, bottomArmRow - 5, bottomArmRow - 1); 
+
+        builder.spawnColumn(16, topArmRow + 1, topArmRow + 3);
+        builder.spawnColumn(20, bottomArmRow - 5, bottomArmRow - 1);
 
         // small ledge ABOVE the bottom tooth 
-        const ledgeRow = bottomArmRow - 6; 
-        const ledgeStartCol = 18;         
+        const ledgeRow = bottomArmRow - 6;
+        const ledgeStartCol = 18;
         const ledgeLen = 2;
 
         builder.spawnRow(ledgeRow, ledgeStartCol, ledgeLen);
@@ -246,7 +248,7 @@ class Levels {
         builder.spawnRow(22, 1, 39);
 
         builder.spawnColumn(11, 8, 20);
-        builder.spawnRow(8,11, 13);
+        builder.spawnRow(8, 11, 13);
         //builder.spawnRow(20, 14, 28);
 
         builder.spawnColumn(23, 8, 13);
@@ -263,15 +265,15 @@ class Levels {
         engine.addEntity(new Spider(engine, spiderPath));
         engine.addEntity(new SleepyGuy(engine, gx(4), gy(15)));
     }
-  
+
     static level6(engine) {
         //TODO - build this level
-         engine.addEntity(new Bed(engine, 1030, 30));
+        engine.addEntity(new Bed(engine, 1030, 30));
         engine.addEntity(new SleepyGuy(engine, 130, 80));
     }
     static level7(engine) {
         //TODO - build this level
-         engine.addEntity(new Bed(engine, 1030, 30));
+        engine.addEntity(new Bed(engine, 1030, 30));
         engine.addEntity(new SleepyGuy(engine, 130, 80));
     }
 }

@@ -78,43 +78,36 @@ class DreamBubbleOverlay {
         }
 
         // If SleepyGuy moved -> bubble hides (but KEEP stored item)
-        const moved =
-            this.lastSGX !== null &&
-            (Math.abs(sg.x - this.lastSGX) > 0.5 || Math.abs(sg.y - this.lastSGY) > 0.5);
-
-        if (moved) {
-            this.isOpen = false;
-            this.lastSGX = sg.x;
-            this.lastSGY = sg.y;
-            return;
-        }
-
+        // Keep tracking Sleepy Guy, but do NOT close the bubble when he moves
         this.lastSGX = sg.x;
         this.lastSGY = sg.y;
 
         if (!this.isOpen) return;
 
-        // ===== Position bubble up-left of SleepyGuy =====
+        // ===== Position bubble at Sleepy Guy's TOP-RIGHT =====
         const w = 150;
         const h = 150;
 
-        // Use SleepyGuy center if BB exists
-        const sgW = sg.BB ? sg.BB.width : 60;
-        const sgH = sg.BB ? sg.BB.height : 60;
-        const sgCx = (sg.BB ? sg.BB.x + sgW / 2 : sg.x)  - this.game.camera.x;
-        const sgCy = (sg.BB ? sg.BB.y + sgH / 2 : sg.y)  - this.game.camera.y;
+        // Use SleepyGuy bounds if BB exists
+        const sgLeft = sg.BB ? sg.BB.left : sg.x;
+        const sgRight = sg.BB ? sg.BB.right : sg.x + 60;
+        const sgTop = sg.BB ? sg.BB.top : sg.y;
 
-        // UP-LEFT offsets (tweak if you want)
-        const offsetX = 30; // left
-        const offsetY = -180; // up
+        // Convert world -> screen
+        const screenRight = sgRight - this.game.camera.x;
+        const screenTop = sgTop - this.game.camera.y;
 
-        let x = sgCx + offsetX;
-        let y = sgCy + offsetY;
+        // Offsets from Sleepy Guy
+        const offsetX = 12;   // a little to the right
+        const offsetY = -150; // above him
 
-        // Keep bubble fully on-screen
+        let x = screenRight + offsetX;
+        let y = screenTop + offsetY;
+
+        // Small clamp so it does not fully disappear
         const cw = this.game.ctx.canvas.width;
         const ch = this.game.ctx.canvas.height;
-        const margin = 10;
+        const margin = 8;
 
         x = Math.max(margin, Math.min(cw - w - margin, x));
         y = Math.max(margin, Math.min(ch - h - margin, y));

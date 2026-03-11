@@ -7,7 +7,7 @@ class MenuRoomController {
 		this.theme = "day";  // "day" or "night"
 
 		this.btnBubbleNormal = ASSET_MANAGER.getAsset("./assets/background/menu/Unselected.png");
-		this.btnBubbleHover  = ASSET_MANAGER.getAsset("./assets/background/menu/Selected.png");
+		this.btnBubbleHover = ASSET_MANAGER.getAsset("./assets/background/menu/Selected.png");
 
 
 
@@ -49,7 +49,7 @@ class MenuRoomController {
 		this.optVolDownRect = { x: 0, y: 0, w: 0, h: 0 };
 		this.optVolUpRect = { x: 0, y: 0, w: 0, h: 0 };
 
-		
+
 		this.levels = [
 			{ id: 1, name: "Level 1", unlocked: true },
 			{ id: 2, name: "Level 2", unlocked: false },
@@ -64,7 +64,7 @@ class MenuRoomController {
 		this.selectedLevel = null;
 
 		// grid button rects (computed every frame)
-		this.levelRects = []; 
+		this.levelRects = [];
 		this.levelPanelRect = { x: 0, y: 0, w: 0, h: 0 };
 		this.levelBackRect = { x: 0, y: 0, w: 150, h: 46 };
 		this.levelSelectRect = { x: 0, y: 0, w: 0, h: 0 };
@@ -87,33 +87,33 @@ class MenuRoomController {
 					{ id: 4, name: "Level 4", unlocked: false },
 				]
 			},
-		lucidsunset: {
-    		title: "LucidSunset Levels",
-			roomBg: ASSET_MANAGER.getAsset("./assets/background/selectLevel/SunsetHall.png"),
-			portalCard: ASSET_MANAGER.getAsset("./assets/background/selectLevel/SunsetPortal.png"),
-			levels: [
-				{ id: 5, name: "Level 1", unlocked: true },
-				{ id: 6, name: "Level 2", unlocked: false },
-				{ id: 7, name: "Level 3", unlocked: false },
-				{ id: 8, name: "Level 4", unlocked: false },
-			]
-	},
-		nightfall: {
-			title: "NightFall Levels",
-			roomBg: ASSET_MANAGER.getAsset("./assets/background/selectLevel/NightFallHall.png"),
-			portalCard: ASSET_MANAGER.getAsset("./assets/background/selectLevel/NightFall_Portal.png"),
-			levels: [
-				{ id: 9, name: "Level 1", unlocked: false },
-				{ id: 10, name: "Level 2", unlocked: false },
-				{ id: 11, name: "Level 3", unlocked: false },
-				{ id: 12, name: "Level 4", unlocked: false },
-			]	
-	}
-	};
+			lucidsunset: {
+				title: "LucidSunset Levels",
+				roomBg: ASSET_MANAGER.getAsset("./assets/background/selectLevel/SunsetHall.png"),
+				portalCard: ASSET_MANAGER.getAsset("./assets/background/selectLevel/SunsetPortal.png"),
+				levels: [
+					{ id: 5, name: "Level 1", unlocked: true },
+					{ id: 6, name: "Level 2", unlocked: false },
+					{ id: 7, name: "Level 3", unlocked: false },
+					{ id: 8, name: "Level 4", unlocked: false },
+				]
+			},
+			nightfall: {
+				title: "NightFall Levels",
+				roomBg: ASSET_MANAGER.getAsset("./assets/background/selectLevel/NightFallHall.png"),
+				portalCard: ASSET_MANAGER.getAsset("./assets/background/selectLevel/NightFall_Portal.png"),
+				levels: [
+					{ id: 9, name: "Level 1", unlocked: false },
+					{ id: 10, name: "Level 2", unlocked: false },
+					{ id: 11, name: "Level 3", unlocked: false },
+					{ id: 12, name: "Level 4", unlocked: false },
+				]
+			}
+		};
 
 		this.worldNextRect = { x: 0, y: 0, w: 140, h: 52 };//
 		this.worldPrevRect = { x: 0, y: 0, w: 140, h: 52 };//
-		
+
 
 
 		this.portalUnlocked =
@@ -131,8 +131,8 @@ class MenuRoomController {
 		const ch = this.game.ctx.canvas.height;
 
 		// const activeTheme = this.getActiveWorldTheme(); //TODO change this to send back a range.
-			// There is no reason to add an extra layer of string mappings when levels already exist as a clear num map
-			// Handle the numbers directly instead of adding in heavier and unnecessary mappings.
+		// There is no reason to add an extra layer of string mappings when levels already exist as a clear num map
+		// Handle the numbers directly instead of adding in heavier and unnecessary mappings.
 		// const activeLevels = activeTheme.levels;
 
 		const pad = 18;
@@ -237,7 +237,7 @@ class MenuRoomController {
 		this.optionsPanelRect.h = Math.min(360, ch * 0.50);
 		this.optionsPanelRect.x = (cw - this.optionsPanelRect.w) / 2;
 		this.optionsPanelRect.y = (ch - this.optionsPanelRect.h) / 2;
-	
+
 
 		this.optionsCloseRect.w = 44;
 		this.optionsCloseRect.h = 44;
@@ -253,7 +253,7 @@ class MenuRoomController {
 		const optBtnW = Math.min(260, p.w * 0.55);
 		const optBtnH = 56;
 		const cx = p.x + p.w / 2 - optBtnW / 2;
-		
+
 		this.optMuteRect = { x: cx, y: p.y + 110, w: optBtnW, h: optBtnH };
 		this.optVolDownRect = {
 			x: cx,
@@ -268,7 +268,7 @@ class MenuRoomController {
 			h: optBtnH,
 		};
 
-		
+
 
 		// Level Select (top-middle-ish or wherever you want)
 		this.levelSelectRect.w = Math.min(320, Math.max(220, cw * 0.22));
@@ -305,47 +305,36 @@ class MenuRoomController {
 		}
 
 		if (this.scene === "levelSelect") {
-			// Update unlocked levels
-			for (let i = 0; i < this.levels.length; i++) {
-				if(i <= this.game.highestLevel) {
-					this.levels[i].unlocked = true;
-
-					if(i < this.worldThemes?.daydream.levels?.length) { //Temp fix to fix merge bug - need to update locked level image on select level menu
-						this.worldThemes.daydream.levels[i].unlocked = true;
-					} //TODO - get rid of this extra layer of abstraction.
-					// Very, very bad practice. Use level numbers directly and map ranges to themes
-
-				} else {
-					break;
+			// Unlock by REAL level id across ALL worlds.
+			// highestLevel starts at 0, so +1 keeps Level 1 open at the start.
+			for (const worldKey of this.worldOrder) {
+				for (const L of this.worldThemes[worldKey].levels) {
+					L.unlocked = L.id <= (this.game.highestLevel + 1);
 				}
 			}
+
+			const activeTheme = this.getActiveWorldTheme();
+			const activeLevels = activeTheme.levels;
 
 			const cols = 2;
 			const titleTop = ch * 0.17;
 			const titleHeight = 70;
 			const topSafe = titleTop + titleHeight + 25;
-
 			const bottomSafe = 40;
-
 			const gap = Math.max(22, cw * 0.018);
 
-			const rows = Math.ceil(Math.min(this.levels.length, 4) / cols); //fix for merge conflict bug
-			//const rows = Math.ceil(this.levels.length / cols);
-			//const rows = Math.ceil(activeLevels.length / cols);
+			const rows = Math.ceil(activeLevels.length / cols);
 
-			const availW = cw * 0.78; 
+			const availW = cw * 0.78;
 			const availH = ch - topSafe - bottomSafe;
 
-			// Compute max card sizes that guarantee everything fits
 			const maxCardW = (availW - gap * (cols - 1)) / cols;
 			const maxCardH = (availH - gap * (rows - 1)) / rows;
 
 			const aspect = 1.05;
-
 			let cardW = Math.min(maxCardW, maxCardH / aspect);
 
 			cardW *= 0.92;
-
 			cardW = Math.max(190, Math.min(290, cardW));
 
 			const cardH = cardW * aspect;
@@ -358,12 +347,7 @@ class MenuRoomController {
 
 			this.levelRects = [];
 
-			//Temp fix to fix merge bug - need to update locked level image on select level menu
-			const levelMaxCount = Math.min(this.levels.length, this.worldThemes.daydream.levels.length);
-			//TODO: REALLY bad practice. Delete worldthemes layer of abstraction, handle mapping to themes directly with level count
-
-			for (let i = 0; i < levelMaxCount; i++) {
-			// for (let i = 0; i < this.levels.length; i++) {//
+			for (let i = 0; i < activeLevels.length; i++) {
 				const row = Math.floor(i / cols);
 				const col = i % cols;
 
@@ -389,7 +373,6 @@ class MenuRoomController {
 				w: 140,
 				h: 52
 			};
-
 		}
 	}
 
@@ -425,7 +408,7 @@ class MenuRoomController {
 
 		} else if (this.scene === "levelSelect") {
 			const activeTheme = this.getActiveWorldTheme();
-    		const activeLevels = activeTheme.levels;
+			const activeLevels = activeTheme.levels;
 			this.drawMenuButton(ctx, this.levelBackRect, "← Room");
 
 			const titleY = ch * 0.17;
@@ -483,10 +466,19 @@ class MenuRoomController {
 					ctx.restore();
 				}
 			}
-				this.drawMenuButton(ctx, this.worldPrevRect, "← Prev World");
-    			this.drawMenuButton(ctx, this.worldNextRect, "Next World →");
 
-			
+			const currentWorldIndex = this.worldOrder.indexOf(this.currentWorld);
+			const lastWorldIndex = this.worldOrder.length - 1;
+
+			if (currentWorldIndex > 0) {
+				this.drawMenuButton(ctx, this.worldPrevRect, "← Prev World");
+			}
+
+			if (currentWorldIndex < lastWorldIndex) {
+				this.drawMenuButton(ctx, this.worldNextRect, "Next World →");
+			}
+
+
 		} else if (this.scene === "dream") {
 			this.drawMenuButton(ctx, this.backRect, "← Room");
 		}
@@ -560,29 +552,29 @@ class MenuRoomController {
 			this.theme = this.theme === "night" ? "day" : "night";
 			return;
 		}
-		
+
 		// Standard menus (3rd priority)
 		if (this.scene === "menu") {
 			this.inStartMenu(x, y);
 		}
 		if (this.scene === "levelSelect") {
 			this.inSelectLevelMenu(x, y);
-			return; 
+			return;
 		}
 		if (this.scene === "room") {
 			this.inRoomMenu(x, y);
 		}
 
 	}
-	
+
 	inStartMenu(x, y) {
-		if(pointInRect(x, y, this.startRect)) {
+		if (pointInRect(x, y, this.startRect)) {
 			this.transitionTo("room");
 			return;
 		}
 	}
 	inRoomMenu(x, y) {
-		
+
 		if (pointInRect(x, y, this.backRect)) {
 			this.transitionTo("menu");
 			return;
@@ -626,19 +618,51 @@ class MenuRoomController {
 			return;
 		}
 	}
+
 	inSelectLevelMenu(x, y) {
 		// Back to room
 		if (pointInRect(x, y, this.levelBackRect)) {
 			this.transitionTo("room");
 			return;
 		}
-		// Click a level
+		
+		// Standard menus (3rd priority)
+		if (this.scene === "menu") {
+			this.inStartMenu(x, y);
+		}
+		if (this.scene === "levelSelect") {
+			this.inSelectLevelMenu(x, y);
+			return; 
+		}
+		if (this.scene === "room") {
+			this.inRoomMenu(x, y);
+		}
+
+		const currentWorldIndex = this.worldOrder.indexOf(this.currentWorld);
+		const lastWorldIndex = this.worldOrder.length - 1;
+
+		// Previous world
+		if (currentWorldIndex > 0 && pointInRect(x, y, this.worldPrevRect)) {
+			this.currentWorld = this.worldOrder[currentWorldIndex - 1];
+			return;
+		}
+
+		// Next world
+		if (currentWorldIndex < lastWorldIndex && pointInRect(x, y, this.worldNextRect)) {
+			this.currentWorld = this.worldOrder[currentWorldIndex + 1];
+			return;
+		}
+
+		// Click a level from the ACTIVE world
+		const activeLevels = this.getActiveWorldTheme().levels;
+
 		for (const rect of this.levelRects) {
 			if (pointInRect(x, y, rect)) {
-				const L = this.levels[rect.levelIndex];
-				if (!L.unlocked) return;
+				const L = activeLevels[rect.levelIndex];
+				if (!L || !L.unlocked) return;
+
 				this.selectedLevel = L.id;
-				// Start gameplay immediately (and let main.js rebuild world for that level)
+
 				if (this.game.startLevel) {
 					this.game.startLevel(this.selectedLevel);
 				} else {
@@ -648,17 +672,18 @@ class MenuRoomController {
 			}
 		}
 	}
+
 	inOptionsMenu(x, y) {
 		if (!pointInRect(x, y, this.optionsPanelRect)) {
 			this.showOptions = false;
-			if(this.game.mode == "pause" && !this.game.gameOver) {
+			if (this.game.mode == "pause" && !this.game.gameOver) {
 				this.game.mode = "gameplay";
 			}
 			return;
 		}
 		if (pointInRect(x, y, this.optionsCloseRect)) {
 			this.showOptions = false;
-			if(this.game.mode == "pause" && !this.game.gameOver) {
+			if (this.game.mode == "pause" && !this.game.gameOver) {
 				this.game.mode = "gameplay";
 			}
 			return;
@@ -703,34 +728,34 @@ class MenuRoomController {
 
 	// GUI Drawing
 
- drawMenuButton(ctx, r, label) {
-	ctx.save();
+	drawMenuButton(ctx, r, label) {
+		ctx.save();
 
-	// ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
-	// ctx.strokeStyle = "rgba(255, 255, 255, 0.55)";
-	// ctx.lineWidth = 2;
-	// roundRectPath(ctx, r.x, r.y, r.w, r.h, 18);
-	// ctx.fill();
-	// ctx.stroke();
+		// ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
+		// ctx.strokeStyle = "rgba(255, 255, 255, 0.55)";
+		// ctx.lineWidth = 2;
+		// roundRectPath(ctx, r.x, r.y, r.w, r.h, 18);
+		// ctx.fill();
+		// ctx.stroke();
 
-	const hover =
-		this.game.mouse && pointInRect(this.game.mouse.x, this.game.mouse.y, r);
+		const hover =
+			this.game.mouse && pointInRect(this.game.mouse.x, this.game.mouse.y, r);
 
-	const bubble = hover ? this.btnBubbleHover : this.btnBubbleNormal;
+		const bubble = hover ? this.btnBubbleHover : this.btnBubbleNormal;
 
-	if (bubble) {
-		ctx.drawImage(bubble, r.x, r.y, r.w, r.h);
+		if (bubble) {
+			ctx.drawImage(bubble, r.x, r.y, r.w, r.h);
+		}
+
+		ctx.fillStyle = "rgba(255,255,255,0.95)";
+		ctx.font = `600 ${Math.floor(r.h * 0.38)}px serif`;
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		ctx.fillText(label, r.x + r.w / 2, r.y + r.h / 2);
+
+
+		ctx.restore();
 	}
-
-	ctx.fillStyle = "rgba(255,255,255,0.95)";
-	ctx.font = `600 ${Math.floor(r.h * 0.38)}px serif`;
-	ctx.textAlign = "center";
-	ctx.textBaseline = "middle";
-	ctx.fillText(label, r.x + r.w / 2, r.y + r.h / 2);
-
-
-	ctx.restore();
- }
 
 
 
@@ -779,11 +804,11 @@ class MenuRoomController {
 		}
 
 		if (this.scene === "levelSelect") {
-    		return this.getActiveWorldTheme().roomBg;
+			return this.getActiveWorldTheme().roomBg;
 		}
 
 		return ASSET_MANAGER.getAsset("./assets/background/menu/newDream.png");
-	}	
+	}
 
 	drawContain(ctx, img, x, y, w, h) {
 		const iw = img.width;
@@ -1057,8 +1082,8 @@ class MenuRoomController {
 	}
 
 	getActiveWorldTheme() {
-    return this.worldThemes[this.currentWorld];
-}
+		return this.worldThemes[this.currentWorld];
+	}
 
 	drawWrappedTextCentered(ctx, text, x, y, w, h, fontSize = 20) {
 		ctx.save();
