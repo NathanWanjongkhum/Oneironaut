@@ -625,18 +625,6 @@ class MenuRoomController {
 			this.transitionTo("room");
 			return;
 		}
-		
-		// Standard menus (3rd priority)
-		if (this.scene === "menu") {
-			this.inStartMenu(x, y);
-		}
-		if (this.scene === "levelSelect") {
-			this.inSelectLevelMenu(x, y);
-			return; 
-		}
-		if (this.scene === "room") {
-			this.inRoomMenu(x, y);
-		}
 
 		const currentWorldIndex = this.worldOrder.indexOf(this.currentWorld);
 		const lastWorldIndex = this.worldOrder.length - 1;
