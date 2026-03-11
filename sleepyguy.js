@@ -316,6 +316,7 @@ class SleepyGuy { //extends Entity??
       case "VenusFlyTrap":
         if (protectedFromMobs) break;
         if (!this.hasBlockBetween(entity)) this.onTakeDamage(entity);
+        //this.onTakeDamage(entity);
         break;
 
       case "StickyBush":

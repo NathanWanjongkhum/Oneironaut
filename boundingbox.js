@@ -9,6 +9,7 @@ class BoundingBox {
     };
 
     collide(oth) {
+        if(!oth) return false;
         if (this.right > oth.left && this.left < oth.right && this.top < oth.bottom && this.bottom > oth.top) return true;
         return false;
     };
@@ -25,4 +26,19 @@ class BoundingBox {
 
         return {x: ox, y: oy};
     };
+
+    update(x, y, w, h) {
+        if(w) this.width = w;
+        if(h) this.height = h;
+        this.left = x;
+        this.top = y;
+        this.right = this.left + (w || this.width);
+        this.bottom = this.top + (h || this.height);
+    }
+
+    debugDraw(ctx, camera, color) {
+        ctx.strokeStyle = color ?? "red";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(this.left - camera?.x, this.top - camera?.y, this.width, this.height);
+    }
 };

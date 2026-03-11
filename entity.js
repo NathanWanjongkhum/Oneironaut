@@ -20,7 +20,7 @@ class Entity {
     if (PARAMS.DEBUG && this.BB) {
       this.BB.debugDraw(ctx, this.game.camera);
     }
-  }
+}
 
   updateBB() {
     this.BB?.update(this.x, this.y, this.width * this.scale, this.height * this.scale);

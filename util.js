@@ -68,4 +68,53 @@ const getNormalVector = (p1, p2) => {
     return (dist === 0) 
         ? { x: 0, y: 0 }
         : { x: dx / dist, y: dy / dist };
+};
+
+
+
+// ===== Geometry helpers (used by Sword) =====
+const clamp01 = (t) => {
+  return t < 0 ? 0 : t > 1 ? 1 : t;
+};
+
+// Squared distance from point P to segment AB
+const dist2PointToSegment = (px, py, ax, ay, bx, by) => {
+  const abx = bx - ax;
+  const aby = by - ay;
+  const apx = px - ax;
+  const apy = py - ay;
+  const abLen2 = abx * abx + aby * aby;
+  const t = abLen2 === 0 ? 0 : clamp01((apx * abx + apy * aby) / abLen2);
+  const cx = ax + abx * t;
+  const cy = ay + aby * t;
+  const dx = px - cx;
+  const dy = py - cy;
+  return dx * dx + dy * dy;
+};
+
+// Point in a rectangle
+const pointInRect = (px, py, r) => {
+    return px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h;
+};
+
+const roundRectPath = (ctx, x, y, w, h, radius) => {
+    const rr = Math.min(radius, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + rr, y);
+    ctx.arcTo(x + w, y, x + w, y + h, rr);
+    ctx.arcTo(x + w, y + h, x, y + h, rr);
+    ctx.arcTo(x, y + h, x, y, rr);
+    ctx.arcTo(x, y, x + w, y, rr);
+    ctx.closePath();
+};
+
+const roundRect = (ctx, x, y, w, h, r) => {
+    const rr = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + rr, y);
+    ctx.arcTo(x + w, y, x + w, y + h, rr);
+    ctx.arcTo(x + w, y + h, x, y + h, rr);
+    ctx.arcTo(x, y + h, x, y, rr);
+    ctx.arcTo(x, y, x + w, y, rr);
+    ctx.closePath();
 }

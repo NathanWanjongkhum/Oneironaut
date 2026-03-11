@@ -1,70 +1,109 @@
 class WaypointBuilder {
-    constructor(game) {
-        this.waypoints = [];
-        this.game = game;
-        this.game.waypoints = this.waypoints;
-    }
+  constructor(game) {
+    this.waypoints = [];
+    this.game = game;
+    this.game.waypoints = this.waypoints;
+    this.lineColor = "#0800ff";
+    this.nodeColor = "#ff00ff";
+    //TODO: use gradient 
+    // this.lineColor = game.ctx.createRadialGradient(100, 200, 100, 300, 60, 300);//TODO: adjust this so that the lines are visible
 
-    draw(ctx) {
-        if (this.waypoints.length === 0) return;
-        if (this.game.inLevel === false) return;
+    // this.gradient.addColorStop("0", "#3259e3");//TODO: replace colors, use #555555 format to control transparency
+    // this.gradient.addColorStop("0.5", "#25fbed");
+    // this.gradient.addColorStop("1.0", "#f591cf");
+  }
 
-        // Draw waypoints
-        ctx.fillStyle = "red";
-        ctx.beginPath();
-        for (let point of this.waypoints) {
-            ctx.moveTo(point.x, point.y);
-            ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
-        }
-        ctx.fill();
+  draw(ctx) {
+    if (this.game.inLevel === false) return;
 
-        // Draw lines between waypoints
-        ctx.strokeStyle = "blue";
+    const camX = this.game.camera?.x ?? 0;
+    const camY = this.game.camera?.y ?? 0;
+
+    if (this.waypoints.length > 0) {
+      // World-space path rendering with camera offset, isolated from other draws.
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.translate(-camX, -camY);
+
+      ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
+      ctx.shadowBlur = 2;
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
+
+      if (this.waypoints.length > 1) {
+        ctx.strokeStyle = this.lineColor;
         ctx.lineWidth = 2;
+        ctx.lineCap = "round";
         ctx.beginPath();
         for (let i = 0; i < this.waypoints.length - 1; i++) {
-            const from = this.waypoints[i];
-            const to = this.waypoints[i + 1];
-            ctx.moveTo(from.x, from.y);
-            ctx.lineTo(to.x, to.y);
+          const from = this.waypoints[i];
+          const to = this.waypoints[i + 1];
+          ctx.moveTo(from.x, from.y);
+          ctx.lineTo(to.x, to.y);
         }
         ctx.stroke();
+      }
 
-        // Draw current mouse position as a waypoint preview
-        if (gameEngine.mouse) {
-            ctx.fillStyle = "green";
-            ctx.beginPath();
-            ctx.arc(gameEngine.mouse.x, gameEngine.mouse.y, 5, 0, Math.PI * 2);
-            ctx.fill();
-        }
+      // Node styling: colored core + white center + white outer ring.
+      for (const point of this.waypoints) {
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = this.nodeColor;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 3, 0, Math.PI * 2);
+        ctx.fillStyle = "white";
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 8, 0, Math.PI * 2);
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      ctx.restore();
     }
 
-    update() {
-        if (this.game.mode !== "gameplay" || this.game.gameOver) return;
+    // Mouse preview stays in screen space.
+    if (this.game.mouse) {
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.fillStyle = "green";
+      ctx.beginPath();
+      ctx.arc(this.game.mouse.x, this.game.mouse.y, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
 
-        const sel = this.game.inventory?.getSelectedItem?.();
-        const weaponSelected = !!(
-            sel &&
-            (
-                sel.id === "Sword" ||
-                sel.id === "ToothBrush" ||
-                sel.id === "SleepDust" ||
-                sel.id === "TeddyBear" ||
-                (sel.id && sel.id.startsWith("SandBag"))
-            )
-        );
-        if (weaponSelected) return;
+  update() {
+    if (this.game.mode !== "gameplay" || this.game.gameOver) return;
 
-        if (gameEngine.click) {
-            this.addPoint(gameEngine.click.x, gameEngine.click.y);
+    if (this.game.click) {
+      const click = this.game.click;
+      const p = click.space === "world"
+        ? { x: click.x, y: click.y }
+        : this.game.screenToWorld(click.x, click.y);
 
-            // consume click so it only adds once
-            gameEngine.click = null;
-            this.game.click = null;
-        }
+      this.addPoint(p.x, p.y);
+      this.game.holdCameraThisFrame = true;
+      this.game.click = null; 
+    }
+  }
+
+  addPoint(x, y) {
+    // Prevent placing nodes too close together
+    if (this.waypoints.length > 0) {
+      const lastWp = this.waypoints[this.waypoints.length - 1];
+      const dist = Math.sqrt((x - lastWp.x) ** 2 + (y - lastWp.y) ** 2);
+
+      if (dist < 10) {
+        return;
+      }
     }
 
-    addPoint(x, y) {
-        this.waypoints.push({ x: x, y: y });
-    }
+    this.waypoints.push({ x: x, y: y });
+  }
 }

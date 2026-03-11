@@ -14,16 +14,66 @@ ASSET_MANAGER.queueDownload("./assets/background/menu/Unselected.png");
 ASSET_MANAGER.queueDownload("./assets/background/selectLevel/LevelSelectCorridor.png");
 ASSET_MANAGER.queueDownload("./assets/background/selectLevel/unlockedLevel.png");
 ASSET_MANAGER.queueDownload("./assets/background/selectLevel/lockedLevel.png");
+ASSET_MANAGER.queueDownload("./assets/background/selectLevel/DayDream_Hall.png");
+ASSET_MANAGER.queueDownload("./assets/background/selectLevel/DayDreamPortal.png");
 
+ASSET_MANAGER.queueDownload("./assets/background/selectLevel/SunsetHall.png");
+ASSET_MANAGER.queueDownload("./assets/background/selectLevel/SunsetPortal.png");
+
+ASSET_MANAGER.queueDownload("./assets/background/selectLevel/NightFallHall.png");
+ASSET_MANAGER.queueDownload("./assets/background/selectLevel/NightFall_Portal.png");
+
+ASSET_MANAGER.queueDownload("./assets/background/clouds1/1.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds1/2.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds1/3.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds1/4.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds2/1.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds2/2.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds2/3.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds2/4.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds3/1.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds3/2.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds3/3.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds3/4.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds4/1.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds4/2.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds4/3.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds4/4.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds5/1.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds5/2.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds5/3.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds5/4.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds5/5.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds6/1.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds6/2.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds6/3.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds6/4.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds6/5.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds6/6.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/1.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/2.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/3.png");
 ASSET_MANAGER.queueDownload("./assets/background/clouds7/4.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds8/1.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds8/2.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds8/3.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds8/4.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds8/5.png");
+ASSET_MANAGER.queueDownload("./assets/background/clouds8/6.png");
 
-ASSET_MANAGER.queueDownload("./assets/entities/bed.png");
 ASSET_MANAGER.queueDownload("./assets/entities/ghost1.png");
 ASSET_MANAGER.queueDownload("./assets/entities/ghost3.png");
-ASSET_MANAGER.queueDownload("./assets/entities/spider.png");
+ASSET_MANAGER.queueDownload("./assets/entities/spiders/1.png");
+ASSET_MANAGER.queueDownload("./assets/entities/spiders/2.png");
+ASSET_MANAGER.queueDownload("./assets/entities/spiders/3.png");
+ASSET_MANAGER.queueDownload("./assets/entities/spiders/4.png");
+ASSET_MANAGER.queueDownload("./assets/entities/spiders/5.png");
+ASSET_MANAGER.queueDownload("./assets/entities/spiders/6.png");
+ASSET_MANAGER.queueDownload("./assets/entities/spiders/7.png");
+ASSET_MANAGER.queueDownload("./assets/entities/spiders/8.png");
+ASSET_MANAGER.queueDownload("./assets/entities/spiders/9.png");
+ASSET_MANAGER.queueDownload("./assets/entities/spiders/10.png");
+ASSET_MANAGER.queueDownload("./assets/entities/spiders/11.png");
 ASSET_MANAGER.queueDownload("./assets/entities/plant1_idle.png");
 ASSET_MANAGER.queueDownload("./assets/entities/sheep_shadow.png");
 ASSET_MANAGER.queueDownload("./assets/entities/sleepyguy.png");
@@ -32,6 +82,7 @@ ASSET_MANAGER.queueDownload("./assets/entities/Bush_simple2_1.png");
 ASSET_MANAGER.queueDownload("./assets/entities/Bush_simple2_2.png");
 ASSET_MANAGER.queueDownload("./assets/entities/Bush_simple2_3.png");
 ASSET_MANAGER.queueDownload("./assets/entities/spikes.png");
+ASSET_MANAGER.queueDownload("./assets/entities/bed2.png");
 
 // Items
 ASSET_MANAGER.queueDownload("./assets/items/Sword.png");
@@ -60,114 +111,24 @@ ASSET_MANAGER.downloadAll(() => {
 
 	PARAMS.CANVAS_WIDTH = canvas.width;
 	PARAMS.CANVAS_HEIGHT = canvas.height;
-	PARAMS.DEBUG = true;
+	PARAMS.DEBUG = false;
 
 	gameEngine.init(ctx);
 
-	gameEngine.mode = "menu";
 
-	gameEngine.currentLevel = 1; //switch to 0 as initial state marking not yet in level?
+	// gameEngine.buildWorld();
 
+	gameEngine.restartToGameplay = () => gameEngine.resetWorld("gameplay");
+	gameEngine.restartToMenu = () => gameEngine.resetWorld("menu");
+	gameEngine.startLevel = (levelId) => gameEngine.resetWorld("gameplay", levelId);
 
-	// Builds a fresh set of game entities (used for initial load and replay)
-	function buildWorld(engine) {
-		engine.addEntity(new Background(engine));
+	//Initialize menu managers
+	gameEngine.menuRoomController = new MenuRoomController(gameEngine);
+	gameEngine.endGame = new EndGame(gameEngine);
 
-		// Level-specific spawns
-		Levels.buildLevel(engine)
-
-		// Common entities
-		engine.addEntity(new EndGame(engine));
-		engine.addEntity(new MenuRoomController(engine));
-
-		engine.blockMap = {};
-
-		engine.entities.forEach(e => { // Keep this last
-			if (e instanceof Block) {
-				const gx = Math.floor(e.x / PARAMS.BLOCKWIDTH);
-				const gy = Math.floor(e.y / PARAMS.BLOCKWIDTH);
-
-				engine.blockMap[`${gx},${gy}`] = e;
-			}
-		});
-	}
-
-
-	// Clears current world state and rebuilds it
-	function resetWorld(engine, mode, levelId = engine.currentLevel) {
-		engine.gameOver = false;
-		engine.gameWon = false;
-		engine.mode = mode;
-		engine.currentLevel = levelId;
-
-		engine.entities = [];
-		engine.sleepyGuy = null;
-		engine.waypoints = [];
-		engine.click = null;
-
-		engine.inventory?.clear?.();
-		engine.swordSwing = null;
-		engine.swordCooldown = 0;
-		engine.swordSwingId = 0;
-
-		engine.brushSwing = null;
-		engine.brushCooldown = 0;
-		engine.brushSwingId = 0;
-
-		engine.gridMap = {};        // IMPORTANT: clears old blocks/spikes/sandbags
-		engine.blockMap = {};       // optional (you rebuild this anyway)
-
-		engine.brushSwing = null;   // if ToothBrush exists in your build
-		engine.brushCooldown = 0;
-		engine.brushSwingId = 0;
-
-		engine.prevT = false;
-		engine.dreamCatcherActive = false;
-		engine.dreamCatcherTimer = 0;
-
-		// keep half-sized defaults
-		engine.dreamCatcherRadius = 85;
-		engine.dreamCatcherMinRadius = 30;
-		engine.dreamCatcherMaxRadius = 210;
-		engine.dreamCatcherRadiusStep = 10;
-
-		engine.prevLBracket = false;
-		engine.prevRBracket = false;
-
-		engine.sandbagCooldown = 0; // so sandbags feel fresh on restart
-
-		// reset SleepDust + TeddyBear state too
-		engine.sleepDustCooldown = 0;
-		engine.sleepDustSplash = null;
-
-		engine.rocketActive = false;
-		engine.rocketTimer = 0;
-
-		engine.sleepMaskTimer = 0;
-
-		engine.teddyCooldown = 0;
-		if (engine.teddyDecoy) engine.teddyDecoy.removeFromWorld = true;
-		engine.teddyDecoy = null;
-
-		engine.strangeLampTimer = 0;
-
-		engine.prevB = false;
-		if (engine.dreamBubble) engine.dreamBubble.close(true);
-
-		buildWorld(engine);
-
-		if (window.setMusicMode) {
-			window.setMusicMode(mode === "menu" ? "menu" : "dream");
-		}
-	}
-
-	gameEngine.restartToGameplay = () => resetWorld(gameEngine, "gameplay", gameEngine.currentLevel);
-	gameEngine.restartToMenu = () => resetWorld(gameEngine, "menu", gameEngine.currentLevel);
-	gameEngine.startLevel = (levelId) => resetWorld(gameEngine, "gameplay", levelId);
-
-	// Initial world starts in menu mode
-	gameEngine.mode = "menu";
-	buildWorld(gameEngine);
+	//Initialize other engine components
+	gameEngine.camera = new Camera(gameEngine);
+	gameEngine.bg = new Background(gameEngine);
 
 	// Start engine loop
 	gameEngine.start();
