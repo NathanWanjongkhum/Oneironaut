@@ -1,6 +1,6 @@
 const NUM_ANIMATIONS = 2;
 
-class SleepyGuy {
+class SleepyGuy { //extends Entity??
   constructor(game, x, y) {
     Object.assign(this, { game, x, y });
 
@@ -9,6 +9,9 @@ class SleepyGuy {
     this.spritesheet = ASSET_MANAGER.getAsset(
       "./assets/entities/sleepyguy.png",
     );
+
+    this.damageCooldown = 0;
+    this.damageCooldownDuration = 0.25; // quarter second between hits
 
     this.width = 200;
     this.height = 100;
@@ -25,8 +28,15 @@ class SleepyGuy {
 
     this.animations = [];
     this.loadAnimations();
-    this.updateBB();
+    this.BB = new BoundingBox(
+      this.x - (this.width * this.scale / 2),
+      this.y - (this.height * this.scale / 2),
+      this.width * this.scale,
+      this.height * this.scale,
+    );
     this._wasStrangeLamp = false;
+
+    this.game.camera.setPlayer(this);
   }
 
   loadAnimations() {
@@ -53,11 +63,11 @@ class SleepyGuy {
 
     if (this.game.mode !== "gameplay") return;
     const TICK = this.game.clockTick;
+    if (this.damageCooldown > 0) {
+      this.damageCooldown -= TICK;
+      if (this.damageCooldown < 0) this.damageCooldown = 0;
+    }
     if (this.dead) {
-      this.attackTimer += TICK;
-      if (this.attackTimer > 1) {
-        this.game.gameOver = true;
-      }
       this.updateBB();
       return;
     }
@@ -69,6 +79,10 @@ class SleepyGuy {
     // Move along waypoints if they exist
     const waypoints = this.game.waypoints;
     if (waypoints && waypoints.length > 0) {
+      if (this.targetWaypointIndex >= waypoints.length) {
+        this.targetWaypointIndex = waypoints.length - 1;
+      }
+
       let velocityLength = Math.sqrt(
         this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y,
       );
@@ -76,50 +90,38 @@ class SleepyGuy {
       let slowEffect = this.isStickyBush ? StickyBush.slowFactor : 1;
       velocityLength *= slowEffect;
 
-      // Rocket passive speed boost (after you press T on the Rocket in the dream bubble)
+      // Rocket passive speed boost
       const rocketBoost = this.game.rocketActive ? (this.game.rocketSpeedMultiplier ?? 1.6) : 1;
       velocityLength *= rocketBoost;
-
 
       // Use remaining movement this frame
       let remaining = velocityLength * TICK;
       let currentIndex = this.targetWaypointIndex;
 
-      while (remaining > 0) {
+      while (remaining > 0 && waypoints.length > 0) {
         // Recompute target and deltas for current index
         this.target = waypoints[currentIndex];
+        if (!this.target) {
+          this.targetWaypointIndex = Math.max(0, waypoints.length - 1);
+          break;
+        }
         let dx = this.target.x - this.x;
         let dy = this.target.y - this.y;
         let distance = Math.sqrt(dx * dx + dy * dy);
 
         if (distance === 0) {
-          // Exactly on the point so advance if possible, otherwise stop
-          if (currentIndex + 1 < waypoints.length) {
-            currentIndex++;
-            this.targetWaypointIndex = currentIndex;
-            continue;
-          } else {
-            this.targetWaypointIndex = currentIndex;
-            break;
-          }
+          // Exactly on the point so consume it and continue
+          waypoints.shift();
+          continue;
         }
 
         if (distance <= remaining) {
-          // Snap to this waypoint and consume movement, then try next
+          // Snap to this waypoint, consume movement, and consume the waypoint
           this.x = this.target.x;
           this.y = this.target.y;
           remaining -= distance;
-
-          if (currentIndex + 1 < waypoints.length) {
-            currentIndex++;
-            this.targetWaypointIndex = currentIndex;
-            // loop to attempt to use leftover movement on next waypoint
-            continue;
-          } else {
-            // Reached final waypoint
-            this.targetWaypointIndex = currentIndex;
-            break;
-          }
+          waypoints.shift();
+          continue;
         } else {
           // Move part-way towards the current target and finish this frame
           const angle = Math.atan2(dy, dx);
@@ -133,10 +135,43 @@ class SleepyGuy {
     // Reset collision flag
     this.isStickyBush = false;
     this.updateBB();
+
+    // Safety net: if enemy overlap is detected here, force damage.
+    // This catches edge cases where dynamic collision order misses a frame.
+    this.checkEnemyContact();
+
     // If Strange Lamp JUST ended this frame, push SleepyGuy out of any wall/sandbag/spikes
     if (wasPhasing && !phasing) {
       this.pushOutOfSolids();
     }
+  }
+
+  checkEnemyContact() {
+    if (this.dead || this.game.gameOver) return false;
+    if ((this.game.strangeLampTimer ?? 0) > 0) return false;
+    if ((this.game.sleepMaskTimer ?? 0) > 0) return false;
+    if (this.game.dreamCatcherActive) return false;
+    if (!this.BB) return false;
+
+    const pad = 6;
+    const probe = new BoundingBox(
+      this.BB.left - pad,
+      this.BB.top - pad,
+      this.BB.width + pad * 2,
+      this.BB.height + pad * 2,
+    );
+
+    for (const e of this.game.entities) {
+      if (!(e instanceof Monster)) continue;
+      if (e instanceof Sheep) continue;
+      if (e.dead || e.removeFromWorld || !e.BB) continue;
+      if (probe.collide(e.BB)) {
+        this.onTakeDamage(e);
+        return true;
+      }
+    }
+
+    return false;
   }
 
   // Put this helper RIGHT ABOVE handleBlockPhysics(entity)
@@ -257,16 +292,20 @@ class SleepyGuy {
     if (this.dead) return;
 
     const phasing = this.game.strangeLampTimer > 0;
+    const protectedFromMobs =
+      this.game.sleepMaskTimer > 0 ||
+      phasing ||
+      this.game.dreamCatcherActive;
 
     switch (entity.constructor.name) {
       case "Block":
-        // Strange Lamp: pass through walls/sandbags
+        // Strange Lamp lets Sleepy Guy phase through walls/sandbags
         if (phasing) break;
         this.handleBlockPhysics(entity, true);
         break;
 
       case "Spikes":
-        // Strange Lamp: pass through spikes (no damage)
+        // Ignore spikes while phasing
         if (phasing) break;
         this.onTakeDamage(entity);
         break;
@@ -275,14 +314,12 @@ class SleepyGuy {
       case "Spider":
       case "Demon":
       case "VenusFlyTrap":
-        // SleepMask OR StrangeLamp: mobs can't catch you
-        if (this.game.sleepMaskTimer > 0 || phasing) break;
-
-        // Prevent "hit through walls"
+        if (protectedFromMobs) break;
         if (!this.hasBlockBetween(entity)) this.onTakeDamage(entity);
         break;
 
       case "StickyBush":
+        // Optional: ignore sticky slow while phasing
         this.isStickyBush = true;
         break;
 
@@ -299,25 +336,52 @@ class SleepyGuy {
   onReachBed(_bed) {
     this.game.gameWon = true;
     this.game.gameOver = true;
+    this.game.updateHighest();
+    this.game.mode = "pause";
   }
-  onTakeDamage(_ghost) {
+
+  onTakeDamage(entity) {
+    if (entity?.sleepTimer > 0) return;
     if ((this.game.strangeLampTimer ?? 0) > 0) return;
+    if (this.game.dreamCatcherActive) return;
+    if (this.game.gameOver) return;
+    if (this.damageCooldown > 0) return;
+
+    // Pajama Armor blocks 3 hits, then breaks
+    if (this.game.pajamaArmorActive && this.game.pajamaArmorHits > 0) {
+      this.game.pajamaArmorHits--;
+      this.damageCooldown = this.damageCooldownDuration;
+
+      if (this.game.pajamaArmorHits <= 0) {
+        this.game.pajamaArmorHits = 0;
+        this.game.pajamaArmorActive = false;
+      }
+
+      return;
+    }
+
     this.dead = true;
     this.attackTimer = 0;
+    this.game.gameWon = false;
+    this.game.gameOver = true;
+    this.game.mode = "pause";
+    if (this.game.waypoints) this.game.waypoints.length = 0;
+    this.targetWaypointIndex = 0;
   }
 
   updateBB() {
     const w = this.width * this.scale;
     const h = this.height * this.scale;
-    this.BB = new BoundingBox(
-      this.x - w, // / 2,
-      this.y - h, // / 2,
-      w * 2,
-      h * 2,
+    this.BB.update(
+      this.x - (w / 2),
+      this.y - (h / 2),
+      w,
+      h,
     );
   }
 
   draw(ctx) {
+
     const anim = this.animations[this.state][this.currentFrame];
 
     // Advance animator time and preserve loop/finished behavior, then draw
@@ -346,9 +410,9 @@ class SleepyGuy {
 
     ctx.save();
 
-    if (this.game.options.debugging) {
+    if (PARAMS.DEBUG) {
       ctx.fillStyle = "blue";
-      ctx.fillRect(offsetX, offsetY, drawW, drawH);
+      ctx.fillRect(offsetX - this.game.camera.x, offsetY - this.game.camera.y, drawW, drawH);
     }
 
     // ===== Strange Lamp (semi-transparent while active) =====
@@ -363,8 +427,8 @@ class SleepyGuy {
       anim.yStart,
       frameW,
       frameH,
-      offsetX,
-      offsetY,
+      offsetX - this.game.camera.x,
+      offsetY - this.game.camera.y,
       drawW,
       drawH,
     );
@@ -378,8 +442,8 @@ class SleepyGuy {
         const mw = drawW * 0.55;
         const mh = mw * (maskImg.height / maskImg.width);
 
-        const mx = this.x - mw / 2;
-        const my = this.y - drawH * 0.10 - mh / 2;
+        const mx = this.x - mw / 2 - this.game.camera.x;
+        const my = this.y - drawH * 0.10 - mh / 2 - this.game.camera.y;
 
         ctx.save();
         const a = Math.min(1, this.game.sleepMaskTimer / 0.5);
@@ -389,9 +453,27 @@ class SleepyGuy {
       }
     }
 
-    if (PARAMS.DEBUG && this.BB) {
-      ctx.strokeStyle = "red";
-      ctx.strokeRect(this.BB.x, this.BB.y, this.BB.width, this.BB.height);
+    // ===== Pajama overlay (drawn when armor is active) =====
+    if (this.game.pajamaArmorActive) {
+      const pajamaImg = ASSET_MANAGER.getAsset("./assets/items/Pijama.png");
+      if (pajamaImg) {
+        const pw = drawW * 0.65; // Scale relative to SleepyGuy
+        const ph = pw * (pajamaImg.height / pajamaImg.width);
+
+        // Position on his body
+        const px = this.x - pw / 2 - this.game.camera.x;
+        const py = this.y - drawH * 0.15 - ph / 2 - this.game.camera.y;
+
+        ctx.save();
+        ctx.globalAlpha = 0.9;
+        ctx.drawImage(pajamaImg, px, py, pw, ph);
+        ctx.restore();
+      }
     }
+
+    if (PARAMS.DEBUG && this.BB) {
+      this.BB.debugDraw(ctx, this.game.camera);
+    }
+
   }
 }
