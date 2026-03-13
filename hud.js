@@ -16,12 +16,14 @@ class HUD {
     // Dropdown panel
     this.showMenu = false;
     this.panelRect = { x: 0, y: 0, w: 220, h: 0 };
+    this.helpRect = { x: 0, y: 0, w: 0, h: 0 };
     this.optRect = { x: 0, y: 0, w: 0, h: 0 };
     this.exitRect = { x: 0, y: 0, w: 0, h: 0 };
 
     // Signals to GameEngine
     this.requestExitToMenu = false;
     this.requestOpenOptions = false;
+    this.requestOpenHelp = false;
   }
 
   update(cw, ch) {
@@ -48,35 +50,45 @@ class HUD {
     // Dropdown under hamburger
     const pw = 220;
     const bh = 44;
+    const rowGap = 10;
     const panelPad = 10;
 
     this.panelRect.w = pw;
     this.panelRect.x = this.menuRect.x;
     this.panelRect.y = this.menuRect.y + this.menuRect.h + 8;
-    this.panelRect.h = panelPad + bh + 10 + bh + panelPad;
+    this.panelRect.h = panelPad + bh + rowGap + bh + rowGap + bh + panelPad;
+
+    this.helpRect.x = this.panelRect.x + panelPad;
+    this.helpRect.y = this.panelRect.y + panelPad;
+    this.helpRect.w = this.panelRect.w - panelPad * 2;
+    this.helpRect.h = bh;
 
     this.optRect.x = this.panelRect.x + panelPad;
-    this.optRect.y = this.panelRect.y + panelPad;
+    this.optRect.y = this.helpRect.y + bh + rowGap;
     this.optRect.w = this.panelRect.w - panelPad * 2;
     this.optRect.h = bh;
 
     this.exitRect.x = this.panelRect.x + panelPad;
-    this.exitRect.y = this.optRect.y + bh + 10;
+    this.exitRect.y = this.optRect.y + bh + rowGap;
     this.exitRect.w = this.panelRect.w - panelPad * 2;
     this.exitRect.h = bh;
   }
 
-  // Return true if HUD consumed the click
   handleClick(x, y) {
     // Hamburger toggle
     if (pointInRect(x, y, this.menuRect)) {
       this.showMenu = !this.showMenu;
-      //this.game.mode = "pause";
       return true;
     }
 
     // If dropdown is open, it consumes clicks
     if (this.showMenu) {
+      if (pointInRect(x, y, this.helpRect)) {
+        this.requestOpenHelp = true;
+        this.showMenu = false;
+        return true;
+      }
+
       if (pointInRect(x, y, this.optRect)) {
         this.requestOpenOptions = true;
         this.showMenu = false;
@@ -111,6 +123,7 @@ class HUD {
   draw(ctx) {
     this.drawHamburgerButton(ctx);
     this.drawInventorySlots(ctx);
+    this.drawPajamaHPBar(ctx);
 
     // timers on the top-right
     this.drawRightTimers(ctx);
@@ -496,6 +509,72 @@ class HUD {
     ctx.restore();
   }
 
+  drawPajamaHPBar(ctx) {
+    const g = this.game;
+    if (!g.pajamaArmorActive || g.pajamaArmorMaxHits <= 0) return;
+
+    const maxHits = g.pajamaArmorMaxHits || 5;
+    const hits = Math.max(0, Math.min(maxHits, g.pajamaArmorHits || 0));
+
+    const x = this.invRect.x;
+    const y = this.showMenu
+      ? this.panelRect.y + this.panelRect.h + 10
+      : this.invRect.y + this.invRect.h + 10;
+    const w = this.invRect.w;
+    const h = 36;
+    const pad = 8;
+
+    let barColor = "rgba(70, 220, 120, 0.95)";   // green
+    if (hits <= 1) {
+      barColor = "rgba(235, 70, 70, 0.95)";       // red
+    } else if (hits <= 2) {
+      barColor = "rgba(245, 210, 70, 0.95)";      // yellow
+    }
+
+    // container
+    ctx.save();
+    ctx.fillStyle = "rgba(0, 0, 0, 0.28)";
+    ctx.strokeStyle = "rgba(255,255,255,0.60)";
+    ctx.lineWidth = 2;
+    roundRectPath(ctx, x, y, w, h, 10);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    // label
+    ctx.save();
+    ctx.font = "bold 14px Arial";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillStyle = "rgba(0,0,0,0.65)";
+    ctx.fillText(`HP: ${hits}/${maxHits}`, x + pad + 1, y + 6 + 1);
+    ctx.fillStyle = "white";
+    ctx.fillText(`HP: ${hits}/${maxHits}`, x + pad, y + 6);
+    ctx.restore();
+
+    // segmented bar
+    const barX = x + pad;
+    const barY = y + 20;
+    const barW = w - pad * 2;
+    const barH = 10;
+    const gap = 4;
+    const segW = (barW - gap * (maxHits - 1)) / maxHits;
+
+    for (let i = 0; i < maxHits; i++) {
+      const sx = barX + i * (segW + gap);
+      const active = i < hits;
+
+      ctx.save();
+      ctx.fillStyle = active ? barColor : "rgba(255,255,255,0.10)";
+      ctx.strokeStyle = active ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.15)";
+      ctx.lineWidth = 1.5;
+      roundRectPath(ctx, sx, barY, segW, barH, 4);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
   drawHamburgerDropdown(ctx) {
     const p = this.panelRect;
 
@@ -508,6 +587,7 @@ class HUD {
     ctx.stroke();
     ctx.restore();
 
+    this.drawDropdownButton(ctx, this.helpRect, "Help");
     this.drawDropdownButton(ctx, this.optRect, "Options");
     this.drawDropdownButton(ctx, this.exitRect, "Exit to Main Menu");
   }

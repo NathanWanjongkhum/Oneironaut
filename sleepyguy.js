@@ -242,50 +242,118 @@ class SleepyGuy { //extends Entity??
     return true;
   }
 
+  isOverlappingSolidAt(testX, testY) {
+    const bw = PARAMS.BLOCKWIDTH;
+    if (!this.game.gridMap) return false;
+
+    const testBB = new BoundingBox(
+      testX - (this.width * this.scale) / 2,
+      testY - (this.height * this.scale) / 2,
+      this.width * this.scale,
+      this.height * this.scale
+    );
+
+    const minGx = Math.floor(testBB.left / bw) - 1;
+    const maxGx = Math.floor(testBB.right / bw) + 1;
+    const minGy = Math.floor(testBB.top / bw) - 1;
+    const maxGy = Math.floor(testBB.bottom / bw) + 1;
+
+    for (let gy = minGy; gy <= maxGy; gy++) {
+      for (let gx = minGx; gx <= maxGx; gx++) {
+        const e = this.game.gridMap[`${gx},${gy}`];
+        if (!e || e.removeFromWorld || !e.BB) continue;
+
+        if (!(e instanceof Block) && !(e instanceof Spikes)) continue;
+
+        if (testBB.collide(e.BB)) return true;
+      }
+    }
+
+    return false;
+  }
+
   pushOutOfSolids() {
     const bw = PARAMS.BLOCKWIDTH;
-    if (!this.game.gridMap || !this.BB) return;
+    if (!this.game.gridMap) return;
 
-    let moved = false;
+    this.updateBB();
 
-    // Try a few times in case we're overlapping multiple blocks/spikes
-    for (let iter = 0; iter < 8; iter++) {
-      this.updateBB();
+    // If already safe, do nothing
+    if (!this.isOverlappingSolidAt(this.x, this.y)) return;
 
-      const minGx = Math.floor(this.BB.left / bw) - 1;
-      const maxGx = Math.floor(this.BB.right / bw) + 1;
-      const minGy = Math.floor(this.BB.top / bw) - 1;
-      const maxGy = Math.floor(this.BB.bottom / bw) + 1;
+    const originX = this.x;
+    const originY = this.y;
 
-      let anyThisIter = false;
+    const step = Math.max(4, Math.floor(bw / 6));
+    const maxRadius = bw * 4;
 
-      for (let gy = minGy; gy <= maxGy; gy++) {
-        for (let gx = minGx; gx <= maxGx; gx++) {
-          const e = this.game.gridMap[`${gx},${gy}`];
-          if (!e || e.removeFromWorld || !e.BB) continue;
+    let found = null;
 
-          // Only push out of walls/sandbags + spikes
-          if (!(e instanceof Block) && !(e instanceof Spikes)) continue;
+    // Search outward in square rings for the nearest free position
+    for (let r = step; r <= maxRadius && !found; r += step) {
+      for (let dx = -r; dx <= r && !found; dx += step) {
+        for (let dy = -r; dy <= r && !found; dy += step) {
+          // only test the edge of the ring
+          if (Math.abs(dx) !== r && Math.abs(dy) !== r) continue;
 
-          if (this.BB.collide(e.BB)) {
-            // push out, BUT don't kill the waypoint path every tiny correction
-            const did = this.handleBlockPhysics(e, false);
-            if (did) {
-              anyThisIter = true;
-              moved = true;
-            }
+          const tx = originX + dx;
+          const ty = originY + dy;
+
+          if (!this.isOverlappingSolidAt(tx, ty)) {
+            found = { x: tx, y: ty };
           }
         }
       }
-
-      if (!anyThisIter) break;
     }
 
-    // If we had to push you out after phasing, stop the path once (prevents re-entering)
-    if (moved) {
-      if (this.game.waypoints) this.game.waypoints.length = 0;
-      this.targetWaypointIndex = 0;
+    // Fallback: keep your old penetration-based cleanup if no open tile found
+    if (!found) {
+      let moved = false;
+
+      for (let iter = 0; iter < 8; iter++) {
+        this.updateBB();
+
+        const minGx = Math.floor(this.BB.left / bw) - 1;
+        const maxGx = Math.floor(this.BB.right / bw) + 1;
+        const minGy = Math.floor(this.BB.top / bw) - 1;
+        const maxGy = Math.floor(this.BB.bottom / bw) + 1;
+
+        let anyThisIter = false;
+
+        for (let gy = minGy; gy <= maxGy; gy++) {
+          for (let gx = minGx; gx <= maxGx; gx++) {
+            const e = this.game.gridMap[`${gx},${gy}`];
+            if (!e || e.removeFromWorld || !e.BB) continue;
+            if (!(e instanceof Block) && !(e instanceof Spikes)) continue;
+
+            if (this.BB.collide(e.BB)) {
+              const did = this.handleBlockPhysics(e, false);
+              if (did) {
+                anyThisIter = true;
+                moved = true;
+              }
+            }
+          }
+        }
+
+        if (!anyThisIter) break;
+      }
+
+      if (moved) {
+        if (this.game.waypoints) this.game.waypoints.length = 0;
+        this.targetWaypointIndex = 0;
+      }
+
+      return;
     }
+
+    // Snap to nearest open location
+    this.x = found.x;
+    this.y = found.y;
+    this.updateBB();
+
+    if (this.game.waypoints) this.game.waypoints.length = 0;
+    this.targetWaypointIndex = 0;
   }
 
   onCollision(entity) {
