@@ -145,92 +145,92 @@ class Monster extends Entity {
         ctx.drawImage(this.zzzImg, zX - this.game.camera.x, baseY + bob - this.game.camera.y, zW, zH);
         ctx.restore();
 
-      // if (this.spawn !== undefined) { //remnant from merge main into dev. I believe it comes from params debug on above line??
-      //   ctx.beginPath();
-      //   ctx.fillStyle = "cyan";
-      //   ctx.arc(this.spawn.x, this.spawn.y, 2, 0, 2 * Math.PI);
-      //   ctx.fill();
-      //   ctx.closePath();
-      // }
+        // if (this.spawn !== undefined) { //remnant from merge main into dev. I believe it comes from params debug on above line??
+        //   ctx.beginPath();
+        //   ctx.fillStyle = "cyan";
+        //   ctx.arc(this.spawn.x, this.spawn.y, 2, 0, 2 * Math.PI);
+        //   ctx.fill();
+        //   ctx.closePath();
+        // }
       }
     }
   }
 
-    /**
-     * Get a normalized vector {x, y} pointing toward the target (SleepyGuy or Teddy).
-     * SleepMask: mobs are blinded -> return {0,0} and clear aggro.
-     */
-    getVectorToPlayer() {
-      // ===== SleepMask: blinded mobs don't chase =====
-      if (this.game?.sleepMaskTimer > 0) {
-        this.aggroTimer = 0;
-        return { x: 0, y: 0 };
-      }
-
-      // Prefer Teddy target if your GameEngine supports it (safe fallback to SleepyGuy)
-      const target =
-        this.game?.getLureTargetFor ? this.game.getLureTargetFor(this) : this.game.sleepyGuy;
-
-      if (!target || target.dead || target.removeFromWorld) return { x: 0, y: 0 };
-
-      const center = {
-        x: this.x + (this.width * this.scale) / 2,
-        y: this.y + (this.height * this.scale) / 2,
-      };
-
-
-      const targetPos = { x: target.x, y: target.y };
-      return getNormalVector(targetPos, center);
+  /**
+   * Get a normalized vector {x, y} pointing toward the target (SleepyGuy or Teddy).
+   * SleepMask: mobs are blinded -> return {0,0} and clear aggro.
+   */
+  getVectorToPlayer() {
+    // ===== SleepMask: blinded mobs don't chase =====
+    if (this.game?.sleepMaskTimer > 0) {
+      this.aggroTimer = 0;
+      return { x: 0, y: 0 };
     }
 
-    handleBlockPhysics(entity) {
-      const thisBB = this.BB;
-      const blockBB = entity.BB;
+    // Prefer Teddy target if your GameEngine supports it (safe fallback to SleepyGuy)
+    const target =
+      this.game?.getLureTargetFor ? this.game.getLureTargetFor(this) : this.game.sleepyGuy;
 
-      const overlapX = thisBB.right > blockBB.left && thisBB.left < blockBB.right;
-      const overlapY = thisBB.bottom > blockBB.top && thisBB.top < blockBB.bottom;
+    if (!target || target.dead || target.removeFromWorld) return { x: 0, y: 0 };
 
-      if (overlapX && overlapY) {
-        // Calculate penetration depths from all 4 sides
-        const penLeft = thisBB.right - blockBB.left;
-        const penRight = blockBB.right - thisBB.left;
-        const penTop = thisBB.bottom - blockBB.top;
-        const penBottom = blockBB.bottom - thisBB.top;
+    const center = {
+      x: this.x + (this.width * this.scale) / 2,
+      y: this.y + (this.height * this.scale) / 2,
+    };
 
-        // Find the smallest penetration on each axis
-        const diffX = Math.min(penLeft, penRight);
-        const diffY = Math.min(penTop, penBottom);
 
-        if (diffY < diffX) {
-          // Vertical Collision
-          if (penTop < penBottom) {
-            // Standing on top of block
-            this.y -= penTop;
-            this.velocity.y = 0;
-            this.onGround = true;
-          } else {
-            // Hitting head on ceiling
-            this.y += penBottom;
-            this.velocity.y = 0;
-          }
+    const targetPos = { x: target.x, y: target.y };
+    return getNormalVector(targetPos, center);
+  }
+
+  handleBlockPhysics(entity) {
+    const thisBB = this.BB;
+    const blockBB = entity.BB;
+
+    const overlapX = thisBB.right > blockBB.left && thisBB.left < blockBB.right;
+    const overlapY = thisBB.bottom > blockBB.top && thisBB.top < blockBB.bottom;
+
+    if (overlapX && overlapY) {
+      // Calculate penetration depths from all 4 sides
+      const penLeft = thisBB.right - blockBB.left;
+      const penRight = blockBB.right - thisBB.left;
+      const penTop = thisBB.bottom - blockBB.top;
+      const penBottom = blockBB.bottom - thisBB.top;
+
+      // Find the smallest penetration on each axis
+      const diffX = Math.min(penLeft, penRight);
+      const diffY = Math.min(penTop, penBottom);
+
+      if (diffY < diffX) {
+        // Vertical Collision
+        if (penTop < penBottom) {
+          // Standing on top of block
+          this.y -= penTop;
+          this.velocity.y = 0;
+          this.onGround = true;
         } else {
-          // Horizontal Collision
-          if (penLeft < penRight) {
-            // Hit left side of block
-            this.x -= penLeft;
-            this.velocity.x = 0;
-          } else {
-            // Hit right side of block
-            this.x += penRight;
-            this.velocity.x = 0;
-          }
+          // Hitting head on ceiling
+          this.y += penBottom;
+          this.velocity.y = 0;
+        }
+      } else {
+        // Horizontal Collision
+        if (penLeft < penRight) {
+          // Hit left side of block
+          this.x -= penLeft;
+          this.velocity.x = 0;
+        } else {
+          // Hit right side of block
+          this.x += penRight;
+          this.velocity.x = 0;
         }
       }
-
-      // Update BB after snapping position
-      this.updateBB();
     }
+
+    // Update BB after snapping position
+    this.updateBB();
   }
+}
 
 class Ghost extends Monster {
   constructor(game, x, y) {
@@ -861,7 +861,7 @@ class Spider extends Monster {
       //if still set idle
       this.state = (dx == 0 && dy == 0) ? 0 : 1;
       //set direction
-      if(Math.abs(dx) > Math.abs(dy)) {
+      if (Math.abs(dx) > Math.abs(dy)) {
         this.facing = (dx > 0) ? 3 : 1;
       } else {
         this.facing = (dy > 0) ? 2 : 0;
@@ -1320,38 +1320,39 @@ class VenusFlyTrap extends Monster {
     const xOffset = (this.width * this.scale - bbWidth) / 2;
     const yOffset = (this.height * this.scale - bbHeight) / 2;
 
-    this.BB?.update(
-      this.x + xOffset,
-      this.y + yOffset,
-      bbWidth,
-      bbHeight,
-    );
+    const bbX = this.x + xOffset;
+    const bbY = this.y + yOffset;
+
+    if (!this.BB) {
+      this.BB = new BoundingBox(bbX, bbY, bbWidth, bbHeight);
+    } else {
+      this.BB.update(bbX, bbY, bbWidth, bbHeight);
+    }
   }
 
   draw(ctx) {
-    this.animations[this.state][this.type].drawFrame(
+    const anim =
+      this.animations?.[this.state]?.[this.type] ||
+      this.animations?.[0]?.[this.type] ||
+      this.animations?.[0]?.[0];
+
+    if (!anim) return;
+
+    anim.drawFrame(
       this.game.clockTick,
       ctx,
       this.x - this.game.camera.x,
       this.y - this.game.camera.y,
-      this.scale,
+      this.scale
     );
 
     super.draw(ctx);
   }
 
   loadAnimations() {
-    for (let i = 0; i < 10; i++) {
-      // states
-      this.animations.push([]);
-      for (let j = 0; j < 3; j++) {
-        // ghost types
-        this.animations.push([]);
-      }
-    }
+    this.animations = Array.from({ length: 10 }, () => Array(3).fill(null));
 
-    //spritesheet, xStart, yStart, width, height, frameCount, frameDuration, framePadding, reverse, loop
-    this.animations[0][0] = new Animator(
+    const idle = new Animator(
       this.spritesheet,
       0,
       0,
@@ -1361,7 +1362,14 @@ class VenusFlyTrap extends Monster {
       0.4,
       0,
       0,
-      1,
-    ); // idle
+      1
+    );
+
+    // Use idle as a safe fallback for every state/type for now
+    for (let s = 0; s < 10; s++) {
+      for (let t = 0; t < 3; t++) {
+        this.animations[s][t] = idle;
+      }
+    }
   }
 }

@@ -4,24 +4,26 @@
 (function () {
   const Music = {
     started: false,
-    mode: "menu", // "menu" or "dream"
+    mode: "menu",
     muted: false,
-    userVolume: 0.10, // matches your HTML slider default
+    userVolume: 0.10,
 
     tracks: {
       menu: new Audio("./assets/music/Oneironaut.mp3"),
-      dream: new Audio("./assets/music/DayDream1-1.mp3"),
+
+      // World themes
+      daydream: new Audio("./assets/music/DayDream1-1.mp3"),
+      lucidsunset: new Audio("./assets/music/LucidSunset 2-1.mp3"),
+      nightfall: new Audio("./assets/music/NightFall 3-1.mp3"),
     },
 
     init() {
-      // configure tracks
       for (const k in this.tracks) {
         const a = this.tracks[k];
         a.loop = true;
         a.preload = "auto";
       }
 
-      // read UI (if present)
       const muteEl = document.getElementById("mute");
       const volEl = document.getElementById("volume");
 
@@ -39,7 +41,6 @@
         });
       }
 
-      // apply initial volume/mute
       this._applyVolume();
     },
 
@@ -47,11 +48,11 @@
       if (this.started) return;
 
       const a = this.tracks[this.mode];
-      // must be called from a user gesture
+      if (!a) return;
+
       a.play()
         .then(() => {
           this.started = true;
-          // ensure correct volume after playback starts
           this._applyVolume();
         })
         .catch(() => {
@@ -68,6 +69,11 @@
     },
 
     setMode(mode) {
+      if (!this.tracks[mode]) {
+        console.warn("Music mode not found:", mode);
+        return;
+      }
+
       this.mode = mode;
       if (!this.started) return;
 
@@ -83,7 +89,6 @@
     },
 
     setVolume(v) {
-      // v expected 0..1
       this.userVolume = Math.max(0, Math.min(1, v));
       this._applyVolume();
     },
@@ -97,10 +102,8 @@
     },
   };
 
-  // expose globally
   window.Music = Music;
 
-  // keep compatibility with your existing MenuRoomController calls
   window.setMusicMode = function (mode) {
     Music.setMode(mode);
   };

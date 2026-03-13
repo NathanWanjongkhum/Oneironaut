@@ -65,7 +65,7 @@ class GameEngine {
     // ===== Pajama Armor passive =====
     this.pajamaArmorActive = false;
     this.pajamaArmorHits = 0;
-    this.pajamaArmorMaxHits = 3;
+    this.pajamaArmorMaxHits = 5;
 
     // ===== Dream Bubble take (Key T) =====
     this.prevT = false;
@@ -85,12 +85,11 @@ class GameEngine {
     this.rocketActive = false;
     this.rocketTimer = 0;
     this.rocketDuration = 5.0;
-    this.rocketSpeedMultiplier = 1.6; // 1.0 = normal, 1.6 = 60% faster
+    this.rocketSpeedMultiplier = 2.0; // 1.0 = normal, 2.0 = 100% faster
 
     // ===== Sleep Mask passive =====
     this.sleepMaskTimer = 0;       // seconds remaining
-    // this.sleepMaskDuration = 5.0;  // seconds//remnants from main merge to dev
-    this.sleepMaskDuration = 1.5;  // seconds
+    this.sleepMaskDuration = 5.0;  // seconds
 
     // ===== Strange Lamp passive =====
     // While > 0: SleepyGuy is invulnerable + drawn semi-transparent
@@ -251,10 +250,13 @@ class GameEngine {
   // Call when you press "New Dream"
   startGameplay() {
     this.mode = "gameplay";
-    if (window.setMusicMode) window.setMusicMode("dream");
     this.clearMenuState("room");
 
     this.currentLevel = 1;
+
+    if (window.setMusicMode) {
+      window.setMusicMode(this.getMusicModeForLevel(this.currentLevel));
+    }
     // clear menu + reset overlay
     this.entities = [];
 
@@ -315,6 +317,7 @@ class GameEngine {
   clearMenuState(sceneKey = null) {
     this.hud.showMenu = false;
     this.hud.requestOpenOptions = false;
+    this.hud.requestOpenHelp = false;
     this.hud.requestExitToMenu = false;
 
     if (!this.menuRoomController) return;
@@ -353,6 +356,13 @@ class GameEngine {
     if (this.dreamBubble) this.dreamBubble.close(true);
   }
 
+  getMusicModeForLevel(level) {
+    if (level >= 1 && level <= 4) return "daydream";
+    if (level >= 5 && level <= 8) return "lucidsunset";
+    if (level >= 9 && level <= 12) return "nightfall";
+    return "daydream";
+  }
+
   update() {
     const cw = this.ctx.canvas.width;
     const ch = this.ctx.canvas.height;
@@ -360,43 +370,69 @@ class GameEngine {
     // HUD layout always updates
     this.hud.update(cw, ch);
 
-
     if (this.mode === "gameplay") {
       this.updateGameplay();
+
       if (this.hud.requestExitToMenu) {
         this.hud.requestExitToMenu = false;
         this.goToMainMenu();
         return;
       }
+
+      if (this.hud.requestOpenHelp) {
+        this.hud.requestOpenHelp = false;
+        this.mode = "pause";
+        this.menuRoomController.showHelp = true;
+        this.menuRoomController.showOptions = false;
+        this.menuRoomController.showCredits = false;
+        return;
+      }
+
       if (this.hud.requestOpenOptions) {
         this.hud.requestOpenOptions = false;
         this.mode = "pause";
         this.menuRoomController.showOptions = true;
+        this.menuRoomController.showHelp = false;
+        this.menuRoomController.showCredits = false;
         return;
       }
 
     } else if (this.mode === "pause") {
       this.endGame.update();
-      // HUD requests
+
       if (this.hud.requestExitToMenu) {
         this.hud.requestExitToMenu = false;
         this.goToMainMenu();
         return;
       }
+
+      if (this.hud.requestOpenHelp) {
+        this.hud.requestOpenHelp = false;
+        this.menuRoomController.showHelp = true;
+        this.menuRoomController.showOptions = false;
+        this.menuRoomController.showCredits = false;
+      }
+
       if (this.hud.requestOpenOptions) {
         this.hud.requestOpenOptions = false;
         this.menuRoomController.showOptions = true;
+        this.menuRoomController.showHelp = false;
+        this.menuRoomController.showCredits = false;
       }
+
       this.menuRoomController.update();
+
       if (this.click) {
         const { x, y } = this.click;
         this.click = null;
-        if (this.menuRoomController.showOptions) {
+
+        if (this.menuRoomController.showOptions || this.menuRoomController.showHelp) {
           this.menuRoomController.handleClick(x, y);
         } else {
           this.hud.handleClick(x, y);
         }
       }
+
     } else if (this.mode === "menu") {
       this.menuRoomController.update();
       this.bg.update();
@@ -462,13 +498,17 @@ class GameEngine {
       this.drawGameplay();
       this.hud.draw(this.ctx);
       this.endGame?.draw(this.ctx);
+
+      if (this.menuRoomController.showHelp) {
+        this.menuRoomController.drawHelpModal(this.ctx);
+      }
+
       if (this.menuRoomController.showOptions) {
         this.menuRoomController.drawOptionsModal(this.ctx);
       }
     } else if (this.mode == "menu") {
       this.menuRoomController.draw(this.ctx);
     }
-
   }
 
   updateHighest() {
@@ -569,7 +609,11 @@ class GameEngine {
     if (targetMode !== "menu") this.buildWorld();
 
     if (window.setMusicMode) {
-      window.setMusicMode(targetMode === "menu" ? "menu" : "dream");
+      if (targetMode === "menu") {
+        window.setMusicMode("menu");
+      } else {
+        window.setMusicMode(this.getMusicModeForLevel(this.currentLevel));
+      }
     }
   }
 

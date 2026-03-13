@@ -207,8 +207,8 @@ class MenuRoomController {
 		this.helpRect.y = ch - pad - buttonH;
 
 		// Help modal sizing
-		this.helpPanelRect.w = Math.min(720, cw * 0.75);
-		this.helpPanelRect.h = Math.min(420, ch * 0.55);
+		this.helpPanelRect.w = Math.min(1120, cw * 0.92);
+		this.helpPanelRect.h = Math.min(660, ch * 0.90);
 		this.helpPanelRect.x = (cw - this.helpPanelRect.w) / 2;
 		this.helpPanelRect.y = (ch - this.helpPanelRect.h) / 2;
 
@@ -501,40 +501,29 @@ class MenuRoomController {
 	handleClick(x, y) {
 		if (this.transitioning) return;
 
-		// Pause only supports the in-game options panel.
+		// Pause-mode supports in-game help/options overlays
 		if (this.game.mode === "pause") {
-			if (this.showOptions) this.inOptionsMenu(x, y);
+			if (this.showOptions) {
+				this.inOptionsMenu(x, y);
+				return;
+			}
+
+			if (this.showHelp) {
+				this.inHelpMenu(x, y);
+				return;
+			}
+
 			return;
 		}
-
-
-		// // Click a level
-		// 	for (const r of this.levelRects) {
-		// 		if (this.pointInRect(x, y, r)) {
-		// 			const L = activeLevels[r.levelIndex];
-
-		// 			if (!L.unlocked) {
-		// 				alert("Coming soon");
-		// 				return;
-		// 			}
-
-		// 			this.selectedLevel = L.id;
-		// 			this.game.currentWorld = this.currentWorld;
-
-		// 			if (this.game.startLevel) {
-		// 				this.game.startLevel(this.selectedLevel, this.currentWorld);
-		// 			} else {
-		// 				this.game.mode = "gameplay";
-		// 			}
 
 		// Priority menus
 		if (this.showOptions || this.showCredits || this.showHelp) {
 			if (this.showOptions) {
 				this.inOptionsMenu(x, y);
 			} else {
-				//Same behavior = treat them identically + only one can be true at a time
 				const currMenuRect = this.showCredits ? this.creditsPanelRect : this.helpPanelRect;
 				const currCloseRect = this.showCredits ? this.creditsCloseRect : this.helpCloseRect;
+
 				if (pointInRect(x, y, currCloseRect)) {
 					this.showCredits = false;
 					this.showHelp = false;
@@ -547,13 +536,12 @@ class MenuRoomController {
 			return;
 		}
 
-		// Theme toggle (2nd priority)
+		// Theme toggle
 		if (pointInRect(x, y, this.toggleRect)) {
 			this.theme = this.theme === "night" ? "day" : "night";
 			return;
 		}
 
-		// Standard menus (3rd priority)
 		if (this.scene === "menu") {
 			this.inStartMenu(x, y);
 		}
@@ -564,7 +552,6 @@ class MenuRoomController {
 		if (this.scene === "room") {
 			this.inRoomMenu(x, y);
 		}
-
 	}
 
 	inStartMenu(x, y) {
@@ -584,14 +571,14 @@ class MenuRoomController {
 			return;
 		}
 		if (pointInRect(x, y, this.newDreamRect)) {
-			if (window.setMusicMode) window.setMusicMode("dream"); // Lucid Journey
+			if (window.setMusicMode) window.setMusicMode("daydream"); // Lucid Journey
 			this.showHelp = false;
 			this.showCredits = false;
 			if (this.game.startGameplay) {
 				this.game.startGameplay();
 			} else {// fallback (shouldn't happen)
 				this.game.mode = "gameplay";
-				if (window.setMusicMode) window.setMusicMode("dream");
+				if (window.setMusicMode) window.setMusicMode("daydream");
 			}
 			return;
 		}
@@ -702,7 +689,25 @@ class MenuRoomController {
 		}
 	}
 
-    transitionTo(sceneKey) {
+	inHelpMenu(x, y) {
+		if (!pointInRect(x, y, this.helpPanelRect)) {
+			this.showHelp = false;
+			if (this.game.mode === "pause" && !this.game.gameOver) {
+				this.game.mode = "gameplay";
+			}
+			return;
+		}
+
+		if (pointInRect(x, y, this.helpCloseRect)) {
+			this.showHelp = false;
+			if (this.game.mode === "pause" && !this.game.gameOver) {
+				this.game.mode = "gameplay";
+			}
+			return;
+		}
+	}
+
+	transitionTo(sceneKey) {
 		if (this.transitioning) return;
 
 		this.showHelp = false;
@@ -870,87 +875,217 @@ class MenuRoomController {
 		ctx.restore();
 	}
 
-
-
 	drawHelpModal(ctx) {
 		const cw = this.game.ctx.canvas.width;
 		const ch = this.game.ctx.canvas.height;
-
-
-		//TODO: What does this block of code do? Backgrounds dim without it. Merge relic??----- 
-		// Dim background
-		ctx.save();
-		ctx.fillStyle = "white";
-		ctx.font = "700 46px serif";
-		ctx.textAlign = "center";
-		ctx.textBaseline = "top";
-		ctx.shadowColor = "rgba(0,0,0,0.7)";
-		ctx.shadowBlur = 12;
-		//ctx.fillText("Select Level", cw/2, titleY); //merge issue where does titleY come from?
-		ctx.restore();
-		// --------
-
-
-		// Panel
 		const p = this.helpPanelRect;
 
+		// Dim background
 		ctx.save();
-		ctx.fillStyle = "rgba(20, 24, 40, 0.85)";
-		ctx.strokeStyle = "rgba(255,255,255,0.45)";
+		ctx.globalAlpha = 0.55;
+		ctx.fillStyle = "black";
+		ctx.fillRect(0, 0, cw, ch);
+		ctx.restore();
+
+		// Panel
+		ctx.save();
+		ctx.fillStyle = "rgba(20, 24, 40, 0.88)";
+		ctx.strokeStyle = "rgba(255,255,255,0.42)";
 		ctx.lineWidth = 2;
-		roundRectPath(ctx, p.x, p.y, p.w, p.h, 22);
+		roundRectPath(ctx, p.x, p.y, p.w, p.h, 24);
 		ctx.fill();
 		ctx.stroke();
 		ctx.restore();
 
 		// Title
 		ctx.save();
-		ctx.fillStyle = "rgba(255,255,255,0.95)";
-		ctx.font = "700 28px serif";
+		ctx.fillStyle = "rgba(255,255,255,0.96)";
+		ctx.font = "700 30px serif";
 		ctx.textAlign = "center";
 		ctx.textBaseline = "top";
 		ctx.fillText("Help", p.x + p.w / 2, p.y + 18);
 		ctx.restore();
 
-		// Close button (X)
+		// Close button
 		this.drawCloseButton(ctx, this.helpCloseRect);
 
-		const body =
-			"New Dream: Start a fresh run.\n" +
-			"Load Dream: Continue from a saved dream.\n" +
-			"Night/Day: Changes the theme.\n" +
-			"Controls\n\n" +
-			"Left Mouse Click (Planning):\n" +
-			"- Click to set a path point (creates a new node and links to the previous).\n" +
-			"- Click + hold on empty space: creates a node that follows the cursor; locks on release.\n" +
-			"- Click + hold on an existing node: drags the node; connected links redraw on release.\n\n" +
-			"Right Mouse Click (Planning):\n" +
-			"- Right click a hovered node to remove it.\n" +
-			"- Deletes that node AND all nodes after it.\n\n" +
-			"Return Key:\n" +
-			"- Begins the next phase.\n\n" +
-			"T Key:\n" +
-			"- Takes the current dream bubble item.\n\n" +
-			"P Key:\n" +
-			"- Selects the edit path option.\n\n" +
-			"Space Bar:\n" +
-			"- Use currently selected item.\n\n" +
-			"1 Key:\n" +
-			"- Selects the first inventory item.\n" +
-			"2 Key:\n" +
-			"- Selects the second inventory item.\n" +
-			"3 Key:\n" +
-			"- Selects the third inventory item.";
+		const innerX = p.x + 34;
+		const innerW = p.w - 68;
+
+		// -------- Top two-column info --------
+		const topY = p.y + 78;
+		const topGap = 36;
+		const topColW = (innerW - topGap) / 2;
+		const leftTopX = innerX;
+		const rightTopX = innerX + topColW + topGap;
+
+		// Quick Guide on the left
+		this.drawHelpSectionTitle(ctx, "Quick Guide", leftTopX, topY, topColW);
 
 		this.drawWrappedTextCentered(
 			ctx,
-			body,
-			p.x + 40,
-			p.y + 80,
-			p.w - 80,
-			p.h - 120,
-			16
+			"New Dream: Start a fresh run.\n" +
+			"Level Select: Choose a level to play.\n" +
+			"Night/Day: Change the menu theme.\n" +
+			"Goal: Guide Sleepy Guy safely to the bed.",
+			leftTopX,
+			topY + 40,
+			topColW,
+			120,
+			17
 		);
+
+		// Controls on the right
+		this.drawHelpSectionTitle(ctx, "Controls", rightTopX, topY, topColW);
+
+		this.drawWrappedTextCentered(
+			ctx,
+			"Left Click: Place a path point or use the selected item.\n" +
+			"Right Click: Remove a clicked path point and all points after it.\n" +
+			"B: Open / close Dream Bubble\n" +
+			"T: Take Dream Bubble item\n" +
+			"1 / 2 / 3: Select inventory slot",
+			rightTopX,
+			topY + 40,
+			topColW,
+			120,
+			17
+		);
+
+		// Divider
+		const dividerY = p.y + 250;
+		ctx.save();
+		ctx.strokeStyle = "rgba(255,255,255,0.18)";
+		ctx.lineWidth = 2;
+		ctx.beginPath();
+		ctx.moveTo(p.x + 24, dividerY);
+		ctx.lineTo(p.x + p.w - 24, dividerY);
+		ctx.stroke();
+		ctx.restore();
+
+		// -------- Bottom two-column layout --------
+		const columnsTop = dividerY + 18;
+		const colGap = 34;
+		const colW = (innerW - colGap) / 2;
+		const leftX = innerX;
+		const rightX = innerX + colW + colGap;
+
+		// Vertical divider
+		ctx.save();
+		ctx.strokeStyle = "rgba(255,255,255,0.14)";
+		ctx.lineWidth = 2;
+		ctx.beginPath();
+		ctx.moveTo(p.x + p.w / 2, columnsTop + 8);
+		ctx.lineTo(p.x + p.w / 2, p.y + p.h - 24);
+		ctx.stroke();
+		ctx.restore();
+
+		this.drawHelpSectionTitle(ctx, "Inventory Items", leftX, columnsTop, colW);
+		this.drawHelpSectionTitle(ctx, "Dream Bubble Items", rightX, columnsTop, colW);
+
+		let leftY = columnsTop + 36;
+		let rightY = columnsTop + 36;
+		const rowGap = 16;
+
+		leftY += this.drawHelpItemRow(
+			ctx,
+			"./assets/items/Sword.png",
+			"Sword — 5 uses",
+			["Knocks enemies away."],
+			leftX,
+			leftY,
+			colW
+		) + rowGap;
+
+		leftY += this.drawHelpItemRow(
+			ctx,
+			"./assets/items/ToothBrush.png",
+			"ToothBrush — 5 uses",
+			["Removes spikes."],
+			leftX,
+			leftY,
+			colW
+		) + rowGap;
+
+		leftY += this.drawHelpItemRow(
+			ctx,
+			"./assets/items/SleepDust.png",
+			"SleepDust — 1 use",
+			["Puts enemies to sleep in a small radius."],
+			leftX,
+			leftY,
+			colW
+		) + rowGap;
+
+		leftY += this.drawHelpItemRow(
+			ctx,
+			"./assets/items/SandBag3.png",
+			"Sandbags — 3 uses",
+			["Places blocks and can block any enemy including sleepy guy."],
+			leftX,
+			leftY,
+			colW
+		) + rowGap;
+
+		leftY += this.drawHelpItemRow(
+			ctx,
+			"./assets/items/TeddyBear.png",
+			"Teddy Bear — 1 use",
+			["Distracts enemies for 5 seconds."],
+			leftX,
+			leftY,
+			colW
+		) + rowGap;
+
+		rightY += this.drawHelpItemRow(
+			ctx,
+			"./assets/items/DreamCatcher.png",
+			"DreamCatcher — 5 seconds",
+			["Eliminates enemies in a small radius."],
+			rightX,
+			rightY,
+			colW
+		) + rowGap;
+
+		rightY += this.drawHelpItemRow(
+			ctx,
+			"./assets/items/TheStrangeLamp.png",
+			"The Strange Lamp — 5 seconds",
+			["SleepyGuy is invulnerable and can phase through."],
+			rightX,
+			rightY,
+			colW
+		) + rowGap;
+
+		rightY += this.drawHelpItemRow(
+			ctx,
+			"./assets/items/SleepMask.png",
+			"SleepMask — 5 seconds",
+			["Blinds enemies so they cannot chase Sleepy Guy."],
+			rightX,
+			rightY,
+			colW
+		) + rowGap;
+
+		rightY += this.drawHelpItemRow(
+			ctx,
+			"./assets/items/Rocket.png",
+			"Rocket — 5 seconds",
+			["Doubles Sleepy Guy's speed."],
+			rightX,
+			rightY,
+			colW
+		) + rowGap;
+
+		rightY += this.drawHelpItemRow(
+			ctx,
+			"./assets/items/Pijama.png",
+			"Pajama — 5 hits",
+			["Gives 5 extra damage protection to Sleepy Guy."],
+			rightX,
+			rightY,
+			colW
+		) + rowGap;
 	}
 
 	drawOptionsModal(ctx) {
@@ -1067,6 +1202,47 @@ class MenuRoomController {
 		ctx.lineTo(r.x + 14, r.y + r.h - 14);
 		ctx.stroke();
 		ctx.restore();
+	}
+
+	drawHelpSectionTitle(ctx, text, x, y, w) {
+		ctx.save();
+		ctx.fillStyle = "rgba(255,255,255,0.96)";
+		ctx.font = "700 24px serif";
+		ctx.textAlign = "center";
+		ctx.textBaseline = "top";
+		ctx.fillText(text, x + w / 2, y);
+		ctx.restore();
+	}
+
+	drawHelpItemRow(ctx, iconPath, title, lines, x, y, w) {
+		const icon = ASSET_MANAGER.getAsset(iconPath);
+		const iconSize = 46;
+		const textX = x + iconSize + 16;
+
+		if (icon) {
+			ctx.drawImage(icon, x, y + 2, iconSize, iconSize);
+		}
+
+		ctx.save();
+		ctx.textAlign = "left";
+		ctx.textBaseline = "top";
+
+		ctx.fillStyle = "rgba(255,255,255,0.96)";
+		ctx.font = "700 18px serif";
+		ctx.fillText(title, textX, y);
+
+		ctx.fillStyle = "rgba(255,255,255,0.86)";
+		ctx.font = "500 15px serif";
+
+		let ty = y + 22;
+		for (const line of lines) {
+			ctx.fillText(line, textX, ty);
+			ty += 18;
+		}
+
+		ctx.restore();
+
+		return Math.max(iconSize, 22 + lines.length * 18);
 	}
 
 	getActiveWorldTheme() {
