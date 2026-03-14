@@ -77,25 +77,30 @@ class HUD {
   handleClick(x, y) {
     // Hamburger toggle
     if (pointInRect(x, y, this.menuRect)) {
-      this.showMenu = !this.showMenu;
+      const opening = !this.showMenu;
+      this.showMenu = opening;
+      this.game.playSFX?.(opening ? "menuOpen" : "menuClose", 0.9);
       return true;
     }
 
     // If dropdown is open, it consumes clicks
     if (this.showMenu) {
       if (pointInRect(x, y, this.helpRect)) {
+        this.game.playSFX?.("buttonPress", 0.9);
         this.requestOpenHelp = true;
         this.showMenu = false;
         return true;
       }
 
       if (pointInRect(x, y, this.optRect)) {
+        this.game.playSFX?.("buttonPress", 0.9);
         this.requestOpenOptions = true;
         this.showMenu = false;
         return true;
       }
 
       if (pointInRect(x, y, this.exitRect)) {
+        this.game.playSFX?.("buttonPress", 0.9);
         this.requestExitToMenu = true;
         this.showMenu = false;
         return true;
@@ -104,6 +109,7 @@ class HUD {
       // Click outside closes it
       if (!pointInRect(x, y, this.panelRect) && !pointInRect(x, y, this.menuRect)) {
         this.showMenu = false;
+        this.game.playSFX?.("menuClose", 0.85);
         return true;
       }
 
@@ -113,7 +119,20 @@ class HUD {
     // Inventory click -> pick slot
     if (pointInRect(x, y, this.invRect)) {
       const slot = this.getSlotIndexAt(x, y);
-      if (slot !== null) this.inv.select(slot);
+      if (slot !== null) {
+        this.inv.select(slot);
+
+        const item = this.inv.getSelectedItem();
+        if (item?.id === "Sword") {
+          this.game.playSFX?.("swordEquip", 0.9);
+        } else if (item?.id === "ToothBrush") {
+          this.game.playSFX?.("toothbrushEquip", 0.9);
+        } else if (item?.id === "TeddyBear") {
+          this.game.playSFX?.("teddyBearEquip", 0.9);
+        } else if (item?.id?.startsWith("SandBag")) {
+          this.game.playSFX?.("sandBagEquip", 0.9);
+        }
+      }
       return true;
     }
 

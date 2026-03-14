@@ -81,7 +81,7 @@ class PickupItem {
                     item.count = 5;
                 }
 
-                // ToothBrsuh gets spike removals
+                // ToothBrush gets spike removals
                 if (this.id === "ToothBrush") {
                     item.count = 5;
                 }
@@ -92,8 +92,28 @@ class PickupItem {
                     item.count = Number.isFinite(n) ? n : 1;
                 }
 
+                const firstEmpty = this.game.inventory.slots.findIndex((s) => s === null);
+                const selected = this.game.inventory.getSelectedIndex();
+
                 const ok = this.game.inventory.addItem(item);
-                if (ok) this.removeFromWorld = true;
+                if (ok) {
+                    if (this.id === "SleepDust") {
+                        this.game.playSFX?.("sleepDustPickup", 0.9);
+                    } else {
+                        this.game.playSFX?.("itemPickup", 0.9);
+                    }
+                    this.removeFromWorld = true;
+                    // Auto-equip sound only if the new item landed in the selected slot
+                    if (firstEmpty === selected) {
+                        if (this.id === "Sword") {
+                            this.game.playSFX?.("swordEquip", 0.9);
+                        } else if (this.id === "ToothBrush") {
+                            this.game.playSFX?.("toothbrushEquip", 0.9);
+                        }
+                    }
+
+                    this.removeFromWorld = true;
+                }
             }
             return;
         }
@@ -106,9 +126,20 @@ class PickupItem {
                 const ok = this.game.dreamBubble.storeItem({ id: this.id, img: this.sprite });
 
                 if (ok) {
+                    if (this.id === "TheStrangeLamp") {
+                        this.game.playSFX?.("theStrangeLampPickedUp", 0.95);
+                    } else if (this.id === "DreamCatcher") {
+                        this.game.playSFX?.("dreamCatcherPickup", 0.95);
+                    } else if (this.id === "Rocket") {
+                        this.game.playSFX?.("rocketPickedUp", 0.95);
+                    } else if (this.id === "SleepMask") {
+                        this.game.playSFX?.("sleepMaskPickedUp", 10.95);
+                    } else if (this.id === "Pajama") {
+                        this.game.playSFX?.("pajamaPickedUp", 0.95);
+                    }
+
                     this.removeFromWorld = true; // stored successfully
                 }
-                // else bubble already full -> do nothing
             }
             return;
         }

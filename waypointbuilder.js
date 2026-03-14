@@ -89,7 +89,7 @@ class WaypointBuilder {
 
       this.addPoint(p.x, p.y);
       this.game.holdCameraThisFrame = true;
-      this.game.click = null; 
+      this.game.click = null;
     }
   }
 
@@ -105,5 +105,6 @@ class WaypointBuilder {
     }
 
     this.waypoints.push({ x: x, y: y });
+    this.game.playSFX?.("pathPointPlace", 0.85);
   }
 }

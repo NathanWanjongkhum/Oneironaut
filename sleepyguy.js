@@ -12,6 +12,10 @@ class SleepyGuy { //extends Entity??
 
     this.damageCooldown = 0;
     this.damageCooldownDuration = 0.25; // quarter second between hits
+    this.armorBreakImmunityDuration = 3.0;
+
+    this.pajamaBreakFadeTimer = 0;
+    this.pajamaBreakFadeDuration = 3.0;
 
     this.width = 200;
     this.height = 100;
@@ -63,14 +67,24 @@ class SleepyGuy { //extends Entity??
 
     if (this.game.mode !== "gameplay") return;
     const TICK = this.game.clockTick;
+
     if (this.damageCooldown > 0) {
       this.damageCooldown -= TICK;
       if (this.damageCooldown < 0) this.damageCooldown = 0;
     }
+
+    if (this.pajamaBreakFadeTimer > 0) {
+      this.pajamaBreakFadeTimer -= TICK;
+      if (this.pajamaBreakFadeTimer < 0) this.pajamaBreakFadeTimer = 0;
+    }
+
     if (this.dead) {
       this.updateBB();
       return;
     }
+
+    const prevX = this.x;
+    const prevY = this.y;
 
     const phasing = this.game.strangeLampTimer > 0;
     const wasPhasing = this._wasStrangeLamp;
@@ -132,6 +146,14 @@ class SleepyGuy { //extends Entity??
       }
     }
 
+    const movedThisFrame = Math.hypot(this.x - prevX, this.y - prevY) > 0.05;
+
+    if (movedThisFrame && !this.game.gameOver) {
+      this.game.startSleepyGuyTravelAudio?.();
+    } else {
+      this.game.stopSleepyGuyTravelAudio?.();
+    }
+
     // Reset collision flag
     this.isStickyBush = false;
     this.updateBB();
@@ -183,8 +205,8 @@ class SleepyGuy { //extends Entity??
     const ay = this.y;
 
     // enemy center
-    const bx = other?.BB ? (other.BB.x + other.BB.width / 2) : other.x;
-    const by = other?.BB ? (other.BB.y + other.BB.height / 2) : other.y;
+    const bx = other?.BB ? (other.BB.left + other.BB.width / 2) : other.x;
+    const by = other?.BB ? (other.BB.top + other.BB.height / 2) : other.y;
 
     const dx = bx - ax;
     const dy = by - ay;
@@ -403,6 +425,11 @@ class SleepyGuy { //extends Entity??
 
   //triggers win condition when SleepyGuy reaches bed
   onReachBed(_bed) {
+    if (this.game.gameOver) return;
+
+    this.game.stopSleepyGuyTravelAudio?.();
+    this.game.playSFX?.("levelComplete", 0.95);
+
     this.game.gameWon = true;
     this.game.gameOver = true;
     this.game.updateHighest();
@@ -416,18 +443,42 @@ class SleepyGuy { //extends Entity??
     if (this.game.gameOver) return;
     if (this.damageCooldown > 0) return;
 
-    // Pajama Armor blocks 3 hits, then breaks
+    // Pajama Armor blocks hits, then gives a short grace period when it breaks
     if (this.game.pajamaArmorActive && this.game.pajamaArmorHits > 0) {
       this.game.pajamaArmorHits--;
-      this.damageCooldown = this.damageCooldownDuration;
+
+      // Any hit absorbed by pajama
+      this.game.playSFX?.("sleepyguygettinghit", 0.95);
 
       if (this.game.pajamaArmorHits <= 0) {
         this.game.pajamaArmorHits = 0;
         this.game.pajamaArmorActive = false;
+
+        // optional extra break sound
+        this.game.playSFX?.("pajamabreaking", 0.95);
+
+        // start 3s transparency effect after Pajama breaks
+        this.pajamaBreakFadeTimer = this.pajamaBreakFadeDuration;
+
+        // last armor hit broke the Pajama: give a little extra immunity
+        this.damageCooldown = Math.max(
+          this.damageCooldown,
+          this.armorBreakImmunityDuration
+        );
+      } else {
+        // normal blocked hit cooldown
+        this.damageCooldown = Math.max(
+          this.damageCooldown,
+          this.damageCooldownDuration
+        );
       }
 
       return;
     }
+
+    // No pajama left: this is the losing/death hit
+    this.game.playSFX?.("sleepyguyGettingHit2", 0.95);
+    this.game.stopSleepyGuyTravelAudio?.();
 
     this.dead = true;
     this.attackTimer = 0;
@@ -436,6 +487,7 @@ class SleepyGuy { //extends Entity??
     this.game.mode = "pause";
     if (this.game.waypoints) this.game.waypoints.length = 0;
     this.targetWaypointIndex = 0;
+
   }
 
   updateBB() {
@@ -484,8 +536,9 @@ class SleepyGuy { //extends Entity??
       ctx.fillRect(offsetX - this.game.camera.x, offsetY - this.game.camera.y, drawW, drawH);
     }
 
-    // ===== Strange Lamp (semi-transparent while active) =====
-    if (this.game.strangeLampTimer > 0) {
+    // ===== Transparency effects =====
+    // Strange Lamp OR Pajama break fade
+    if (this.game.strangeLampTimer > 0 || this.pajamaBreakFadeTimer > 0) {
       const pulse = 0.45 + 0.10 * Math.sin(performance.now() * 0.02);
       ctx.globalAlpha = pulse;
     }

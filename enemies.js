@@ -26,6 +26,10 @@ class Monster extends Entity {
     this.sleepTimer = 0; // seconds remaining
     this.zzzImg = ASSET_MANAGER.getAsset("./assets/entities/ZZZ.png");
 
+    this.dying = false;
+    this.deathState = null;
+    this.dead = false;
+
   }
 
   /**
@@ -43,6 +47,30 @@ class Monster extends Entity {
     this.knockbackVel.y = vy;
     this.knockbackTimer = Math.max(this.knockbackTimer, duration);
     return true;
+  }
+
+  startDeath(deathState = 9) {
+    if (this.dying || this.removeFromWorld) return;
+
+    this.dead = true;
+    this.dying = true;
+    this.deathState = deathState;
+
+    this.velocity = { x: 0, y: 0 };
+    this.knockbackTimer = 0;
+    this.sleepTimer = 0;
+    this.aggroTimer = 0;
+
+    // Stop collisions while dying
+    this.BB = null;
+
+    // Reset the death animator so it always starts from frame 0
+    const anim = this.getDeathAnimator?.();
+    if (anim) anim.elapsedTime = 0;
+  }
+
+  getDeathAnimator() {
+    return null;
   }
 
   /**
@@ -274,8 +302,23 @@ class Ghost extends Monster {
     }
   }
 
+  getDeathAnimator() {
+    return this.animations[9][this.type];
+  }
+
   update() {
     if (this.game.mode !== "gameplay") return;
+
+    if (this.dying) {
+      this.state = this.deathState ?? 9;
+
+      const anim = this.getDeathAnimator();
+      if (anim && anim.isDone()) {
+        this.removeFromWorld = true;
+      }
+      return;
+    }
+
     if (this.dead) return;
     if (this.state === 3 || this.game.gameOver) return;
 
@@ -735,7 +778,7 @@ class Spider extends Monster {
     this.loadAnimations();
 
     this.facing = 0; //0=up, 1=left, 2=down, 3=right
-    this.state = 0; //0=idle, 1=walk, 2=attack
+    this.state = 0; //0=idle, 1=walk, 2=attack, 3=dead
 
     this.BB = new BoundingBox();
   }
@@ -815,15 +858,44 @@ class Spider extends Monster {
     this.animations[2][3] = new Animator(
       this.spritesheet, 0, 192, 64, 64, 4, 0.2, 0, 0, 1
     ); // attack
+    this.animations[3][0] = new Animator(
+      this.spritesheet, 0, 256, 64, 64, 4, 0.18, 0, 0, 0
+    );
+    this.animations[3][1] = new Animator(
+      this.spritesheet, 0, 256, 64, 64, 4, 0.18, 0, 0, 0
+    );
+    this.animations[3][2] = new Animator(
+      this.spritesheet, 0, 256, 64, 64, 4, 0.18, 0, 0, 0
+    );
+    this.animations[3][3] = new Animator(
+      this.spritesheet, 0, 256, 64, 64, 4, 0.18, 0, 0, 0
+    );
+  }
+
+  getDeathAnimator() {
+    return this.animations[3][this.facing];
   }
 
   update() {
     if (this.game.mode !== "gameplay") return;
+
+    if (this.dying) {
+      this.state = this.deathState ?? 3;
+
+      const anim = this.getDeathAnimator();
+      if (anim && anim.isDone()) {
+        this.removeFromWorld = true;
+      }
+      return;
+    }
+
     if (this.game.sleepMaskTimer > 0) {
       super.update();
       return;
     }
+
     if (this.dead) return;
+
     // Sword knockback stun
     if (this.doKnockbackMotion()) return;
 
@@ -961,8 +1033,23 @@ class Demon extends Monster {
     }
   }
 
+  getDeathAnimator() {
+    return this.animations[9][2];
+  }
+
   update() {
     if (this.game.mode !== "gameplay") return;
+
+    if (this.dying) {
+      this.state = this.deathState ?? 9;
+
+      const anim = this.getDeathAnimator();
+      if (anim && anim.isDone()) {
+        this.removeFromWorld = true;
+      }
+      return;
+    }
+
     if (this.dead) return;
     if (this.state === 3 || this.game.gameOver) return;
 

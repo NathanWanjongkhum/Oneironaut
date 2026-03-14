@@ -134,7 +134,7 @@ ASSET_MANAGER.downloadAll(() => {
 	gameEngine.start();
 
 	// Start music after any user interaction
-	canvas.addEventListener("pointerdown", Music.tryStartMusic);
+	canvas.addEventListener("pointerdown", () => Music.tryStart(), { once: true });
 
 	window.addEventListener("keydown", (e) => {
 		if (!gameEngine.gameOver) return;
@@ -145,9 +145,6 @@ ASSET_MANAGER.downloadAll(() => {
 
 	Music.init();
 	if (window.setMusicMode) window.setMusicMode("menu");
-
-	// tryStart once (prevents repeated calls)
-	canvas.addEventListener("pointerdown", () => Music.tryStart(), { once: true });
 
 });
 

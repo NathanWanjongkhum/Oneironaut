@@ -2,11 +2,24 @@
 // Global Music manager (no modules). Works with your current script-tag setup.
 
 (function () {
+  const clamp01 = (v) => Math.max(0, Math.min(1, Number(v) || 0));
+
   const Music = {
     started: false,
     mode: "menu",
     muted: false,
-    userVolume: 0.10,
+
+    // NEW
+    masterVolume: 1.0,
+    musicVolume: 0.10,
+
+    // Compatibility with your older code
+    get userVolume() {
+      return this.musicVolume;
+    },
+    set userVolume(v) {
+      this.musicVolume = clamp01(v);
+    },
 
     tracks: {
       menu: new Audio("./assets/music/Oneironaut.mp3"),
@@ -34,10 +47,11 @@
         });
       }
 
+      // keep old HTML slider working as MUSIC volume only
       if (volEl) {
-        this.userVolume = Number(volEl.value);
+        this.musicVolume = clamp01(Number(volEl.value));
         volEl.addEventListener("input", () => {
-          this.setVolume(Number(volEl.value));
+          this.setMusicVolume(Number(volEl.value));
         });
       }
 
@@ -79,22 +93,36 @@
 
       this.stopAll();
       const a = this.tracks[mode];
-      a.play().catch(() => {});
+      a.play().catch(() => { });
       this._applyVolume();
     },
 
     setMuted(m) {
-      this.muted = m;
+      this.muted = !!m;
       this._applyVolume();
     },
 
-    setVolume(v) {
-      this.userVolume = Math.max(0, Math.min(1, v));
+    setMasterVolume(v) {
+      this.masterVolume = clamp01(v);
       this._applyVolume();
+    },
+
+    setMusicVolume(v) {
+      this.musicVolume = clamp01(v);
+      this._applyVolume();
+    },
+
+    // compatibility alias
+    setVolume(v) {
+      this.setMusicVolume(v);
+    },
+
+    getAudibleMaster() {
+      return this.muted ? 0 : this.masterVolume;
     },
 
     _applyVolume() {
-      const vol = this.muted ? 0 : this.userVolume;
+      const vol = this.getAudibleMaster() * this.musicVolume;
 
       for (const k in this.tracks) {
         this.tracks[k].volume = vol;

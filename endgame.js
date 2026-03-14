@@ -24,6 +24,7 @@ class EndGame {
 
     update() {
         if (!this.game.gameOver) return;
+        if (this.game.sceneFadeActive) return;
 
         const click = this.game.click;
         if (!click) return;
@@ -32,18 +33,23 @@ class EndGame {
         this.game.click = null; // consume click
 
         if (this.playAgain && pointInRect(click.x, click.y, this.playAgain)) {
-            this.game.restartToGameplay();  
-            return;
-        }
-        if (this.game.gameWon && this.playNext && pointInRect(click.x, click.y, this.playNext)) {
-            this.game.loadNextLevel();
-            return;
-        }
-        if (this.quitMenu && pointInRect(click.x, click.y, this.quitMenu)) {
-            this.game.restartToMenu();   
+            this.game.restartToGameplay();
             return;
         }
 
+        if (this.game.gameWon && this.playNext && pointInRect(click.x, click.y, this.playNext)) {
+            this.game.fadeToNextLevel();
+            return;
+        }
+
+        if (this.quitMenu && pointInRect(click.x, click.y, this.quitMenu)) {
+            if (this.game.gameWon) {
+                this.game.fadeToMainMenu();
+            } else {
+                this.game.restartToMenu();
+            }
+            return;
+        }
     }
 
     draw(ctx) {
@@ -76,7 +82,7 @@ class EndGame {
 
         this.playAgain = { x, y: y0, w: btnW, h: btnH };
         this.drawButton(ctx, this.playAgain, "Play Again");
-        if(this.game.gameWon) {
+        if (this.game.gameWon) {
             this.playNext = { x, y: y1, w: btnW, h: btnH };
             this.quitMenu = { x, y: y2, w: btnW, h: btnH };
             this.drawButton(ctx, this.playNext, "Next Level");
