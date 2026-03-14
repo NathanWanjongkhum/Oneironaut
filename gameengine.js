@@ -14,6 +14,13 @@ class GameEngine {
     this.gameOver = false;
     this.gameWon = false;
 
+    // ===== Full-screen fade transition (win screen -> next level/menu) =====
+    this.sceneFadeActive = false;
+    this.sceneFade = 0;
+    this.sceneFadeDir = 0;      // 1 = fade in to black, -1 = fade back out
+    this.sceneFadeSpeed = 2.2;
+    this.sceneFadeAction = null;
+
     this.highestLevel = 0;
 
     this.bubbleSwapFX = null;  // { t, duration }
@@ -74,10 +81,10 @@ class GameEngine {
     this.dreamCatcherActive = false;
     this.dreamCatcherTimer = 0;
     this.dreamCatcherDuration = 5.0;   // lasts 5 seconds
-    this.dreamCatcherRadius = 60;      // small radius around Sleepy Guy
+    this.dreamCatcherRadius = 75;
     this.dreamCatcherMinRadius = 30;
-    this.dreamCatcherMaxRadius = 180;
-    this.dreamCatcherRadiusStep = 10;
+    this.dreamCatcherMaxRadius = 100;
+    this.dreamCatcherRadiusStep = 20;
     this.prevLBracket = false;
     this.prevRBracket = false;
 
@@ -96,6 +103,372 @@ class GameEngine {
     this.strangeLampTimer = 0;       // seconds remaining
     this.strangeLampDuration = 5.0;  // seconds
 
+    this.dreamCatcherAuraAudio = new Audio("./assets/sfx/dreamcatcher_aura_loop.mp3");
+    this.dreamCatcherAuraAudio.preload = "auto";
+    this.dreamCatcherAuraAudio.loop = false; // your file is already 5 seconds
+
+    this.sleepyGuyTravelAudio = new Audio("./assets/sfx/sleepyguytravelingair.mp3");
+    this.sleepyGuyTravelAudio.preload = "auto";
+    this.sleepyGuyTravelAudio.loop = true;
+
+    this.spiderWalkAudio = new Audio("./assets/sfx/spiderwalk.mp3");
+    this.spiderWalkAudio.preload = "auto";
+    this.spiderWalkAudio.loop = true;
+
+    this.ghostWhisperAudio = new Audio("./assets/sfx/ghostWhisper.mp3");
+    this.ghostWhisperAudio.preload = "auto";
+    this.ghostWhisperAudio.loop = true;
+
+    this.venusPlantNearAudio = new Audio("./assets/sfx/VenusPlantnear.mp3");
+    this.venusPlantNearAudio.preload = "auto";
+    this.venusPlantNearAudio.loop = true;
+
+    this.sheepCallAudio = new Audio("./assets/sfx/sheepCall.mp3");
+    this.sheepCallAudio.preload = "auto";
+    this.sheepCallAudio.loop = true;
+
+    this._sfxCtx = null;
+    this.sfxVolume = 1.0;
+    this.sfx = {
+      buttonPress: new Audio("./assets/sfx/button_press_magical.wav"),
+      magicGlassTouch: new Audio("./assets/sfx/magic_glass_touch.wav"),
+      menuOpen: new Audio("./assets/sfx/menu_open_dreamy.wav"),
+      menuClose: new Audio("./assets/sfx/menu_close_dreamy.wav"),
+      pathPointPlace: new Audio("./assets/sfx/path_point_place_dreamy.wav"),
+      pathPointRemove: new Audio("./assets/sfx/path_point_remove_dreamy.wav"),
+      itemPickup: new Audio("./assets/sfx/item_pickup_soft_pop.wav"),
+      swordHit: new Audio("./assets/sfx/sword_hit_dreamy.wav"),
+      swordEquip: new Audio("./assets/sfx/sword_unsheath_dreamy_metallic.wav"),
+      toothbrushEquip: new Audio("./assets/sfx/toothbrush_equip_brushy.wav"),
+      toothbrushScrub: new Audio("./assets/sfx/toothbrush_spike_scrub.wav"),
+
+      sleepDustPickup: new Audio("./assets/sfx/sleepdust_pickup_dusty_whoosh.wav"),
+      sleepDustThrow: new Audio("./assets/sfx/sleepdust_throw_dusty_whoosh.wav"),
+
+      teddyBearEquip: new Audio("./assets/sfx/teddybear_equip_squeaky.wav"),
+      teddyBearPlace: new Audio("./assets/sfx/teddybear_place_squeaky.wav"),
+
+      sandBagEquip: new Audio("./assets/sfx/sandbag_equip_grainy.wav"),
+      sandBagPlace: new Audio("./assets/sfx/sandbag_place_drop.wav"),
+
+      bubbleOpen: new Audio("./assets/sfx/bubble_open_watery.mp3"),
+      bubbleClose: new Audio("./assets/sfx/bubble_close_pop.mp3"),
+
+      theStrangeLampPickedUp: new Audio("./assets/sfx/theStrangeLampPickedUp.mp3"),
+      theStrangeLampUsed: new Audio("./assets/sfx/theStrangeLampUsed.mp3"),
+
+      dreamCatcherPickup: new Audio("./assets/sfx/dreamcatcherpickup.mp3"),
+
+      sleepMaskPickedUp: new Audio("./assets/sfx/sleepMaskPickedUp.mp3"),
+      sleepMaskUsed: new Audio("./assets/sfx/sleepMaskUsed.mp3"),
+
+      rocketPickedUp: new Audio("./assets/sfx/rocketPickedUp.mp3"),
+      rocketUsed: new Audio("./assets/sfx/rocketUsed.mp3"),
+
+      pajamaPickedUp: new Audio("./assets/sfx/pajamaPickedUp.mp3"),
+      pajamabreaking: new Audio("./assets/sfx/pajamabreaking.mp3"),
+      sleepyguygettinghit: new Audio("./assets/sfx/sleepyguygettinghit.mp3"),
+      sleepyguyGettingHit2: new Audio("./assets/sfx/sleepyguyGettingHit2.mp3"),
+
+      levelComplete: new Audio("./assets/sfx/LevelComplete.mp3"),
+
+      spiderKill: new Audio("./assets/sfx/spiderkill.mp3"),
+      ghostKill: new Audio("./assets/sfx/ghostKill.mp3"),
+      demonKill: new Audio("./assets/sfx/demonKill.mp3"),
+      venusPlantKill: new Audio("./assets/sfx/VenusplantKill.mp3"),
+
+
+    };
+
+    for (const a of Object.values(this.sfx)) {
+      a.preload = "auto";
+    }
+
+  }
+
+  startVenusPlantNearAudio() {
+    try {
+      if (!this.venusPlantNearAudio) return;
+
+      this.applyLoopSFXVolume(this.venusPlantNearAudio, 0.95);
+
+      if (this.venusPlantNearAudio.paused) {
+        this.venusPlantNearAudio.play().catch(() => { });
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  stopVenusPlantNearAudio() {
+    try {
+      if (!this.venusPlantNearAudio) return;
+      this.venusPlantNearAudio.pause();
+      this.venusPlantNearAudio.currentTime = 0;
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  updateVenusPlantNearAudio() {
+    if (this.mode !== "gameplay" || this.gameOver || !this.sleepyGuy) {
+      this.stopVenusPlantNearAudio();
+      return;
+    }
+
+    const sg = this.sleepyGuy;
+    const sx = sg.BB ? (sg.BB.left + sg.BB.width / 2) : sg.x;
+    const sy = sg.BB ? (sg.BB.top + sg.BB.height / 2) : sg.y;
+
+    const HEAR_RADIUS = 180;
+    const hearR2 = HEAR_RADIUS * HEAR_RADIUS;
+
+    let shouldPlay = false;
+
+    for (const e of this.entities) {
+      if (!(e instanceof VenusFlyTrap)) continue;
+      if (e.dead || e.removeFromWorld || e.sleepTimer > 0) continue;
+
+      const ex = e.BB ? (e.BB.left + e.BB.width / 2) : e.x;
+      const ey = e.BB ? (e.BB.top + e.BB.height / 2) : e.y;
+
+      const dx = ex - sx;
+      const dy = ey - sy;
+
+      if (dx * dx + dy * dy <= hearR2) {
+        shouldPlay = true;
+        break;
+      }
+    }
+
+    if (shouldPlay) this.startVenusPlantNearAudio();
+    else this.stopVenusPlantNearAudio();
+  }
+
+
+  startSleepyGuyTravelAudio() {
+    try {
+      if (!this.sleepyGuyTravelAudio) return;
+
+      this.applyLoopSFXVolume(this.sleepyGuyTravelAudio, 1.2);
+
+      if (this.sleepyGuyTravelAudio.paused) {
+        this.sleepyGuyTravelAudio.play().catch(() => { });
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  stopSleepyGuyTravelAudio() {
+    try {
+      if (!this.sleepyGuyTravelAudio) return;
+      this.sleepyGuyTravelAudio.pause();
+      this.sleepyGuyTravelAudio.currentTime = 0;
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  startSheepCallAudio() {
+    try {
+      if (!this.sheepCallAudio) return;
+
+      this.applyLoopSFXVolume(this.sheepCallAudio, 0.95);
+
+      if (this.sheepCallAudio.paused) {
+        this.sheepCallAudio.play().catch(() => { });
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  stopSheepCallAudio() {
+    try {
+      if (!this.sheepCallAudio) return;
+      this.sheepCallAudio.pause();
+      this.sheepCallAudio.currentTime = 0;
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  updateSheepCallAudio() {
+    if (this.mode !== "gameplay" || this.gameOver || !this.sleepyGuy) {
+      this.stopSheepCallAudio();
+      return;
+    }
+
+    const sg = this.sleepyGuy;
+    const sx = sg.BB ? (sg.BB.left + sg.BB.width / 2) : sg.x;
+    const sy = sg.BB ? (sg.BB.top + sg.BB.height / 2) : sg.y;
+
+    const HEAR_RADIUS = 170;
+    const hearR2 = HEAR_RADIUS * HEAR_RADIUS;
+
+    let shouldPlay = false;
+
+    for (const e of this.entities) {
+      if (!(e instanceof Sheep)) continue;
+      if (e.dead || e.removeFromWorld || e.sleepTimer > 0) continue;
+
+      const ex = e.BB ? (e.BB.left + e.BB.width / 2) : e.x;
+      const ey = e.BB ? (e.BB.top + e.BB.height / 2) : e.y;
+
+      const dx = ex - sx;
+      const dy = ey - sy;
+
+      if (dx * dx + dy * dy <= hearR2) {
+        shouldPlay = true;
+        break;
+      }
+    }
+
+    if (shouldPlay) this.startSheepCallAudio();
+    else this.stopSheepCallAudio();
+  }
+
+
+  startSpiderWalkAudio() {
+    try {
+      if (!this.spiderWalkAudio) return;
+
+      this.applyLoopSFXVolume(this.spiderWalkAudio, 0.95);
+
+      if (this.spiderWalkAudio.paused) {
+        this.spiderWalkAudio.play().catch(() => { });
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  stopSpiderWalkAudio() {
+    try {
+      if (!this.spiderWalkAudio) return;
+      this.spiderWalkAudio.pause();
+      this.spiderWalkAudio.currentTime = 0;
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  updateSpiderWalkAudio() {
+    if (this.mode !== "gameplay" || this.gameOver || !this.sleepyGuy) {
+      this.stopSpiderWalkAudio();
+      return;
+    }
+
+    const sg = this.sleepyGuy;
+    const sx = sg.BB ? (sg.BB.left + sg.BB.width / 2) : sg.x;
+    const sy = sg.BB ? (sg.BB.top + sg.BB.height / 2) : sg.y;
+
+    const HEAR_RADIUS = 180;
+    const hearR2 = HEAR_RADIUS * HEAR_RADIUS;
+
+    let shouldPlay = false;
+
+    for (const e of this.entities) {
+      if (!(e instanceof Spider)) continue;
+      if (e.dead || e.removeFromWorld || e.sleepTimer > 0) continue;
+
+      const ex = e.BB ? (e.BB.left + e.BB.width / 2) : e.x;
+      const ey = e.BB ? (e.BB.top + e.BB.height / 2) : e.y;
+
+      const dx = ex - sx;
+      const dy = ey - sy;
+
+      if (dx * dx + dy * dy <= hearR2) {
+        shouldPlay = true;
+        break;
+      }
+    }
+
+    if (shouldPlay) this.startSpiderWalkAudio();
+    else this.stopSpiderWalkAudio();
+  }
+
+  startGhostWhisperAudio() {
+    try {
+      if (!this.ghostWhisperAudio) return;
+
+      this.applyLoopSFXVolume(this.ghostWhisperAudio, 0.95);
+
+      if (this.ghostWhisperAudio.paused) {
+        this.ghostWhisperAudio.play().catch(() => { });
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  stopGhostWhisperAudio() {
+    try {
+      if (!this.ghostWhisperAudio) return;
+      this.ghostWhisperAudio.pause();
+      this.ghostWhisperAudio.currentTime = 0;
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  updateGhostWhisperAudio() {
+    if (this.mode !== "gameplay" || this.gameOver || !this.sleepyGuy) {
+      this.stopGhostWhisperAudio();
+      return;
+    }
+
+    const sg = this.sleepyGuy;
+    const sx = sg.BB ? (sg.BB.left + sg.BB.width / 2) : sg.x;
+    const sy = sg.BB ? (sg.BB.top + sg.BB.height / 2) : sg.y;
+
+    const HEAR_RADIUS = 200;
+    const hearR2 = HEAR_RADIUS * HEAR_RADIUS;
+
+    let shouldPlay = false;
+
+    for (const e of this.entities) {
+      const isGhostOrDemon = (e instanceof Ghost) || (e instanceof Demon);
+      if (!isGhostOrDemon) continue;
+      if (e.dead || e.removeFromWorld || e.sleepTimer > 0) continue;
+
+      const ex = e.BB ? (e.BB.left + e.BB.width / 2) : e.x;
+      const ey = e.BB ? (e.BB.top + e.BB.height / 2) : e.y;
+
+      const dx = ex - sx;
+      const dy = ey - sy;
+
+      if (dx * dx + dy * dy <= hearR2) {
+        shouldPlay = true;
+        break;
+      }
+    }
+
+    if (shouldPlay) this.startGhostWhisperAudio();
+    else this.stopGhostWhisperAudio();
+  }
+
+  getMasterVolume() {
+    if (!window.Music) return 1;
+    if (Music.muted) return 0;
+    return typeof Music.masterVolume === "number" ? Music.masterVolume : 1;
+  }
+
+  getSFXVolume() {
+    return typeof this.sfxVolume === "number" ? this.sfxVolume : 1;
+  }
+
+  setSFXVolume(v) {
+    this.sfxVolume = Math.max(0, Math.min(1, Number(v) || 0));
+  }
+
+  applyLoopSFXVolume(audio, gain = 1) {
+    if (!audio) return;
+    audio.volume = Math.max(
+      0,
+      Math.min(1, this.getMasterVolume() * this.getSFXVolume() * gain)
+    );
   }
 
   init(ctx) {
@@ -184,12 +557,44 @@ class GameEngine {
       if (!e.repeat) {
         if (e.code === "Digit1") {
           this.inventory.select(0);
+          const item = this.inventory.getSelectedItem();
+          if (item?.id === "Sword") {
+            this.playSFX("swordEquip", 0.9);
+          } else if (item?.id === "ToothBrush") {
+            this.playSFX("toothbrushEquip", 0.9);
+          } else if (item?.id === "TeddyBear") {
+            this.playSFX("teddyBearEquip", 0.9);
+          } else if (item?.id?.startsWith("SandBag")) {
+            this.playSFX("sandBagEquip", 0.9);
+          }
           e.preventDefault();
+
         } else if (e.code === "Digit2") {
           this.inventory.select(1);
+          const item = this.inventory.getSelectedItem();
+          if (item?.id === "Sword") {
+            this.playSFX("swordEquip", 0.9);
+          } else if (item?.id === "ToothBrush") {
+            this.playSFX("toothbrushEquip", 0.9);
+          } else if (item?.id === "TeddyBear") {
+            this.playSFX("teddyBearEquip", 0.9);
+          } else if (item?.id?.startsWith("SandBag")) {
+            this.playSFX("sandBagEquip", 0.9);
+          }
           e.preventDefault();
+
         } else if (e.code === "Digit3") {
           this.inventory.select(2);
+          const item = this.inventory.getSelectedItem();
+          if (item?.id === "Sword") {
+            this.playSFX("swordEquip", 0.9);
+          } else if (item?.id === "ToothBrush") {
+            this.playSFX("toothbrushEquip", 0.9);
+          } else if (item?.id === "TeddyBear") {
+            this.playSFX("teddyBearEquip", 0.9);
+          } else if (item?.id?.startsWith("SandBag")) {
+            this.playSFX("sandBagEquip", 0.9);
+          }
           e.preventDefault();
         }
       }
@@ -302,6 +707,12 @@ class GameEngine {
     Levels.buildLevel(this);
 
     this.blockMap = {};
+    this.stopDreamCatcherAuraAudio();
+    this.stopSleepyGuyTravelAudio();
+    this.stopSpiderWalkAudio();
+    this.stopGhostWhisperAudio();
+    this.stopVenusPlantNearAudio();
+    this.stopSheepCallAudio();
 
     this.entities.forEach((e) => {
       // Keep this last
@@ -351,7 +762,12 @@ class GameEngine {
     this.rocketTimer = 0;
     this.pajamaArmorActive = false;
     this.pajamaArmorHits = 0;
-
+    this.stopDreamCatcherAuraAudio();
+    this.stopSleepyGuyTravelAudio();
+    this.stopSpiderWalkAudio();
+    this.stopGhostWhisperAudio();
+    this.stopVenusPlantNearAudio();
+    this.stopSheepCallAudio();
     this.prevB = false;
     if (this.dreamBubble) this.dreamBubble.close(true);
   }
@@ -370,8 +786,20 @@ class GameEngine {
     // HUD layout always updates
     this.hud.update(cw, ch);
 
+    if (this.mode !== "gameplay") {
+      this.stopSleepyGuyTravelAudio();
+      this.stopSpiderWalkAudio();
+      this.stopGhostWhisperAudio();
+      this.stopVenusPlantNearAudio();
+      this.stopSheepCallAudio();
+    }
+
     if (this.mode === "gameplay") {
       this.updateGameplay();
+      this.updateSpiderWalkAudio();
+      this.updateGhostWhisperAudio();
+      this.updateVenusPlantNearAudio();
+      this.updateSheepCallAudio();
 
       if (this.hud.requestExitToMenu) {
         this.hud.requestExitToMenu = false;
@@ -437,6 +865,7 @@ class GameEngine {
       this.menuRoomController.update();
       this.bg.update();
     }
+    this.updateSceneFade();
   }
 
   isAnyDreamEffectActive() {
@@ -486,6 +915,100 @@ class GameEngine {
     }
   }
 
+  startSceneFade(action) {
+    if (this.sceneFadeActive) return;
+
+    this.sceneFadeActive = true;
+    this.sceneFade = 0;
+    this.sceneFadeDir = 1;
+    this.sceneFadeAction = action;
+
+    // prevent stale clicks while fading
+    this.click = null;
+    this.rightClick = null;
+  }
+
+  fadeToNextLevel() {
+    this.startSceneFade(() => {
+      this.loadNextLevel();
+    });
+  }
+
+  fadeToMainMenu() {
+    this.startSceneFade(() => {
+      if (typeof this.restartToMenu === "function") {
+        this.restartToMenu();
+      } else {
+        this.goToMainMenu();
+      }
+    });
+  }
+
+  updateSceneFade() {
+    if (!this.sceneFadeActive) return;
+
+    this.sceneFade = Math.max(
+      0,
+      Math.min(1, this.sceneFade + this.sceneFadeDir * this.sceneFadeSpeed * this.clockTick)
+    );
+
+    // fully black: do the scene switch, then fade back out
+    if (this.sceneFade >= 1 && this.sceneFadeDir === 1) {
+      const action = this.sceneFadeAction;
+      this.sceneFadeAction = null;
+      action?.();
+      this.sceneFadeDir = -1;
+    }
+
+    // done
+    if (this.sceneFade <= 0 && this.sceneFadeDir === -1) {
+      this.sceneFadeActive = false;
+      this.sceneFadeDir = 0;
+    }
+  }
+
+  playSFX(name, volume = 1) {
+    try {
+      const base = this.sfx?.[name];
+      if (!base) return;
+
+      const a = base.cloneNode();
+      a.volume = Math.max(
+        0,
+        Math.min(1, this.getMasterVolume() * this.getSFXVolume() * volume)
+      );
+
+      a.play().catch(() => { });
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  startDreamCatcherAuraAudio() {
+    try {
+      this.stopDreamCatcherAuraAudio();
+
+      if (!this.dreamCatcherAuraAudio) return;
+      this.dreamCatcherAuraAudio.currentTime = 0;
+
+      this.applyLoopSFXVolume(this.dreamCatcherAuraAudio, 2.9);
+
+      this.dreamCatcherAuraAudio.play().catch(() => { });
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  stopDreamCatcherAuraAudio() {
+    try {
+      if (!this.dreamCatcherAuraAudio) return;
+      this.dreamCatcherAuraAudio.pause();
+      this.dreamCatcherAuraAudio.currentTime = 0;
+    } catch (e) {
+      // ignore
+    }
+  }
+
   draw() {
     this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 
@@ -508,6 +1031,14 @@ class GameEngine {
       }
     } else if (this.mode == "menu") {
       this.menuRoomController.draw(this.ctx);
+    }
+
+    if (this.sceneFadeActive) {
+      this.ctx.save();
+      this.ctx.globalAlpha = this.sceneFade;
+      this.ctx.fillStyle = "black";
+      this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+      this.ctx.restore();
     }
   }
 
@@ -577,10 +1108,10 @@ class GameEngine {
     this.pajamaArmorHits = 0;
 
     // keep half-sized defaults
-    this.dreamCatcherRadius = 60;
+    this.dreamCatcherRadius = 75;
     this.dreamCatcherMinRadius = 30;
-    this.dreamCatcherMaxRadius = 210;
-    this.dreamCatcherRadiusStep = 10;
+    this.dreamCatcherMaxRadius = 100;
+    this.dreamCatcherRadiusStep = 20;
 
     this.prevLBracket = false;
     this.prevRBracket = false;
@@ -601,6 +1132,12 @@ class GameEngine {
     this.teddyDecoy = null;
 
     this.strangeLampTimer = 0;
+    this.stopDreamCatcherAuraAudio();
+    this.stopSleepyGuyTravelAudio();
+    this.stopSpiderWalkAudio();
+    this.stopGhostWhisperAudio();
+    this.stopVenusPlantNearAudio();
+    this.stopSheepCallAudio();
 
     this.prevB = false;
     if (this.dreamBubble) this.dreamBubble.close(true);
@@ -652,29 +1189,31 @@ class GameEngine {
     switch (item.id) {
       case "TheStrangeLamp":
         this.strangeLampTimer = this.strangeLampDuration;
+        this.playSFX("theStrangeLampUsed", 100.00);
         break;
 
       case "Pajama":
         this.pajamaArmorActive = true;
-        this.pajamaArmorHits = this.pajamaArmorMaxHits; // 3 hits
+        this.pajamaArmorHits = this.pajamaArmorMaxHits;
+        this.playSFX("pajamaPickedUp", 0.95);
         break;
 
       case "DreamCatcher":
         this.dreamCatcherActive = true;
         this.dreamCatcherTimer = this.dreamCatcherDuration;
+        this.playSFX("dreamCatcherPickup", 0.95);
+        this.startDreamCatcherAuraAudio();
         break;
 
       case "Rocket":
         this.rocketActive = true;
         this.rocketTimer = this.rocketDuration;
+        this.playSFX("rocketUsed", 0.95);
         break;
 
       case "SleepMask":
         this.sleepMaskTimer = this.sleepMaskDuration;
-        break;
-
-      case "TheStrangeLamp":
-        this.strangeLampTimer = this.strangeLampDuration;
+        this.playSFX("sleepMaskUsed", 6.95);
         break;
 
       default:
@@ -684,9 +1223,12 @@ class GameEngine {
 
     this.dreamBubble.item = null;
     this.dreamBubble.close();
+    this.playSFX("bubbleClose", 0.95);
   }
 
   clearDreamBubbleEffects() {
+    this.stopDreamCatcherAuraAudio();
+
     this.pajamaArmorActive = false;
     this.pajamaArmorHits = 0;
 
@@ -706,16 +1248,19 @@ class GameEngine {
 
     const r = this.dreamCatcherRadius;
 
+    const sx = sg.BB ? (sg.BB.left + sg.BB.width / 2) : sg.x;
+    const sy = sg.BB ? (sg.BB.top + sg.BB.height / 2) : sg.y;
+
     for (const e of this.entities) {
       if (!(e instanceof Monster)) continue;
       if (e instanceof Sheep) continue;
       if (e.dead || e.removeFromWorld) continue;
 
-      // Enemy center + radius (use BB if available)
       let ex, ey, er;
+
       if (e.BB) {
-        ex = e.BB.x + e.BB.width / 2;
-        ey = e.BB.y + e.BB.height / 2;
+        ex = e.BB.left + e.BB.width / 2;
+        ey = e.BB.top + e.BB.height / 2;
         er = Math.max(e.BB.width, e.BB.height) / 2;
       } else {
         ex = e.x + (e.width * e.scale) / 2;
@@ -723,14 +1268,28 @@ class GameEngine {
         er = Math.max(e.width * e.scale, e.height * e.scale) / 2;
       }
 
-      const dx = ex - sg.x;
-      const dy = ey - sg.y;
+      const dx = ex - sx;
+      const dy = ey - sy;
 
-      // Kill when enemy's edge touches aura circle
       const R = r + er;
       if (dx * dx + dy * dy <= R * R) {
-        e.dead = true;
-        e.removeFromWorld = true;
+        if (e instanceof Spider) {
+          this.playSFX("spiderKill", 0.95);
+          e.startDeath?.(3);
+        } else if (e instanceof Ghost) {
+          this.playSFX("ghostKill", 0.95);
+          e.startDeath?.(9);
+        } else if (e instanceof Demon) {
+          this.playSFX("demonKill", 0.95);
+          e.startDeath?.(9);
+        } else if (e instanceof VenusFlyTrap) {
+          this.playSFX("venusPlantKill", 0.95);
+          e.dead = true;
+          e.removeFromWorld = true;
+        } else {
+          e.dead = true;
+          e.removeFromWorld = true;
+        }
       }
     }
   }
@@ -968,6 +1527,7 @@ class GameEngine {
       }
       if (foundIndex !== -1) {
         this.waypoints.splice(foundIndex);
+        this.playSFX("pathPointRemove", 0.9);
         this.holdCameraThisFrame = true;
         if (this.sleepyGuy) {
           if (this.waypoints.length === 0) {
@@ -1000,6 +1560,7 @@ class GameEngine {
       if (this.dreamCatcherTimer <= 0) {
         this.dreamCatcherTimer = 0;
         this.dreamCatcherActive = false;
+        this.stopDreamCatcherAuraAudio();
       }
     }
     if (this.strangeLampTimer > 0) {
@@ -1027,9 +1588,17 @@ class GameEngine {
     // ===== Dream Bubble toggle (Key B) =====
     const bDown = !!this.keys["KeyB"];
     if (bDown && !this.prevB) {
-      // create lazily here (ASSET_MANAGER exists by now)
       if (!this.dreamBubble) this.dreamBubble = new DreamBubbleOverlay(this);
+
+      const wasOpen = !!this.dreamBubble.isOpen;
       this.dreamBubble.toggle();
+      const isOpen = !!this.dreamBubble.isOpen;
+
+      if (!wasOpen && isOpen) {
+        this.playSFX("bubbleOpen", 0.95);
+      } else if (wasOpen && !isOpen) {
+        this.playSFX("bubbleClose", 0.95);
+      }
     }
     this.prevB = bDown;
     if (this.dreamBubble) this.dreamBubble.update();
@@ -1167,10 +1736,17 @@ class GameEngine {
         }
         px /= plen;
         py /= plen;
-        const hitApplied = e.applyKnockback?.(px * KNOCK_SPEED, py * KNOCK_SPEED, KNOCK_TIME, sw.id);
-        if (hitApplied && sel && sel.id === "Sword") {
-          if (typeof sel.count !== "number") sel.count = 5;
+        const hitApplied = e.applyKnockback?.(
+          px * KNOCK_SPEED,
+          py * KNOCK_SPEED,
+          KNOCK_TIME,
+          sw.id
+        );
 
+        if (hitApplied && sel && sel.id === "Sword") {
+          this.playSFX("swordHit", 0.95);
+
+          if (typeof sel.count !== "number") sel.count = 5;
           sel.count -= 1;
 
           if (sel.count <= 0) {
@@ -1257,6 +1833,7 @@ class GameEngine {
 
           // Remove only this one spike block
           e.removeFromWorld = true;
+          this.playSFX("toothbrushScrub", 0.95);
 
           // Clear it from gridMap too
           const gx = Math.floor(e.x / PARAMS.BLOCKWIDTH);
@@ -1330,6 +1907,7 @@ class GameEngine {
 
               this.addEntity(wall);
               this.gridMap[key] = wall;
+              this.playSFX("sandBagPlace", 0.95);
 
               // consume 1 charge
               if (typeof sel.count !== "number") sel.count = 1;
@@ -1367,6 +1945,7 @@ class GameEngine {
 
         this.teddyDecoy = teddy;
         this.addEntity(teddy);
+        this.playSFX("teddyBearPlace", 0.95);
 
         // consume item (single use)
         this.inventory.removeItem(this.inventory.getSelectedIndex());
@@ -1379,7 +1958,7 @@ class GameEngine {
     const dustSelected = !!(sel && sel.id === "SleepDust");
 
     const DUST_RADIUS = 70;   // small splash radius (tweak)
-    const DUST_TIME = 10.0;    // seconds asleep (tweak)
+    const DUST_TIME = 10.0;   // seconds asleep (tweak)
 
     if (dustSelected && !bubbleOpen && !this.gameOver) {
       if (this.click && this.sleepDustCooldown <= 0) {
@@ -1405,6 +1984,7 @@ class GameEngine {
 
         // little visual puff
         this.sleepDustSplash = { x, y, t: 0, duration: 0.35, r: DUST_RADIUS };
+        this.playSFX("sleepDustThrow", 0.95);
 
         // consume item (single use)
         this.inventory.removeItem(this.inventory.getSelectedIndex());

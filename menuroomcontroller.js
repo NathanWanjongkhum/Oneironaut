@@ -45,10 +45,9 @@ class MenuRoomController {
 		this.optionsCloseRect = { x: 0, y: 0, w: 44, h: 44 };
 
 		// Options UI buttons inside modal
-		this.optMuteRect = { x: 0, y: 0, w: 0, h: 0 };
-		this.optVolDownRect = { x: 0, y: 0, w: 0, h: 0 };
-		this.optVolUpRect = { x: 0, y: 0, w: 0, h: 0 };
-
+		this.optMasterBarRect = { x: 0, y: 0, w: 0, h: 0 };
+		this.optSFXBarRect = { x: 0, y: 0, w: 0, h: 0 };
+		this.optMusicBarRect = { x: 0, y: 0, w: 0, h: 0 };
 
 		this.levels = [
 			{ id: 1, name: "Level 1", unlocked: true },
@@ -233,11 +232,10 @@ class MenuRoomController {
 			12;
 		this.creditsCloseRect.y = this.creditsPanelRect.y + 12;
 
-		this.optionsPanelRect.w = Math.min(720, cw * 0.70);
-		this.optionsPanelRect.h = Math.min(360, ch * 0.50);
+		this.optionsPanelRect.w = Math.min(760, cw * 0.72);
+		this.optionsPanelRect.h = Math.min(430, ch * 0.60);
 		this.optionsPanelRect.x = (cw - this.optionsPanelRect.w) / 2;
 		this.optionsPanelRect.y = (ch - this.optionsPanelRect.h) / 2;
-
 
 		this.optionsCloseRect.w = 44;
 		this.optionsCloseRect.h = 44;
@@ -248,27 +246,17 @@ class MenuRoomController {
 			12;
 		this.optionsCloseRect.y = this.optionsPanelRect.y + 12;
 
-		// Buttons inside options modal
+		// Audio bars inside options modal
 		const p = this.optionsPanelRect;
-		const optBtnW = Math.min(260, p.w * 0.55);
-		const optBtnH = 56;
-		const cx = p.x + p.w / 2 - optBtnW / 2;
+		const barW = Math.min(380, p.w * 0.62);
+		const barH = 22;
+		const barX = p.x + p.w / 2 - barW / 2;
+		const startY = p.y + 125;
+		const rowGap = 78;
 
-		this.optMuteRect = { x: cx, y: p.y + 110, w: optBtnW, h: optBtnH };
-		this.optVolDownRect = {
-			x: cx,
-			y: p.y + 110 + 80,
-			w: (optBtnW - 16) / 2,
-			h: optBtnH,
-		};
-		this.optVolUpRect = {
-			x: cx + (optBtnW + 16) / 2,
-			y: p.y + 110 + 80,
-			w: (optBtnW - 16) / 2,
-			h: optBtnH,
-		};
-
-
+		this.optMasterBarRect = { x: barX, y: startY, w: barW, h: barH };
+		this.optSFXBarRect = { x: barX, y: startY + rowGap, w: barW, h: barH };
+		this.optMusicBarRect = { x: barX, y: startY + rowGap * 2, w: barW, h: barH };
 
 		// Level Select (top-middle-ish or wherever you want)
 		this.levelSelectRect.w = Math.min(320, Math.max(220, cw * 0.22));
@@ -527,10 +515,12 @@ class MenuRoomController {
 				if (pointInRect(x, y, currCloseRect)) {
 					this.showCredits = false;
 					this.showHelp = false;
+					this.game.playSFX?.("menuClose", 0.8);
 				}
 				if (!pointInRect(x, y, currMenuRect)) {
 					this.showCredits = false;
 					this.showHelp = false;
+					this.game.playSFX?.("menuClose", 0.8);
 				}
 			}
 			return;
@@ -538,6 +528,7 @@ class MenuRoomController {
 
 		// Theme toggle
 		if (pointInRect(x, y, this.toggleRect)) {
+			this.game.playSFX?.("buttonClick", 0.8);
 			this.theme = this.theme === "night" ? "day" : "night";
 			return;
 		}
@@ -556,49 +547,67 @@ class MenuRoomController {
 
 	inStartMenu(x, y) {
 		if (pointInRect(x, y, this.startRect)) {
+			this.game.playSFX?.("buttonPress", 0.9);
 			this.transitionTo("room");
 			return;
 		}
 	}
-	inRoomMenu(x, y) {
 
+	inRoomMenu(x, y) {
 		if (pointInRect(x, y, this.backRect)) {
+			this.game.playSFX?.("buttonPress", 0.9);
 			this.transitionTo("menu");
 			return;
 		}
+
 		if (pointInRect(x, y, this.levelSelectRect)) {
+			this.game.playSFX?.("buttonPress", 0.9);
 			this.transitionTo("levelSelect");
 			return;
 		}
+
 		if (pointInRect(x, y, this.newDreamRect)) {
-			if (window.setMusicMode) window.setMusicMode("daydream"); // Lucid Journey
+			this.game.playSFX?.("magicGlassTouch", 0.95);
+			if (window.setMusicMode) window.setMusicMode("daydream");
 			this.showHelp = false;
 			this.showCredits = false;
+
 			if (this.game.startGameplay) {
 				this.game.startGameplay();
-			} else {// fallback (shouldn't happen)
+			} else {
 				this.game.mode = "gameplay";
 				if (window.setMusicMode) window.setMusicMode("daydream");
 			}
 			return;
 		}
+
 		if (pointInRect(x, y, this.creditsRect)) {
+			this.game.playSFX?.("buttonPress", 0.9);
+			this.game.playSFX?.("menuOpen", 0.75);
 			this.showCredits = true;
 			this.showHelp = false;
 			this.showOptions = false;
 			return;
 		}
+
 		if (pointInRect(x, y, this.loadDreamRect)) {
+			this.game.playSFX?.("buttonPress", 0.9);
 			console.log("TODO: Load Dream");
 			return;
 		}
+
 		if (pointInRect(x, y, this.helpRect)) {
+			this.game.playSFX?.("buttonPress", 0.9);
+			this.game.playSFX?.("menuOpen", 0.75);
 			this.showHelp = true;
 			this.showOptions = false;
 			this.showCredits = false;
 			return;
 		}
+
 		if (pointInRect(x, y, this.optionsRect)) {
+			this.game.playSFX?.("buttonPress", 0.9);
+			this.game.playSFX?.("menuOpen", 0.75);
 			this.showOptions = true;
 			this.showHelp = false;
 			this.showCredits = false;
@@ -607,8 +616,8 @@ class MenuRoomController {
 	}
 
 	inSelectLevelMenu(x, y) {
-		// Back to room
 		if (pointInRect(x, y, this.levelBackRect)) {
+			this.game.playSFX?.("buttonPress", 0.9);
 			this.transitionTo("room");
 			return;
 		}
@@ -616,19 +625,18 @@ class MenuRoomController {
 		const currentWorldIndex = this.worldOrder.indexOf(this.currentWorld);
 		const lastWorldIndex = this.worldOrder.length - 1;
 
-		// Previous world
 		if (currentWorldIndex > 0 && pointInRect(x, y, this.worldPrevRect)) {
+			this.game.playSFX?.("buttonPress", 0.85);
 			this.currentWorld = this.worldOrder[currentWorldIndex - 1];
 			return;
 		}
 
-		// Next world
 		if (currentWorldIndex < lastWorldIndex && pointInRect(x, y, this.worldNextRect)) {
+			this.game.playSFX?.("buttonPress", 0.85);
 			this.currentWorld = this.worldOrder[currentWorldIndex + 1];
 			return;
 		}
 
-		// Click a level from the ACTIVE world
 		const activeLevels = this.getActiveWorldTheme().levels;
 
 		for (const rect of this.levelRects) {
@@ -636,6 +644,7 @@ class MenuRoomController {
 				const L = activeLevels[rect.levelIndex];
 				if (!L || !L.unlocked) return;
 
+				this.game.playSFX?.("magicGlassTouch", 0.95);
 				this.selectedLevel = L.id;
 
 				if (this.game.startLevel) {
@@ -651,39 +660,46 @@ class MenuRoomController {
 	inOptionsMenu(x, y) {
 		if (!pointInRect(x, y, this.optionsPanelRect)) {
 			this.showOptions = false;
+			this.game.playSFX?.("menuClose", 0.8);
 			if (this.game.mode == "pause" && !this.game.gameOver) {
 				this.game.mode = "gameplay";
 			}
 			return;
 		}
+
 		if (pointInRect(x, y, this.optionsCloseRect)) {
 			this.showOptions = false;
+			this.game.playSFX?.("menuClose", 0.8);
 			if (this.game.mode == "pause" && !this.game.gameOver) {
 				this.game.mode = "gameplay";
 			}
 			return;
 		}
-		if (pointInRect(x, y, this.optMuteRect)) {
-			if (window.Music) {
-				Music.setMuted(!Music.muted);
-				const muteEl = document.getElementById("mute");
-				if (muteEl) muteEl.checked = Music.muted;
-			}
+
+		if (pointInRect(x, y, this.optMasterBarRect)) {
+			const t = Math.max(0, Math.min(1, (x - this.optMasterBarRect.x) / this.optMasterBarRect.w));
+			this.game.playSFX?.("buttonPress", 0.75);
+			if (window.Music) Music.setMasterVolume(t);
 			return;
 		}
-		if (pointInRect(x, y, this.optVolDownRect)) {
-			if (window.Music) {
-				Music.setVolume(Math.max(0, Music.userVolume - 0.05));
-				const volEl = document.getElementById("volume");
-				if (volEl) volEl.value = String(Music.userVolume);
-			}
+
+		if (pointInRect(x, y, this.optSFXBarRect)) {
+			const t = Math.max(0, Math.min(1, (x - this.optSFXBarRect.x) / this.optSFXBarRect.w));
+			this.game.playSFX?.("buttonPress", 0.75);
+			if (this.game.setSFXVolume) this.game.setSFXVolume(t);
+			else this.game.sfxVolume = t;
 			return;
 		}
-		if (pointInRect(x, y, this.optVolUpRect)) {
+
+		if (pointInRect(x, y, this.optMusicBarRect)) {
+			const t = Math.max(0, Math.min(1, (x - this.optMusicBarRect.x) / this.optMusicBarRect.w));
+			this.game.playSFX?.("buttonPress", 0.75);
 			if (window.Music) {
-				Music.setVolume(Math.min(1, Music.userVolume + 0.05));
+				Music.setMusicVolume(t);
+
+				// keep old HTML slider in sync if it still exists
 				const volEl = document.getElementById("volume");
-				if (volEl) volEl.value = String(Music.userVolume);
+				if (volEl) volEl.value = String(Music.musicVolume);
 			}
 			return;
 		}
@@ -692,6 +708,7 @@ class MenuRoomController {
 	inHelpMenu(x, y) {
 		if (!pointInRect(x, y, this.helpPanelRect)) {
 			this.showHelp = false;
+			this.game.playSFX?.("menuClose", 0.8);
 			if (this.game.mode === "pause" && !this.game.gameOver) {
 				this.game.mode = "gameplay";
 			}
@@ -700,6 +717,7 @@ class MenuRoomController {
 
 		if (pointInRect(x, y, this.helpCloseRect)) {
 			this.showHelp = false;
+			this.game.playSFX?.("menuClose", 0.8);
 			if (this.game.mode === "pause" && !this.game.gameOver) {
 				this.game.mode = "gameplay";
 			}
@@ -1120,15 +1138,68 @@ class MenuRoomController {
 		ctx.fillText("Options", p.x + p.w / 2, p.y + 18);
 		ctx.restore();
 
-		// Close button (X)
+		// Close button
 		this.drawCloseButton(ctx, this.optionsCloseRect);
 
-		const muteLabel = window.Music && Music.muted ? "Unmute" : "Mute";
-		const volPct = window.Music ? Math.round(Music.userVolume * 100) : 10;
+		const master = window.Music ? (Music.masterVolume ?? 1) : 1;
+		const music = window.Music ? (Music.musicVolume ?? Music.userVolume ?? 0.1) : 0.1;
+		const sfx = typeof this.game.sfxVolume === "number" ? this.game.sfxVolume : 1;
 
-		this.drawMenuButton(ctx, this.optMuteRect, muteLabel);
-		this.drawMenuButton(ctx, this.optVolDownRect, "Vol -");
-		this.drawMenuButton(ctx, this.optVolUpRect, `Vol + (${volPct}%)`);
+		this.drawAudioSlider(ctx, this.optMasterBarRect, "Master Audio", master);
+		this.drawAudioSlider(ctx, this.optSFXBarRect, "SFX Audio", sfx);
+		this.drawAudioSlider(ctx, this.optMusicBarRect, "Music Audio", music);
+	}
+
+	drawAudioSlider(ctx, r, label, value) {
+		const v = Math.max(0, Math.min(1, Number(value) || 0));
+		const pct = `${Math.round(v * 100)}%`;
+
+		// label row
+		ctx.save();
+		ctx.fillStyle = "rgba(255,255,255,0.95)";
+		ctx.font = "600 18px serif";
+		ctx.textBaseline = "bottom";
+		ctx.textAlign = "left";
+		ctx.fillText(label, r.x, r.y - 10);
+
+		ctx.textAlign = "right";
+		ctx.fillText(pct, r.x + r.w, r.y - 10);
+		ctx.restore();
+
+		// track
+		ctx.save();
+		ctx.fillStyle = "rgba(255,255,255,0.10)";
+		ctx.strokeStyle = "rgba(255,255,255,0.35)";
+		ctx.lineWidth = 2;
+		roundRectPath(ctx, r.x, r.y, r.w, r.h, r.h / 2);
+		ctx.fill();
+		ctx.stroke();
+		ctx.restore();
+
+		// fill
+		const fillW = Math.max(r.h, r.w * v);
+		ctx.save();
+		ctx.fillStyle = "rgba(215,225,255,0.75)";
+		roundRectPath(ctx, r.x, r.y, fillW, r.h, r.h / 2);
+		ctx.fill();
+		ctx.restore();
+
+		// knob
+		const knobMin = r.x + r.h / 2;
+		const knobMax = r.x + r.w - r.h / 2;
+		const knobX = knobMin + (knobMax - knobMin) * v;
+		const knobY = r.y + r.h / 2;
+		const knobR = r.h * 0.62;
+
+		ctx.save();
+		ctx.fillStyle = "rgba(255,255,255,0.96)";
+		ctx.strokeStyle = "rgba(60,70,110,0.7)";
+		ctx.lineWidth = 2;
+		ctx.beginPath();
+		ctx.arc(knobX, knobY, knobR, 0, Math.PI * 2);
+		ctx.fill();
+		ctx.stroke();
+		ctx.restore();
 	}
 
 	drawCreditsModal(ctx) {
