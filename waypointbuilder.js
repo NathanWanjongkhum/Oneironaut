@@ -67,23 +67,15 @@ class WaypointBuilder {
     if (this.game.mouse && !selectedItem) {
       const mx = this.game.mouse.x;
       const my = this.game.mouse.y;
-      const crosshairImg = ASSET_MANAGER.getAsset("./assets/favicon_io/crosshair054.png");
+      const s = 10;
       ctx.save();
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      if (crosshairImg) {
-        const size = 40;
-        ctx.globalAlpha = 0.75;
-        ctx.drawImage(crosshairImg, mx - size / 2, my - size / 2, size, size);
-      } else {
-        // fallback: simple crosshair lines
-        const s = 10;
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(mx - s, my); ctx.lineTo(mx + s, my);
-        ctx.moveTo(mx, my - s); ctx.lineTo(mx, my + s);
-        ctx.stroke();
-      }
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(mx - s, my); ctx.lineTo(mx + s, my);
+      ctx.moveTo(mx, my - s); ctx.lineTo(mx, my + s);
+      ctx.stroke();
       ctx.restore();
     }
   }
