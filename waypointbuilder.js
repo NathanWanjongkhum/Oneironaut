@@ -3,8 +3,9 @@ class WaypointBuilder {
     this.waypoints = [];
     this.game = game;
     this.game.waypoints = this.waypoints;
-    this.lineColor = "#0800ff";
+    this.lineColor = "#d0d0d0ff";
     this.nodeColor = "#ff00ff";
+    this.pointColor = "#ffffff";
     //TODO: use gradient 
     // this.lineColor = game.ctx.createRadialGradient(100, 200, 100, 300, 60, 300);//TODO: adjust this so that the lines are visible
 
@@ -25,7 +26,7 @@ class WaypointBuilder {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.translate(-camX, -camY);
 
-      ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
+      ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
       ctx.shadowBlur = 2;
       ctx.shadowOffsetX = 2;
       ctx.shadowOffsetY = 2;
@@ -48,17 +49,12 @@ class WaypointBuilder {
       for (const point of this.waypoints) {
         ctx.beginPath();
         ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
-        ctx.fillStyle = this.nodeColor;
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.arc(point.x, point.y, 3, 0, Math.PI * 2);
-        ctx.fillStyle = "white";
+        ctx.fillStyle = this.lineColor;
         ctx.fill();
 
         ctx.beginPath();
         ctx.arc(point.x, point.y, 8, 0, Math.PI * 2);
-        ctx.strokeStyle = "white";
+        ctx.strokeStyle = this.pointColor;
         ctx.lineWidth = 2;
         ctx.stroke();
       }
@@ -70,7 +66,7 @@ class WaypointBuilder {
     if (this.game.mouse) {
       ctx.save();
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.fillStyle = "green";
+      ctx.fillStyle = this.nodeColor;
       ctx.beginPath();
       ctx.arc(this.game.mouse.x, this.game.mouse.y, 5, 0, Math.PI * 2);
       ctx.fill();
