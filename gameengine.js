@@ -1435,10 +1435,12 @@ class GameEngine {
     const sandSelected = !!(sel && sel.id && sel.id.startsWith("SandBag"));
     const teddySelected = !!(sel && sel.id === "TeddyBear");
     const placeableSelected = teddySelected || dustSelected || sandSelected;
+    const anyItemSelected = !!(sel && sel.id);
 
-    // Hide normal mouse cursor only for these placeable items
+    // Hide native cursor when any item is selected
+    const inWaypointMode = this.mode === "gameplay" && !this.gameOver && !bubbleOpen;
     this.ctx.canvas.style.cursor =
-      (!bubbleOpen && mouseScreen && placeableSelected) ? "none" : "default";
+      (mouseScreen && (anyItemSelected || inWaypointMode)) ? "none" : "default";
 
     if (!bubbleOpen && mouseScreen && sel?.img && placeableSelected) {
       this.ctx.save();
@@ -1479,6 +1481,7 @@ class GameEngine {
 
       this.ctx.restore();
     }
+
 
     // ===== DreamCatcher aura visual (matches kill radius exactly) =====
     if (this.mode === "gameplay" && this.dreamCatcherActive && this.sleepyGuy && !this.gameOver) {

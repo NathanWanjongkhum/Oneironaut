@@ -85,6 +85,8 @@ ASSET_MANAGER.queueDownload("./assets/entities/spikes.png");
 ASSET_MANAGER.queueDownload("./assets/entities/bed2.png");
 
 // Items
+ASSET_MANAGER.queueDownload("./assets/cursor/crosshair054.png");
+
 ASSET_MANAGER.queueDownload("./assets/items/Sword.png");
 ASSET_MANAGER.queueDownload("./assets/items/ToothBrush.png");
 ASSET_MANAGER.queueDownload("./assets/items/TeddyBear.png");
