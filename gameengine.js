@@ -1444,7 +1444,9 @@ class GameEngine {
 
     if (!bubbleOpen && mouseScreen && sel?.img && placeableSelected) {
       this.ctx.save();
-      this.ctx.globalAlpha = 0.78;
+      this.ctx.globalAlpha = 0.4;
+      this.ctx.shadowColor = "rgba(180, 210, 255, 0.9)";
+      this.ctx.shadowBlur = 18;
 
       if (sandSelected && mouseWorld) {
         // snap sandbag preview to tile
