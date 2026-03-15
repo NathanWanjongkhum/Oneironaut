@@ -64,12 +64,19 @@ class WaypointBuilder {
 
     // Mouse preview stays in screen space.
     if (this.game.mouse) {
+      const mx = this.game.mouse.x;
+      const my = this.game.mouse.y;
+      const s = 8;
       ctx.save();
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.fillStyle = this.nodeColor;
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(this.game.mouse.x, this.game.mouse.y, 5, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.moveTo(mx - s, my - s);
+      ctx.lineTo(mx + s, my + s);
+      ctx.moveTo(mx + s, my - s);
+      ctx.lineTo(mx - s, my + s);
+      ctx.stroke();
       ctx.restore();
     }
   }
