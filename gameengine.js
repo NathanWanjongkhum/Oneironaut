@@ -746,6 +746,7 @@ class GameEngine {
 
   goToMainMenu() {
     this.mode = "menu";
+    this.ctx.canvas.style.cursor = "default";
     if (window.setMusicMode) window.setMusicMode("menu");
     this.clearMenuState("menu");
 
@@ -1077,6 +1078,7 @@ class GameEngine {
     this.gameWon = false;
     const targetMode = mode ?? this.mode;
     this.mode = targetMode;
+    if (targetMode !== "gameplay") this.ctx.canvas.style.cursor = "default";
     this.currentLevel = levelNum ?? this.currentLevel;
 
     this.entities = [];
