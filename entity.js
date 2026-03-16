@@ -91,8 +91,8 @@ class Block extends Entity {
     this.scale = 1;
 
     // Optional sprite rendering (used by sandbags)
-    this.sprite = opts.sprite || null;
-    this.spriteScale = opts.spriteScale ?? 1;
+    this.sprite = opts.sprite || ASSET_MANAGER.getAsset("./assets/entities/cloudBlock.png");
+    this.spriteScale = opts.spriteScale ?? 2.3;
     this.spriteYOffset = opts.spriteYOffset ?? 0;
 
     // IMPORTANT: create a real bounding box
