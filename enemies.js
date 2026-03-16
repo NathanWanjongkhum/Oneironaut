@@ -771,8 +771,9 @@ class Spider extends Monster {
 
     this.path = path;
     this.targetIndex = 1;
+    let whichSpider = (Math.floor(Math.random() * 11) + 1);
 
-    this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/spiders/1.png");
+    this.spritesheet = ASSET_MANAGER.getAsset("./assets/entities/spiders/" + whichSpider + ".png");
 
     this.animations = [];
     this.loadAnimations();
