@@ -1513,19 +1513,15 @@ class GameEngine {
   updateGameplay() {
     const sel = this.inventory.getSelectedItem();
     const bubbleOpen = !!(this.dreamBubble && this.dreamBubble.isOpen);
-    // HUD consumes right clicks in gameplay to remove pathing nodes
-    if (this.rightClick && this.waypoints) {
-      const rc = this.rightClick.space === "world"
-        ? this.rightClick
-        : { x: this.rightClick.wx, y: this.rightClick.wy };
-      const clickX = rc.x;
-      const clickY = rc.y;
-      const clickRadius = 30;
+    // Held right-click drag erases waypoints near the cursor
+    if (this.rightClickDown && this.waypoints && this.mouse) {
+      const world = this.screenToWorld(this.mouse.x, this.mouse.y);
+      const eraseRadius = 30;
       let foundIndex = -1;
       for (let i = 0; i < this.waypoints.length; i++) {
         const wp = this.waypoints[i];
-        const dist = Math.sqrt((wp.x - clickX) ** 2 + (wp.y - clickY) ** 2);
-        if (dist <= clickRadius) {
+        const dist = Math.sqrt((wp.x - world.x) ** 2 + (wp.y - world.y) ** 2);
+        if (dist <= eraseRadius) {
           foundIndex = i;
           break;
         }
@@ -1545,8 +1541,8 @@ class GameEngine {
           }
         }
       }
-      this.rightClick = null;
     }
+    this.rightClick = null;
 
     if (this.sleepDustCooldown > 0) this.sleepDustCooldown -= this.clockTick;
     if (this.sleepMaskTimer > 0) {
