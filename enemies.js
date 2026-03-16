@@ -258,6 +258,27 @@ class Monster extends Entity {
     // Update BB after snapping position
     this.updateBB();
   }
+
+  updateBB() {
+    const xScaler = 4 / 6;
+    const yScaler = 2 / 3;
+
+    const bbWidth = this.width * this.scale * xScaler;
+    const bbHeight = this.height * this.scale * yScaler;
+
+    const xOffset = (this.width * this.scale - bbWidth) / 2;
+    const yOffset = (this.height * this.scale - bbHeight) / 2;
+
+    const bbX = this.x + xOffset;
+    const bbY = this.y + yOffset;
+
+    if (!this.BB) {
+      this.BB = new BoundingBox(bbX, bbY, bbWidth, bbHeight);
+    } else {
+      this.BB.update(bbX, bbY, bbWidth, bbHeight);
+    }
+  }
+  
 }
 
 class Ghost extends Monster {
