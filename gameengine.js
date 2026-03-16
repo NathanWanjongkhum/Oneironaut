@@ -21,7 +21,7 @@ class GameEngine {
     this.sceneFadeSpeed = 2.2;
     this.sceneFadeAction = null;
 
-    this.highestLevel = 0;
+    this.highestLevel = 11;
 
     this.bubbleSwapFX = null;  // { t, duration }
     this._sfxCtx = null;       // WebAudio context for tiny SFX

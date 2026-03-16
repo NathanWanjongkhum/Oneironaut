@@ -10,6 +10,12 @@ class Levels {
             4: this.level4,
             5: this.level5,
             6: this.level6,
+            7: this.level7,
+            8: this.level8,
+            9: this.level9,
+            10: this.level10,
+            11: this.level11,
+            12: this.level12,
         };
 
         //TODO: put bed and sleepyguy in different location for each level rather than having them built here
@@ -267,13 +273,562 @@ class Levels {
     }
 
     static level6(engine) {
-        //TODO - build this level
-        engine.addEntity(new Bed(engine, 1030, 30));
-        engine.addEntity(new SleepyGuy(engine, 130, 80));
+        const BW = PARAMS.BLOCKWIDTH;
+        const gx = (c) => c * BW;
+        const gy = (r) => r * BW;
+
+        // =========================================================
+        // SPAWN / GOAL
+        // =========================================================
+        engine.addEntity(new SleepyGuy(engine, gx(4), gy(18)));
+        engine.addEntity(new Bed(engine, gx(35), gy(4)));
+
+        // =========================================================
+        // ITEMS
+        // =========================================================
+        engine.addEntity(new PickupItem(engine, gx(6), gy(17), "SleepDust"));
+        engine.addEntity(new PickupItem(engine, gx(31), gy(10), "SandBag3"));
+        engine.addEntity(new PickupItem(engine, gx(23), gy(17), "Rocket"));
+        engine.addEntity(new PickupItem(engine, gx(14), gy(6), "TeddyBear"));
+
+        const builder = new LevelBuilder(engine);
+
+        // =========================================================
+        // OUTER BORDER
+        // =========================================================
+        builder.spawnRow(2, 2, 60);
+        builder.spawnRow(21, 2, 60);
+        builder.spawnColumn(2, 2, 40);
+        builder.spawnColumn(50, 2, 40);
+
+        // =========================================================
+        // MAIN MAZE WALLS
+        // All doorways are 5 tiles tall so every entity can pass.
+        // Route pattern:
+        // start lower-left -> up opening -> down opening -> up opening -> bed
+        // =========================================================
+
+        // Wall 1: opening low
+        // gap rows 15..19
+        //builder.spawnColumn(10, 2, 14);
+        builder.spawnColumn(10, 25, 21);
+
+        // Wall 4: opening high
+        // gap rows 4..8
+        builder.spawnColumn(34, 2, 3);
+        builder.spawnColumn(34, 9, 21);
+
+        // =========================================================
+        // SHORT LEDGES / MAZE DETAIL
+        // These add maze feeling without sealing the player in.
+        // =========================================================
+
+        builder.spawnRow(14, 28, 32);
+
+        // =========================================================
+        // HAZARDS
+        // Keep hazards away from the actual doorway paths.
+        // =========================================================
+        for (let c = 21; c <= 23; c++) {
+            engine.addEntity(new Spikes(engine, gx(c), gy(6)));
+        }
+
+        for (let c = 29; c <= 31; c++) {
+            engine.addEntity(new Spikes(engine, gx(c), gy(18)));
+        }
+
+        engine.addEntity(new StickyBush(engine, gx(22), gy(12)));
+
+        // =========================================================
+        // ENEMIES
+        // Spread out by chamber so it feels fair.
+        // =========================================================
+        engine.addEntity(new Demon(engine, gx(6), gy(11)));
+        engine.addEntity(new Ghost(engine, gx(21), gy(5)));
+        engine.addEntity(new Ghost(engine, gx(28), gy(14)));
+        engine.addEntity(new Ghost(engine, gx(28), gy(5)));
+        engine.addEntity(new Sheep(engine, gx(29), gy(10)));
+
+        engine.addEntity(new Spider(engine, [
+            { x: gx(12), y: gy(19) },
+            { x: gx(16), y: gy(19) }
+        ]));
     }
+
     static level7(engine) {
-        //TODO - build this level
-        engine.addEntity(new Bed(engine, 1030, 30));
-        engine.addEntity(new SleepyGuy(engine, 130, 80));
+        const BW = PARAMS.BLOCKWIDTH;
+        const gx = (c) => c * BW;
+        const gy = (r) => r * BW;
+
+        engine.addEntity(new Bed(engine, gx(45), gy(18)));
+        engine.addEntity(new SleepyGuy(engine, gx(4), gy(4)));
+
+        engine.addEntity(new PickupItem(engine, gx(6), gy(5), "DreamCatcher"));
+        engine.addEntity(new PickupItem(engine, gx(18), gy(11), "SleepMask"));
+        engine.addEntity(new PickupItem(engine, gx(29), gy(17), "TheStrangeLamp"));
+
+        const builder = new LevelBuilder(engine);
+
+        builder.spawnRow(2, 2, 37);
+        builder.spawnRow(21, 2, 37);
+        builder.spawnColumn(2, 2, 21);
+        builder.spawnColumn(37, 2, 21);
+
+        builder.spawnRow(7, 10, 24);
+        builder.spawnRow(12, 6, 28);
+        builder.spawnRow(17, 10, 34);
+
+        for (let c = 14; c <= 18; c++) {
+            engine.addEntity(new Spikes(engine, gx(c), gy(20)));
+        }
+        for (let c = 27; c <= 31; c++) {
+            engine.addEntity(new Spikes(engine, gx(c), gy(11)));
+        }
+
+        engine.addEntity(new Ghost(engine, gx(5), gy(5)));
+        engine.addEntity(new Demon(engine, gx(20), gy(10)));
+        engine.addEntity(new Ghost(engine, gx(32), gy(15)));
+        engine.addEntity(new VenusFlyTrap(engine, gx(24), gy(18)));
+
+        engine.addEntity(new Spider(engine, [
+            { x: gx(27), y: gy(6) },
+            { x: gx(35), y: gy(6) },
+        ]));
+
+        engine.addEntity(new Spider(engine, [
+            { x: gx(4), y: gy(19) },
+            { x: gx(12), y: gy(19) },
+        ]));
+    }
+
+    static level8(engine) {
+        const BW = PARAMS.BLOCKWIDTH;
+        const gx = (c) => c * BW;
+        const gy = (r) => r * BW;
+
+        engine.addEntity(new Bed(engine, gx(41), gy(3)));
+        engine.addEntity(new SleepyGuy(engine, gx(5), gy(18)));
+
+        engine.addEntity(new PickupItem(engine, gx(16), gy(14), "Pajama"));
+        engine.addEntity(new PickupItem(engine, gx(12), gy(6), "SleepDust"));
+        engine.addEntity(new PickupItem(engine, gx(24), gy(15), "DreamCatcher"));
+        engine.addEntity(new PickupItem(engine, gx(31), gy(5), "TheStrangeLamp"));
+
+        const builder = new LevelBuilder(engine);
+
+        builder.spawnRow(2, 3, 40);
+        builder.spawnRow(20, 3, 40);
+        builder.spawnColumn(3, 2, 20);
+        builder.spawnColumn(39, 2, 20);
+
+        builder.spawnRow(11, 3, 15);
+        builder.spawnColumn(19, 2, 8);
+        builder.spawnColumn(21, 11, 20);
+
+        builder.spawnRow(6, 19, 30);
+
+        for (let c = 16; c <= 20; c++) {
+            engine.addEntity(new Spikes(engine, gx(c), gy(10)));
+        }
+        for (let c = 22; c <= 25; c++) {
+            engine.addEntity(new Spikes(engine, gx(c), gy(12)));
+        }
+
+        engine.addEntity(new StickyBush(engine, gx(21), gy(9)));
+        engine.addEntity(new Ghost(engine, gx(9), gy(5)));
+        engine.addEntity(new Ghost(engine, gx(24), gy(10)));
+        engine.addEntity(new Demon(engine, gx(24), gy(6)));
+        engine.addEntity(new Sheep(engine, gx(14), gy(17)));
+        engine.addEntity(new VenusFlyTrap(engine, gx(31), gy(9)));
+
+        engine.addEntity(new Spider(engine, [
+            { x: gx(7), y: gy(9) },
+            { x: gx(16), y: gy(9) },
+        ]));
+
+        engine.addEntity(new Spider(engine, [
+            { x: gx(23), y: gy(14) },
+            { x: gx(33), y: gy(14) },
+        ]));
+    }
+
+    /*    static level6(engine) {
+            const BW = PARAMS.BLOCKWIDTH;
+            const gx = (c) => c * BW;
+            const gy = (r) => r * BW;
+            engine.addEntity(new Bed(engine, gx(30), gy(5)));
+    
+            engine.addEntity(new PickupItem(engine, gx(6), gy(5), "TheStrangeLamp"));
+            engine.addEntity(new PickupItem(engine, gx(13), gy(9), "Sword"));
+            engine.addEntity(new PickupItem(engine, gx(21), gy(3), "ToothBrush"));
+    
+            const builder = new LevelBuilder(engine);
+    
+            builder.spawnRow(1, 1, 39);
+            builder.spawnColumn(1, 1, 25);
+            builder.spawnColumn(39, 1, 25);
+           // builder.spawnRow(20, 1, 15);
+            builder.spawnRow(22, 1, 39);
+    
+            builder.spawnColumn(9, 6, 10);
+            builder.spawnColumn(9, 13, 17);
+            builder.spawnColumn(9, 21, 24);
+            builder.spawnColumn(16, 1, 6);
+            builder.spawnRow(6, 10, 18);
+            builder.spawnColumn(18,7,12); 
+            builder.spawnColumn(18,17,22); 
+            builder.spawnRow(17, 18, 23);
+            builder.spawnColumn(23, 13, 16);
+            builder.spawnRow(13, 23, 25);
+            builder.spawnColumn(30, 9, 13);
+    
+            engine.addEntity(new Spikes(engine, gx(9), gy(17)));
+            engine.addEntity(new Spikes(engine, gx(9), gy(20)));
+            engine.addEntity(new Spikes(engine, gx(9), gy(21)));
+               for (let c = 26; c <= 29; c++) {
+                engine.addEntity(new Spikes(engine, gx(c), gy(13)));
+            }
+    
+            //engine.addEntity(new Sheep(engine, gx(11), gy(6)));
+            //engine.addEntity(new Demon(engine, gx(11), gy(15)));
+              for (let c = 23; c <= 34; c++) {
+                engine.addEntity(new Spikes(engine, gx(c), gy(21)));
+            }
+            const spiderPath1 = [
+                { x: gx(10), y: gy(19) },
+                { x: gx(16), y: gy(20) }
+            ];
+            for (let c = 23; c <= 34; c++) {
+                engine.addEntity(new Spikes(engine, gx(c), gy(21)));
+            }
+            const spiderPath2 = [
+                { x: gx(30), y: gy(12) },
+                { x: gx(38), y: gy(12) }
+            ];
+            engine.addEntity(new Ghost(engine, gx(16), gy(12)));
+            engine.addEntity(new Spider(engine, spiderPath1));
+            engine.addEntity(new Spider(engine, spiderPath2));
+            engine.addEntity(new StickyBush(engine, gx(23), gy(11)));
+            engine.addEntity(new Demon(engine, gx(28), gy(4)));
+            engine.addEntity(new SleepyGuy(engine, gx(4), gy(15)));
+        }
+        static level7(engine) {
+            const BW = PARAMS.BLOCKWIDTH;
+            const gx = (c) => c * BW;
+            const gy = (r) => r * BW;
+            engine.addEntity(new Bed(engine, gx(31), gy(10)));
+    
+            engine.addEntity(new PickupItem(engine, gx(6), gy(5), "TheStrangeLamp"));
+            engine.addEntity(new PickupItem(engine, gx(13), gy(9), "Sword"));
+            engine.addEntity(new PickupItem(engine, gx(21), gy(3), "ToothBrush"));
+    
+            const builder = new LevelBuilder(engine);
+    
+            builder.spawnRow(1, 1, 39);
+            builder.spawnColumn(1, 1, 25);
+            builder.spawnColumn(39, 1, 7);
+            builder.spawnColumn(39, 15, 25);
+           // builder.spawnRow(20, 1, 15);
+            builder.spawnRow(22, 1, 33);
+            builder.spawnRow(22, 39, 39);
+    
+            builder.spawnColumn(9, 6, 14);
+            builder.spawnColumn(9,18, 23);
+            builder.spawnRow(6,9,14);
+            builder.spawnRow(19,9,23);
+            builder.spawnColumn(23, 18, 23)
+            builder.spawnColumn(23, 1, 6);
+            builder.spawnRow(10,23,34);
+            builder.spawnColumn(23, 10, 17);
+      
+    
+              for (let c = 2; c <= 8; c++) {
+                engine.addEntity(new Spikes(engine, gx(c), gy(5)));
+            }
+             for (let c = 15; c <= 22; c++) {
+                engine.addEntity(new Spikes(engine, gx(c), gy(5)));
+            }
+             for (let c = 35; c <= 38; c++) {
+                engine.addEntity(new Spikes(engine, gx(c), gy(10)));
+            }
+            engine.addEntity(new StickyBush(engine, gx(39), gy(8)));
+            engine.addEntity(new VenusFlyTrap(engine, gx(34), gy(12)));
+            engine.addEntity(new Demon(engine, gx(34), gy(20)));
+    
+            const spiderPath1 = [
+                { x: gx(9), y: gy(16) },
+                { x: gx(17), y: gy(18) }
+            ];
+        
+            const spiderPath2 = [
+                { x: gx(22), y: gy(8) },
+                { x: gx(29), y: gy(8) }
+            ];
+            engine.addEntity(new Spider(engine, spiderPath1));
+            engine.addEntity(new Spider(engine, spiderPath2));
+            engine.addEntity(new SleepyGuy(engine, gx(4), gy(18)));
+        }
+    
+       */
+    static level9(engine) {
+        const BW = PARAMS.BLOCKWIDTH;
+        const gx = (c) => c * BW
+        const gy = (r) => r * BW;
+        engine.addEntity(new Bed(engine, gx(31), gy(1)));
+        engine.addEntity(new SleepyGuy(engine, gx(4), gy(4)));
+
+        engine.addEntity(new PickupItem(engine, gx(18), gy(4), "ToothBrush"));
+        engine.addEntity(new PickupItem(engine, gx(3), gy(21), "Rocket"));
+        engine.addEntity(new PickupItem(engine, gx(31), gy(20), "Pajama"));
+        engine.addEntity(new PickupItem(engine, gx(10), gy(12), "Sword"));
+        engine.addEntity(new PickupItem(engine, gx(9), gy(-2), "SleepDust"));
+
+
+        const builder = new LevelBuilder(engine);
+
+        builder.spawnRow(1, 1, 19);
+        builder.spawnColumn(1, 1, 16);
+        builder.spawnColumn(20, 1, 16);
+        builder.spawnRow(7, 7, 9);
+        builder.spawnColumn(9, 7, 9);
+        builder.spawnRow(9, 9, 14);
+        builder.spawnColumn(14, 9, 11);
+        builder.spawnRow(16, 1, 7);
+        builder.spawnRow(16, 17, 20);
+        builder.spawnColumn(17, 16, 19);
+        builder.spawnRow(19, 12, 16);
+        builder.spawnRow(19, 1, 7)
+        builder.spawnColumn(1, 19, 22);
+        builder.spawnRow(22, 1, 20);
+        builder.spawnColumn(28, 8, 22);
+        builder.spawnRow(8, 28, 38);
+        builder.spawnColumn(38, 1, 8);
+
+        for (let c = 2; c <= 6; c++) {
+            engine.addEntity(new Spikes(engine, gx(c), gy(6)));
+        }
+        for (let c = 15; c <= 19; c++) {
+            engine.addEntity(new Spikes(engine, gx(c), gy(11)));
+        }
+
+        const spiderPath1 = [
+            { x: gx(20), y: gy(16) },
+            { x: gx(20), y: gy(21) }
+        ];
+        const spiderPath2 = [
+            { x: gx(27), y: gy(1) },
+            { x: gx(27), y: gy(7) }
+        ];
+        engine.addEntity(new Spider(engine, spiderPath1));
+        engine.addEntity(new Spider(engine, spiderPath2));
+        engine.addEntity(new Ghost(engine, gx(30), gy(-2)));
+        engine.addEntity(new Demon(engine, gx(14), gy(-4)));
+        engine.addEntity(new VenusFlyTrap(engine, gx(25), gy(22)));
+
+
+
+    }
+
+    static level10(engine) {
+        const BW = PARAMS.BLOCKWIDTH;
+        const gx = (c) => c * BW
+        const gy = (r) => r * BW;
+        engine.addEntity(new Bed(engine, gx(31), gy(18)));
+        engine.addEntity(new SleepyGuy(engine, gx(5), gy(6)));
+
+
+
+        engine.addEntity(new PickupItem(engine, gx(11), gy(0), "Pajama"));
+        engine.addEntity(new PickupItem(engine, gx(15), gy(4), "ToothBrush"));
+        engine.addEntity(new PickupItem(engine, gx(20), gy(15), "TheStrangeLamp"));
+        engine.addEntity(new PickupItem(engine, gx(10), gy(12), "Sword"));
+        engine.addEntity(new PickupItem(engine, gx(-3), gy(-5), "SleepDust"));
+
+
+        const builder = new LevelBuilder(engine);
+
+        builder.spawnRow(1, 1, 19);
+        builder.spawnColumn(1, 1, 4);
+        builder.spawnColumn(1, 8, 14);
+        builder.spawnColumn(20, 1, 2);
+        builder.spawnRow(20, 1, 17)
+        builder.spawnColumn(10, 1, 6);
+        builder.spawnRow(6, 11, 17);
+        builder.spawnColumn(17, 7, 12);
+        builder.spawnRow(12, 17, 22);
+        builder.spawnColumn(22, 12, 15);
+        builder.spawnRow(12, 7, 11);
+        builder.spawnColumn(11, 12, 16);
+        builder.spawnColumn(30, 1, 7);
+        builder.spawnRow(18, 32, 38);
+
+
+        for (let c = 18; c <= 23; c++) {
+            engine.addEntity(new Spikes(engine, gx(c), gy(20)));
+        }
+        //  for (let c = 15; c <= 19; c++) {
+        //     engine.addEntity(new Spikes(engine, gx(c), gy(11)));
+        // }
+
+        const spiderPath1 = [
+            { x: gx(30), y: gy(25) },
+            { x: gx(36), y: gy(25) }
+        ];
+
+
+        engine.addEntity(new Spider(engine, spiderPath1));
+
+
+
+        engine.addEntity(new VenusFlyTrap(engine, gx(8), gy(10)));
+        engine.addEntity(new Ghost(engine, gx(27), gy(18)));
+        engine.addEntity(new Ghost(engine, gx(37), gy(18)));
+        engine.addEntity(new Demon(engine, gx(33), gy(14)));
+        engine.addEntity(new Ghost(engine, gx(-1), gy(15)));
+        engine.addEntity(new Demon(engine, gx(6), gy(21)));
+        engine.addEntity(new Ghost(engine, gx(1), gy(-4)));
+        engine.addEntity(new Ghost(engine, gx(15), gy(-4)));
+        engine.addEntity(new StickyBush(engine, gx(0), gy(6)));
+
+        // engine.addEntity(new Demon(engine, gx(14), gy(-4)));
+        // engine.addEntity(new VenusFlyTrap(engine, gx(25), gy(22)));
+
+    }
+
+    static level11(engine) {
+        const BW = PARAMS.BLOCKWIDTH;
+        const gx = (c) => c * BW
+        const gy = (r) => r * BW;
+        engine.addEntity(new Bed(engine, gx(29), gy(16)));
+        engine.addEntity(new SleepyGuy(engine, gx(5), gy(6)));
+
+
+
+        engine.addEntity(new PickupItem(engine, gx(17), gy(16), "Pajama"));
+        engine.addEntity(new PickupItem(engine, gx(4), gy(21), "Rocket"));
+        engine.addEntity(new PickupItem(engine, gx(17), gy(0), "TheStrangeLamp"));
+        engine.addEntity(new PickupItem(engine, gx(30), gy(4), "SleepDust"));
+
+
+
+        const builder = new LevelBuilder(engine);
+
+        builder.spawnRow(1, 1, 3);
+        builder.spawnColumn(1, 1, 6);
+        builder.spawnRow(6, 1, 5);
+        builder.spawnColumn(5, 6, 9);
+        builder.spawnRow(9, 5, 8);
+        builder.spawnColumn(8, 9, 12);
+
+        builder.spawnColumn(1, 17, 25);
+        builder.spawnRow(22, 1, 37);
+        builder.spawnColumn(15, 13, 17);
+        builder.spawnRow(17, 15, 19)
+        builder.spawnColumn(37, 16, 25);
+        builder.spawnRow(16, 26, 37)
+        builder.spawnColumn(37, 1, 10);
+        builder.spawnRow(1, 27, 37);
+        builder.spawnRow(5, 27, 37);
+        builder.spawnRow(10, 27, 37);
+        builder.spawnRow(10, 32, 37);
+        builder.spawnRow(1, 10, 22);
+        builder.spawnColumn(13, 1, 7);
+        builder.spawnRow(7, 13, 18);
+
+        const spiderPath = [
+            { x: gx(24), y: gy(16) },
+            { x: gx(24), y: gy(21) }
+        ];
+        engine.addEntity(new Ghost(engine, gx(9), gy(-4)));
+        engine.addEntity(new Ghost(engine, gx(18), gy(-4)));
+        engine.addEntity(new Demon(engine, gx(25), gy(5)));
+        engine.addEntity(new Demon(engine, gx(14), gy(2)));
+
+        engine.addEntity(new VenusFlyTrap(engine, gx(1), gy(12)));
+        engine.addEntity(new Sheep(engine, gx(14), gy(16)));
+        engine.addEntity(new Demon(engine, gx(24), gy(11)));
+        engine.addEntity(new Spider(engine, spiderPath));
+        engine.addEntity(new Spikes(engine, gx(15), gy(12)));
+
+
+        for (let c = 3; c <= 15; c++) {
+            engine.addEntity(new Spikes(engine, gx(c), gy(27)));
+        }
+
+    }
+
+
+    static level12(engine) {
+        const BW = PARAMS.BLOCKWIDTH;
+        const gx = (c) => c * BW
+        const gy = (r) => r * BW;
+        engine.addEntity(new Bed(engine, gx(11), gy(10)));
+        engine.addEntity(new SleepyGuy(engine, gx(-5), gy(-5)));
+
+
+
+        engine.addEntity(new PickupItem(engine, gx(37), gy(11), "SleepDust"));
+        engine.addEntity(new PickupItem(engine, gx(37), gy(17), "TheStrangeLamp"));
+        engine.addEntity(new PickupItem(engine, gx(22), gy(5), "Sword"));
+        engine.addEntity(new PickupItem(engine, gx(8), gy(4), "Pajama"));
+
+
+
+        const builder = new LevelBuilder(engine);
+
+
+        builder.spawnRow(1, 3, 7);
+        builder.spawnRow(1, 21, 25);
+        builder.spawnRow(6, 17.24);
+        builder.spawnRow(11, 1, 3);
+        builder.spawnRow(16, 1, 3);
+        builder.spawnRow(21, 5, 7);
+        builder.spawnRow(21, 11, 13);
+        builder.spawnRow(21, 17, 19);
+        builder.spawnRow(21, 23, 25);
+        builder.spawnRow(16, 26, 28);
+        builder.spawnRow(11, 26, 28);
+        builder.spawnRow(6, 26, 28);
+        builder.spawnRow(9, 11, 19);
+        builder.spawnRow(8, 34, 39);
+        builder.spawnRow(18, 34, 39);
+
+        const spiderPath1 = [
+            { x: gx(10), y: gy(10) },
+            { x: gx(10), y: gy(15) }
+        ];
+
+        const spiderPath2 = [
+            { x: gx(19), y: gy(10) },
+            { x: gx(19), y: gy(15) }
+        ];
+
+        const spiderPath3 = [
+            { x: gx(8), y: gy(1) },
+            { x: gx(18), y: gy(1) }
+        ];
+
+        const spiderPath4 = [
+            { x: gx(39), y: gy(9) },
+            { x: gx(39), y: gy(17) }
+        ];
+
+        engine.addEntity(new Spider(engine, spiderPath1));
+        engine.addEntity(new Spider(engine, spiderPath2));
+        engine.addEntity(new Spider(engine, spiderPath3));
+        engine.addEntity(new Spider(engine, spiderPath4));
+        engine.addEntity(new Ghost(engine, gx(0), gy(2)));
+        engine.addEntity(new Ghost(engine, gx(0), gy(7)));
+        engine.addEntity(new Ghost(engine, gx(0), gy(12)));
+        engine.addEntity(new Demon(engine, gx(4), gy(17)));
+        engine.addEntity(new Demon(engine, gx(10), gy(17)));
+        engine.addEntity(new Demon(engine, gx(16), gy(17)));
+        engine.addEntity(new Demon(engine, gx(22), gy(17)));
+        engine.addEntity(new VenusFlyTrap(engine, gx(26), gy(14)));
+        engine.addEntity(new VenusFlyTrap(engine, gx(26), gy(9)));
+        engine.addEntity(new VenusFlyTrap(engine, gx(26), gy(5)));
+        engine.addEntity(new StickyBush(engine, gx(6), gy(-1)));
+        engine.addEntity(new StickyBush(engine, gx(23), gy(-1)));
+
     }
 }
