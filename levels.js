@@ -439,7 +439,7 @@ class Levels {
         engine.addEntity(new Ghost(engine, gx(24), gy(10)));
         engine.addEntity(new Demon(engine, gx(24), gy(6)));
         engine.addEntity(new Sheep(engine, gx(14), gy(17)));
-        engine.addEntity(new VenusFlyTrap(engine, gx(31), gy(9)));
+        engine.addEntity(new VenusFlyTrap(engine, gx(31), gy(15)));
 
         engine.addEntity(new Spider(engine, [
             { x: gx(7), y: gy(9) },
