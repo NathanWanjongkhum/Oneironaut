@@ -93,7 +93,8 @@ class Block extends Entity {
     // Optional sprite rendering (used by sandbags)
     this.sprite = opts.sprite || ASSET_MANAGER.getAsset("./assets/entities/cloudBlock.png");
     this.spriteScale = opts.spriteScale ?? 2.3;
-    this.spriteYOffset = opts.spriteYOffset ?? 0;
+    this.spriteYOffset = opts.spriteYOffset ?? -20;
+    this.spriteXOffset = opts.spriteXOffset ?? -20;
 
     // IMPORTANT: create a real bounding box
     this.BB = new BoundingBox(this.x, this.y, this.width, this.height);
@@ -111,7 +112,7 @@ class Block extends Entity {
     if (this.sprite) {
       const w = this.width * this.spriteScale;
       const h = this.height * this.spriteScale;
-      const dx = this.x - this.game.camera.x;
+      const dx = this.x - this.game.camera.x + this.spriteXOffset;
       const dy = this.y - this.game.camera.y + this.spriteYOffset;
       ctx.drawImage(this.sprite, dx, dy, w, h);
     } else {
