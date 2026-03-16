@@ -13,6 +13,8 @@ class Background {
     update() {
         this.level = (this.game.currentLevel + 3) % 4;
         this.theme = (this.game.menuRoomController.theme === "day")? 0 : 1;
+        if(this.game.currentLevel > 4) this.theme = 1; // Fast solution, not the ideal solution,
+        // just makes it so that users see night themes by making only the first 4 levels daytime
     }
 
     draw(ctx) {
@@ -57,7 +59,7 @@ class Background {
             7 (4) - orange skies
             8 (6) - purple dusk
             day Imgs = 1, 5, 2, 6
-            night Imgs = 3, 8, 4, 7
+            night Imgs = 3, 8, 4, 7 => 7, 4, 8, 3
         */
         // this.layers.push([]);
         // this.parallaxFactors.push([]);
@@ -102,14 +104,14 @@ class Background {
             ASSET_MANAGER.getAsset("./assets/background/clouds6/6.png")
         ]
         this.parallaxFactors[3][0] = [0.1, 0.2, 0.3, 0.4, 0.5, 0.7];
-        this.layers[0][1] = [
+        this.layers[3][1] = [
             ASSET_MANAGER.getAsset("./assets/background/clouds3/1.png"),
             ASSET_MANAGER.getAsset("./assets/background/clouds3/2.png"),
             ASSET_MANAGER.getAsset("./assets/background/clouds3/3.png"),
             ASSET_MANAGER.getAsset("./assets/background/clouds3/4.png")
         ]
-        this.parallaxFactors[0][1] = [0.1, 0.25, 0.5, 0.75];
-        this.layers[1][1] = [
+        this.parallaxFactors[3][1] = [0.1, 0.25, 0.5, 0.75];
+        this.layers[2][1] = [
             ASSET_MANAGER.getAsset("./assets/background/clouds8/1.png"),
             ASSET_MANAGER.getAsset("./assets/background/clouds8/2.png"),
             ASSET_MANAGER.getAsset("./assets/background/clouds8/3.png"),
@@ -117,20 +119,20 @@ class Background {
             ASSET_MANAGER.getAsset("./assets/background/clouds8/5.png"),
             ASSET_MANAGER.getAsset("./assets/background/clouds8/6.png")
         ]
-        this.parallaxFactors[1][1] = [0.1, 0.2, 0.3, 0.4, 0.5, 0.7];
-        this.layers[2][1] = [
+        this.parallaxFactors[2][1] = [0.1, 0.2, 0.3, 0.4, 0.5, 0.7];
+        this.layers[1][1] = [
             ASSET_MANAGER.getAsset("./assets/background/clouds4/1.png"),
             ASSET_MANAGER.getAsset("./assets/background/clouds4/2.png"),
             ASSET_MANAGER.getAsset("./assets/background/clouds4/3.png"),
             ASSET_MANAGER.getAsset("./assets/background/clouds4/4.png")
         ]
-        this.parallaxFactors[2][1] = [0.1, 0.25, 0.5, 0.75];
-        this.layers[3][1] = [
+        this.parallaxFactors[1][1] = [0.1, 0.25, 0.5, 0.75];
+        this.layers[0][1] = [
             ASSET_MANAGER.getAsset("./assets/background/clouds7/1.png"),
             ASSET_MANAGER.getAsset("./assets/background/clouds7/2.png"),
             ASSET_MANAGER.getAsset("./assets/background/clouds7/3.png"),
             ASSET_MANAGER.getAsset("./assets/background/clouds7/4.png")
         ]
-        this.parallaxFactors[3][1] = [0.1, 0.25, 0.5, 0.75];
+        this.parallaxFactors[0][1] = [0.1, 0.25, 0.5, 0.75];
     }
 }
